@@ -1,0 +1,118 @@
+/* Enhanced Sidebar Styles */
+
+/* Logo Enhancement */
+.app-brand {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1rem;
+}
+
+.app-brand-logo img {
+    max-height: 40px;
+    width: auto;
+}
+
+/* Menu Items */
+#layout-menu .menu-inner {
+    padding: 0;
+}
+
+#layout-menu .menu-item {
+    position: relative;
+    overflow: hidden;
+}
+
+#layout-menu .menu-link {
+    position: relative;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* Active Menu Item Animation */
+#layout-menu .menu-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 70%;
+    background: var(--primary-color);
+    border-radius: 0 4px 4px 0;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        width: 0;
+        opacity: 0;
+    }
+    to {
+        width: 4px;
+        opacity: 1;
+    }
+}
+
+/* Menu Icons */
+#layout-menu .menu-link i {
+    transition: transform var(--transition-fast);
+}
+
+#layout-menu .menu-link:hover i {
+    transform: translateX(2px);
+}
+
+/* Submenu Styles */
+#layout-menu .menu-sub {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-md);
+    margin: 0.25rem 0.5rem;
+}
+
+#layout-menu .menu-sub .menu-link {
+    padding-left: 3rem;
+    font-size: 0.875rem;
+}
+
+/* Menu Divider */
+#layout-menu hr {
+    margin: 1rem 1.5rem;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Scrollbar for Sidebar */
+#layout-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+#layout-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#layout-menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+#layout-menu::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive Improvements */
+@media (max-width: 1199px) {
+    .layout-menu-toggle {
+        background: var(--primary-color);
+        color: white;
+        border-radius: var(--radius-md);
+        padding: 0.5rem;
+    }
+    
+    #layout-menu.menu-vertical {
+        transform: translateX(-100%);
+        transition: transform var(--transition-slow);
+    }
+    
+    #layout-menu.menu-vertical.show {
+        transform: translateX(0);
+    }
+}

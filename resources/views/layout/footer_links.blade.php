@@ -67,6 +67,8 @@
     var js_date_format = 'DD-MM-YYYY';
 </script>
 <script src="{{ asset('front-end/assets/js/custom.js') }}"></script>
+<!-- Modern UI Enhancements -->
+<script src="{{ asset('front-end/assets/js/modern-ui.js') }}"></script>
 <script>
     // toastr.options = {
     //     "positionClass": "toast-top-right",
