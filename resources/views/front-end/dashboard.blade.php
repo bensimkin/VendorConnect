@@ -10,82 +10,37 @@
         <div class="container-fluid">
             <div class="col-lg-12 col-md-12 order-1">
                 <div class="row mt-4">
-                    <div class="col-lg-3 col-md-12 col-6 mb-4">
-                        <div class="card">
-                            <a href="{{ route('task.view') }}" style="text-decoration: none">
-                                <div class="card-body">
-                                    <div class="card-title d-flex align-items-start justify-content-between">
-                                        <div class="avatar flex-shrink-0">
-                                            <i class="menu-icon tf-icons bx bx-briefcase-alt-2 bx-md text-success"></i>
-                                        </div>
-                                    </div>
-                                    <span class="fw-semibold d-block mb-1">Tasks</span>
-                                    <h3 class="card-title mb-2">
-                                        {{ $taskCount }}</h3>
-                                    {{-- <a href="#"><small
-                                                class="text-success fw-semibold"><i
-                                                    class="bx bx-right-arrow-alt"></i>View more</small></a> --}}
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-12 col-6 mb-4">
-                        <div class="card">
-                            <a href="{{ route('tasktype.view') }}">
-                                <div class="card-body">
-                                    <div class="card-title d-flex align-items-start justify-content-between">
-                                        <div class="avatar flex-shrink-0">
-                                            <i class="menu-icon tf-icons bx bx-task bx-md text-primary"></i>
-                                        </div>
-                                    </div>
-                                    <span class="fw-semibold d-block mb-1">Task Types</span>
-                                    <h3 class="card-title mb-2">{{ $taskTypeCount }}</h3>
-                                    {{-- <a href="#"><small
-                                            sclass="text-primary fw-semibold"><i
-                                        class="bx bx-right-arrow-alt"></i>View more</small></a> --}}
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-12 col-6 mb-4">
-                        <a href="{{ route('user.view') }}">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="card-title d-flex align-items-start justify-content-between">
-                                        <div class="avatar flex-shrink-0">
-                                            <i class="menu-icon tf-icons bx bxs-user-detail bx-md text-warning"></i>
-                                        </div>
-                                    </div>
-                                    <span class="fw-semibold d-block mb-1">Total users</span>
-                                    <h3 class="card-title mb-2">{{ $usersCount }}
-                                    </h3>
-                                    {{-- <a href="#"><small --}}
-                                    {{-- class="text-warning fw-semibold"><i --}}
-                                    {{-- class="bx bx-right-arrow-alt"></i>View more</small></a> --}}
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-lg-3 col-md-12 col-6 mb-4">
-                        <div class="card">
-                            <a href="{{ route('clients.view') }}">
-                                <div class="card-body">
-                                    <div class="card-title d-flex align-items-start justify-content-between">
-                                        <div class="avatar flex-shrink-0">
-                                            <i class="menu-icon tf-icons bx bxs-user-detail bx-md text-info"></i>
-                                        </div>
-                                    </div>
-                                    <span class="fw-semibold d-block mb-1">Total clients</span>
-                                    <h3 class="card-title mb-2">
-                                        {{ $clientCount }}</h3>
-                                    {{-- <a href="#"><small
-                                            class="text-info fw-semibold"><i
-                                        class="bx bx-right-arrow-alt"></i>View more</small></a> --}}
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-
+                    @include('components.dashboard-card', [
+                        'title' => 'Tasks',
+                        'count' => $taskCount,
+                        'icon' => 'bx-briefcase-alt-2',
+                        'color' => 'success',
+                        'link' => route('task.view')
+                    ])
+                    
+                    @include('components.dashboard-card', [
+                        'title' => 'Task Types',
+                        'count' => $taskTypeCount,
+                        'icon' => 'bx-task',
+                        'color' => 'primary',
+                        'link' => route('tasktype.view')
+                    ])
+                    
+                    @include('components.dashboard-card', [
+                        'title' => 'Total Users',
+                        'count' => $usersCount,
+                        'icon' => 'bxs-user-detail',
+                        'color' => 'warning',
+                        'link' => route('user.view')
+                    ])
+                    
+                    @include('components.dashboard-card', [
+                        'title' => 'Total Clients',
+                        'count' => $clientCount,
+                        'icon' => 'bxs-user-detail',
+                        'color' => 'info',
+                        'link' => route('clients.view')
+                    ])
                 </div>
                 <div class="row">
                     <div class="col-md-4 col-sm-12">
