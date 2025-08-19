@@ -21,6 +21,11 @@
         class="template-customizer-theme-css" />
     <link rel="stylesheet" href="{{ asset('front-end/assets/css/demo.css') }}" />
     <link rel="stylesheet" href="{{ asset('front-end/assets/css/custom.css') }}" />
+    <!-- Modern UI Enhancements -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('front-end/assets/css/modern-ui.css') }}" />
+    <link rel="stylesheet" href="{{ asset('front-end/assets/css/dark-mode.css') }}" />
+    <link rel="stylesheet" href="{{ asset('front-end/assets/css/sidebar-enhancements.css') }}" />
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="{{ asset('front-end/assets/css/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
     <link rel="stylesheet" href="{{ asset('front-end/assets/css/pages/page-auth.css') }}" />
