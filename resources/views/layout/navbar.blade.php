@@ -45,16 +45,20 @@
                                             </div> --}}
                                         </li>
 
-                                        {{-- <li class="nav-item navbar-dropdown dropdown-user dropdown ml-1">
-
-                                            <li class="nav-item navbar-dropdown dropdown">
-                                                <a class="nav-link " href="{{ route('notification.view') }}"
-                                                   >
-                                                    <i class='bx bx-bell bx-sm'></i> <span id="unreadNotificationsCount"
-                                                        class="badge rounded-pill badge-center h-px-20 w-px-20 bg-danger d-none">0</span>
-                                                </a>
-                                            </li>
-                                            </li> --}}
+                                        {{-- Notifications --}}
+                                        <li class="nav-item navbar-dropdown dropdown me-2">
+                                            <a class="nav-link position-relative" href="{{ route('notification.view') }}">
+                                                <i class='bx bx-bell bx-sm'></i> 
+                                                <span id="unreadNotificationsCount" class="badge rounded-pill badge-center h-px-20 w-px-20 bg-danger d-none">0</span>
+                                            </a>
+                                        </li>
+                                        
+                                        {{-- Dark Mode Toggle --}}
+                                        <li class="nav-item me-2">
+                                            <button id="darkModeToggle" class="btn btn-sm btn-light rounded-circle p-2" title="Toggle dark mode">
+                                                <i class="bx bx-moon"></i>
+                                            </button>
+                                        </li>
 
                                         <li class="profile">
                                             <!-- User -->
