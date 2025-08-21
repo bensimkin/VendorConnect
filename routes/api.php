@@ -48,6 +48,7 @@ Route::prefix('v1')->group(function () {
             return $request->user();
         });
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::post('/auth/refresh', [AuthController::class, 'refresh']);
         
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index']);
