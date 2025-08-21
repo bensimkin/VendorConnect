@@ -16,5 +16,7 @@ class VerifyCsrfToken extends Middleware
     protected $addHttpCookie = true;
     protected $except = [
         "/master-panel/subscription-plan/checkout/*",
+        "/users/authenticate",
+        "/front-end/assets/js/cdn-init",
     ];
 }
