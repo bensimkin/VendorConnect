@@ -23,6 +23,34 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Expiration Minutes
+    |--------------------------------------------------------------------------
+    |
+    | This value controls the number of minutes until an issued token will be
+    | considered expired. If this value is null, personal access tokens do
+    | not expire. This won't tweak the lifetime of first-party sessions.
+    |
+    */
+
+    'expiration' => env('SANCTUM_TOKEN_EXPIRATION', 60 * 24 * 7), // 7 days default
+
+    /*
+    |--------------------------------------------------------------------------
+    | Token Prefix
+    |--------------------------------------------------------------------------
+    |
+    | Sanctum will prefix new tokens in order to take advantage of numerous
+    | security scanning initiatives maintained by open source platforms
+    | such as [GitHub Advisory Database](https://github.com/advisories).
+    |
+    | The prefix for tokens may be set to any string of your choosing.
+    |
+    */
+
+    'token_prefix' => env('SANCTUM_TOKEN_PREFIX', ''),
+
+    /*
+    |--------------------------------------------------------------------------
     | Sanctum Guards
     |--------------------------------------------------------------------------
     |
@@ -34,19 +62,6 @@ return [
     */
 
     'guard' => ['web'],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Expiration Minutes
-    |--------------------------------------------------------------------------
-    |
-    | This value controls the number of minutes until an issued token will be
-    | considered expired. If this value is null, personal access tokens do
-    | not expire. This won't tweak the lifetime of first-party sessions.
-    |
-    */
-
-    'expiration' => null,
 
     /*
     |--------------------------------------------------------------------------
