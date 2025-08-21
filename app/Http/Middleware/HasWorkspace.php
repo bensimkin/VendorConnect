@@ -18,7 +18,7 @@ class HasWorkspace
     public function handle(Request $request, Closure $next)
     {
 
-        if (session()->get('workspace_id') == 0) {
+        if (session()->get('workspace_id') == 0 && auth()->id() != 1) {
             if (!$request->ajax()) {
                 return redirect(route('home.index'))->with('error', get_label('must_workspace_participant', 'You must be participant in atleast one workspace'));
             }
