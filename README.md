@@ -94,4 +94,4 @@ Follow the steps below to configure the database for the project:
    ```
    
    - Replace DB_DATABASE with the name of your database.
-   - Update DB_USERNAME and DB_PASSWORD according to your phpMyAdmin credentials.
+   - Update DB_USERNAME and DB_PASSWORD according to your phpMyAdmin credentials.# Git credentials configured
