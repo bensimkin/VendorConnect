@@ -137,4 +137,4 @@ This project is proprietary software.
 
 ---
 
-Built with ❤️ using Next.js 14, TypeScript, and Tailwind CSS
+Built with ❤️ using Next.js 14, TypeScript, and Tailwind CSS# Development Workflow Updated - Now using Git for deployment
