@@ -55,11 +55,11 @@ class Task extends Model implements HasMedia
 
     public function users()
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class, 'task_user');
     }
     public function clients()
     {
-        return $this->project->client;
+        return $this->belongsToMany(Client::class, 'client_task');
     }
 
     public function taskClients()
@@ -99,6 +99,11 @@ class Task extends Model implements HasMedia
     public function priority()
     {
         return $this->belongsTo(Priority::class);
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'task_tag');
     }
 
 
