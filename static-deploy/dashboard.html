@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - VendorConnect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center mr-3">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-xl font-bold text-gray-900">VendorConnect</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="userName" class="text-sm text-gray-700"></span>
+                    <button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Welcome Section -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">Dashboard</h2>
+            <p class="text-gray-600">Welcome back! Here's what's happening today.</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Tasks</p>
+                        <p id="totalTasks" class="text-3xl font-bold text-gray-900">-</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-blue-500">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Active Users</p>
+                        <p id="totalUsers" class="text-3xl font-bold text-gray-900">-</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-green-500">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Clients</p>
+                        <p id="totalClients" class="text-3xl font-bold text-gray-900">-</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-purple-500">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Active Projects</p>
+                        <p id="totalProjects" class="text-3xl font-bold text-gray-900">-</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-orange-500">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Statistics -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Task Statistics</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                            <div id="pendingTasks" class="text-2xl font-bold text-yellow-600">-</div>
+                            <div class="text-sm text-yellow-700">Pending</div>
+                        </div>
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <div id="inProgressTasks" class="text-2xl font-bold text-blue-600">-</div>
+                            <div class="text-sm text-blue-700">In Progress</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <div id="completedTasks" class="text-2xl font-bold text-green-600">-</div>
+                            <div class="text-sm text-green-700">Completed</div>
+                        </div>
+                        <div class="text-center p-4 bg-red-50 rounded-lg">
+                            <div id="overdueTasks" class="text-2xl font-bold text-red-600">-</div>
+                            <div class="text-sm text-red-700">Overdue</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+                <div id="recentActivity" class="space-y-4">
+                    <div class="text-center text-gray-500">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                        <p class="mt-2">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Tasks -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-900">Recent Tasks</h3>
+                <button class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                    View all tasks
+                </button>
+            </div>
+            <div id="recentTasks" class="overflow-x-auto">
+                <div class="text-center text-gray-500 py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <p class="mt-2">Loading tasks...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('auth_token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) {
+            window.location.href = '/index.html';
+        }
+
+        // Display user name
+        document.getElementById('userName').textContent = `${user.first_name} ${user.last_name}`;
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user');
+            window.location.href = '/index.html';
+        });
+
+        // API base URL
+        const API_BASE = 'https://vc.themastermind.com.au/api/v1';
+
+        // Fetch dashboard data
+        async function fetchDashboardData() {
+            try {
+                const response = await fetch(`${API_BASE}/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                    }
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/index.html';
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    updateDashboard(data.data);
+                }
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+            }
+        }
+
+        function updateDashboard(data) {
+            // Update stats
+            document.getElementById('totalTasks').textContent = data.total_tasks;
+            document.getElementById('totalUsers').textContent = data.total_users;
+            document.getElementById('totalClients').textContent = data.total_clients;
+            document.getElementById('totalProjects').textContent = data.total_projects;
+
+            // Update task statistics
+            document.getElementById('pendingTasks').textContent = data.task_statistics.pending;
+            document.getElementById('inProgressTasks').textContent = data.task_statistics.in_progress;
+            document.getElementById('completedTasks').textContent = data.task_statistics.completed;
+            document.getElementById('overdueTasks').textContent = data.task_statistics.overdue;
+
+            // Update recent activity
+            const activityHtml = data.user_activity.slice(0, 5).map(activity => `
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg class="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">${activity.user_name}</p>
+                        <p class="text-xs text-gray-500">${activity.completed_tasks} tasks completed</p>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('recentActivity').innerHTML = activityHtml;
+
+            // Update recent tasks
+            const tasksHtml = `
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${data.recent_tasks.slice(0, 5).map(task => `
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">${task.title}</div>
+                                        <div class="text-sm text-gray-500">${task.taskType?.task_type || 'N/A'}</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(task.status?.name || 'pending')}">
+                                        ${task.status?.name || 'Pending'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(task.priority?.name || 'medium')}">
+                                        ${task.priority?.name || 'Medium'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    ${formatDate(task.end_date)}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('recentTasks').innerHTML = tasksHtml;
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                pending: 'bg-yellow-100 text-yellow-800',
+                'in-progress': 'bg-blue-100 text-blue-800',
+                completed: 'bg-green-100 text-green-800',
+                cancelled: 'bg-red-100 text-red-800',
+                overdue: 'bg-red-100 text-red-800',
+            };
+            return colors[status.toLowerCase()] || 'bg-gray-100 text-gray-800';
+        }
+
+        function getPriorityColor(priority) {
+            const colors = {
+                low: 'bg-green-100 text-green-800',
+                medium: 'bg-yellow-100 text-yellow-800',
+                high: 'bg-red-100 text-red-800',
+                urgent: 'bg-purple-100 text-purple-800',
+            };
+            return colors[priority.toLowerCase()] || 'bg-gray-100 text-gray-800';
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+        }
+
+        // Load dashboard data on page load
+        fetchDashboardData();
+    </script>
+</body>
+</html>
