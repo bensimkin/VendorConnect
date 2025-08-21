@@ -18,6 +18,9 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        // Rate limiting for login attempts
+        $this->validateLoginAttempts($request);
+
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|string|min:6',
@@ -34,6 +37,7 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
+            $this->incrementLoginAttempts($request);
             return response()->json([
                 'success' => false,
                 'message' => 'Account not found!'
@@ -41,6 +45,7 @@ class AuthController extends Controller
         }
 
         if (!Hash::check($request->password, $user->password)) {
+            $this->incrementLoginAttempts($request);
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials!'
@@ -54,11 +59,17 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Create token
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Clear any existing tokens for this user (optional - for single session)
+        // $user->tokens()->delete();
+
+        // Create token with expiration
+        $token = $user->createToken('auth_token', ['*'], now()->addDays(7))->plainTextToken;
 
         // Get user permissions
         $permissions = $user->getAllPermissions()->pluck('name')->toArray();
+
+        // Update last login
+        $user->update(['last_login_at' => now()]);
 
         return response()->json([
             'success' => true,
@@ -74,7 +85,8 @@ class AuthController extends Controller
                 ],
                 'permissions' => $permissions,
                 'token' => $token,
-                'token_type' => 'Bearer'
+                'token_type' => 'Bearer',
+                'expires_at' => now()->addDays(7)->toISOString()
             ]
         ]);
     }
@@ -244,5 +256,63 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Verification link sent'
         ]);
+    }
+
+    /**
+     * Refresh token
+     */
+    public function refresh(Request $request)
+    {
+        $user = $request->user();
+        
+        // Revoke current token
+        $request->user()->currentAccessToken()->delete();
+        
+        // Create new token
+        $token = $user->createToken('auth_token', ['*'], now()->addDays(7))->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Token refreshed successfully',
+            'data' => [
+                'token' => $token,
+                'token_type' => 'Bearer',
+                'expires_at' => now()->addDays(7)->toISOString()
+            ]
+        ]);
+    }
+
+    /**
+     * Validate login attempts and apply rate limiting
+     */
+    private function validateLoginAttempts(Request $request)
+    {
+        $key = 'login_attempts_' . $request->ip();
+        $attempts = cache()->get($key, 0);
+        
+        if ($attempts >= 5) {
+            $lockoutTime = cache()->get($key . '_lockout', 0);
+            if (now()->timestamp < $lockoutTime) {
+                abort(429, 'Too many login attempts. Please try again later.');
+            } else {
+                cache()->forget($key);
+                cache()->forget($key . '_lockout');
+            }
+        }
+    }
+
+    /**
+     * Increment login attempts
+     */
+    private function incrementLoginAttempts(Request $request)
+    {
+        $key = 'login_attempts_' . $request->ip();
+        $attempts = cache()->get($key, 0) + 1;
+        
+        cache()->put($key, $attempts, now()->addMinutes(15));
+        
+        if ($attempts >= 5) {
+            cache()->put($key . '_lockout', now()->addMinutes(15)->timestamp, now()->addMinutes(15));
+        }
     }
 }
