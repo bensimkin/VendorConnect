@@ -1,97 +1,140 @@
-# Vendor Connect v0.5
-BusinessNET (c) 2024
-Benjamin Simkin
+# VendorConnect Frontend
 
-# VendorConnect
+A beautiful, modern task management system built with Next.js 14, TypeScript, and Tailwind CSS.
 
-VendorConnect is an open-source project management solution designed to streamline collaboration with external contractors and vendors. It provides a structured way to manage repeatable tasks, maintain client requirements, and ensure consistent project delivery across distributed teams.
+## 🚀 Features
 
-## 🌟 Key Features
+- **Modern UI/UX**: Beautiful, responsive design with Tailwind CSS
+- **TypeScript**: Full type safety throughout the application
+- **Real-time Data**: Connected to Laravel API backend
+- **Authentication**: Secure login/logout with JWT tokens
+- **Dashboard**: Beautiful analytics and task overview
+- **Responsive**: Works perfectly on desktop, tablet, and mobile
 
-### Template-Based Task Management
-- Create reusable task templates for standardized workflows
-- Customize templates with specific instructions while maintaining core requirements
-- Perfect for recurring projects like video production, content creation, or design work
-- Add custom fields and requirements specific to each project type
-- Make new templates to create new variations
+## 🛠️ Tech Stack
 
-### Comprehensive Vendor Management 
-- Create and maintain a database of third-party contractors and vendors
-- Track vendor performance, specialties, and availability
-- Assign tasks based on vendor expertise and workload
-- Maintain communication history and project outcomes
-- Set different access levels and permissions for various vendor types
+- **Framework**: Next.js 14 (React 18)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **HTTP Client**: Axios
+- **Icons**: Lucide React
+- **Forms**: React Hook Form + Zod
+- **State Management**: React Query (TanStack Query)
 
-### Client Resource Integration
-- Attach permanent client resources that automatically sync with related tasks
-- Store and version control brand guides, style sheets, and other reference materials
-- Ensure contractors always have access to the latest client requirements
-- Organize resources by client, project type, or department
-- Control access and sharing permissions for sensitive materials
+## 📦 Installation
 
-### Advanced Deadline Management
-- Set flexible or strict deadlines for task completion
-- Automated enforcement of deadline restrictions
-- Block submissions after deadline expiration for time-sensitive projects
-- Configure grace periods and extension requests
-- Receive notifications for approaching deadlines
-
-### Project Oversight
-- Real-time progress tracking and status updates
-- Customizable approval workflows
-- Quality control checkpoints
-- Revision management and version control
-- Detailed audit trails of all project activities
-
-## 💡 Use Cases
-
-### Marketing Agencies
-- Manage multiple contractors for content creation
-- Maintain consistent brand guidelines across projects
-- Track deliverables and deadlines for campaigns
-- Streamline review and approval processes
-
-### Creative Services
-- Coordinate with freelance designers and artists
-- Maintain project specifications and requirements
-- Ensure consistent quality across deliverables
-- Manage revisions and feedback cycles
-
-### Business Operations
-- Standardize vendor onboarding and management
-- Track vendor performance and compliance
-- Maintain audit trails for all external work
-- Ensure consistent service delivery
-
-## 🚀 Installation & Setup
-
-### Database Configuration Instructions
-Follow the steps below to configure the database for the project:
-
-1. **Download the SQL File**
-   - Download the taskmanagement.sql file provided with the project.
-    
-2. **Create a New Database in phpMyAdmin**
-   - Open phpMyAdmin.
-   - Create a new database. You can name the database anything you prefer.
-  
-3. **Import the SQL File**
-   - Select the new database you just created.
-   - Click on the Import tab in phpMyAdmin.
-   - Upload the taskmanagement.sql file and execute the import process.
-
-4. **Configure Environment File**
-   - Open the .env file in the project root directory.
-   - Update the database credentials to match your new database configuration. Example:
-
+1. **Install dependencies:**
+   ```bash
+   npm install
    ```
-   DB_CONNECTION=mysql
-   DB_HOST=localhost
-   DB_PORT=3306
-   DB_DATABASE=task_management
-   DB_USERNAME=root
-   DB_PASSWORD=
+
+2. **Start development server:**
+   ```bash
+   npm run dev
    ```
-   
-   - Replace DB_DATABASE with the name of your database.
-   - Update DB_USERNAME and DB_PASSWORD according to your phpMyAdmin credentials.
+
+3. **Open your browser:**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 🔐 Authentication
+
+The frontend connects to the Laravel API backend. Demo credentials:
+
+- **Email**: admin@admin.com
+- **Password**: admin123
+
+## 📁 Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── dashboard/         # Dashboard page
+│   ├── login/            # Login page
+│   └── page.tsx          # Home page (redirects)
+├── lib/                   # Utility libraries
+│   ├── api.ts            # API configuration
+│   └── utils.ts          # Helper functions
+└── types/                 # TypeScript type definitions
+    └── index.ts          # All application types
+```
+
+## 🎨 Design System
+
+- **Colors**: Blue/Indigo gradient theme
+- **Typography**: Modern, clean fonts
+- **Components**: Consistent design patterns
+- **Spacing**: Tailwind's spacing scale
+- **Shadows**: Subtle, modern shadows
+
+## 🔧 Development
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+
+### API Integration
+
+The frontend is fully integrated with the Laravel API backend:
+
+- **Base URL**: https://vc.themastermind.com.au/api/v1
+- **Authentication**: JWT Bearer tokens
+- **Error Handling**: Automatic token refresh and logout
+- **Type Safety**: Full TypeScript types for all API responses
+
+## 🚀 Deployment
+
+The frontend can be deployed to:
+
+- **Vercel** (recommended for Next.js)
+- **Netlify**
+- **AWS Amplify**
+- **Any static hosting service**
+
+### Environment Variables
+
+Create a `.env.local` file:
+
+```env
+NEXT_PUBLIC_API_URL=https://vc.themastermind.com.au/api/v1
+```
+
+## 📱 Responsive Design
+
+The application is fully responsive and works on:
+
+- **Desktop**: Full-featured dashboard
+- **Tablet**: Optimized layout
+- **Mobile**: Touch-friendly interface
+
+## 🎯 Next Steps
+
+Future enhancements planned:
+
+- [ ] Task management pages
+- [ ] User management
+- [ ] Client management
+- [ ] Project management
+- [ ] Real-time notifications
+- [ ] Dark mode
+- [ ] Advanced filtering
+- [ ] Data export
+- [ ] Mobile app (React Native)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is proprietary software.
+
+---
+
+Built with ❤️ using Next.js 14, TypeScript, and Tailwind CSS
