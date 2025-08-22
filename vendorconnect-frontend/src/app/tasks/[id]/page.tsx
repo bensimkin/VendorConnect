@@ -46,6 +46,24 @@ interface TaskDetail {
   updated_at: string;
   tags?: Array<{ id: number; name: string }>;
   note?: string;
+  template?: {
+    id: number;
+    template_name: string;
+  };
+}
+
+interface TemplateQuestion {
+  id: number;
+  question_text: string;
+  question_type: 'text' | 'textarea' | 'select' | 'checkbox' | 'radio';
+  options?: string[];
+}
+
+interface QuestionAnswer {
+  id: number;
+  question_id: number;
+  question_answer: string;
+  briefQuestions: TemplateQuestion;
 }
 
 export default function TaskDetailPage() {
@@ -55,6 +73,10 @@ export default function TaskDetailPage() {
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [templateQuestions, setTemplateQuestions] = useState<TemplateQuestion[]>([]);
+  const [questionAnswers, setQuestionAnswers] = useState<QuestionAnswer[]>([]);
+  const [checklistItems, setChecklistItems] = useState<string[]>([]);
+  const [checklistCompleted, setChecklistCompleted] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     if (params.id) {
@@ -65,7 +87,52 @@ export default function TaskDetailPage() {
   const fetchTaskDetail = async (id: string) => {
     try {
       const response = await apiClient.get(`/tasks/${id}`);
-      setTask(response.data.data);
+      const taskData = response.data.data;
+      setTask(taskData);
+
+      // Load template questions and answers if template exists
+      if (taskData.template?.id) {
+        try {
+          const [questionsRes, answersRes, checklistRes, checklistStatusRes] = await Promise.all([
+            apiClient.get(`/task-brief-questions?template_id=${taskData.template.id}`),
+            apiClient.get(`/tasks/${id}/question-answers`),
+            apiClient.get(`/task-brief-checklists?template_id=${taskData.template.id}`),
+            apiClient.get(`/tasks/${id}/checklist-status`),
+          ]);
+
+          const questions = questionsRes.data.data?.data || questionsRes.data.data || [];
+          setTemplateQuestions(questions);
+
+          const answers = answersRes.data.data?.data || answersRes.data.data || [];
+          setQuestionAnswers(answers);
+
+          // Load checklist
+          const checklistData = checklistRes.data.data?.data || checklistRes.data.data || [];
+          if (checklistData.length > 0 && checklistData[0].checklist) {
+            const checklist = checklistData[0].checklist;
+            if (Array.isArray(checklist)) {
+              setChecklistItems(checklist);
+            } else if (typeof checklist === 'string') {
+              try {
+                const parsed = JSON.parse(checklist);
+                setChecklistItems(Array.isArray(parsed) ? parsed : [checklist]);
+              } catch {
+                setChecklistItems([checklist]);
+              }
+            }
+          }
+
+          // Load checklist completion status
+          const checklistStatus = checklistStatusRes.data.data?.data || checklistStatusRes.data.data || [];
+          const completedMap: Record<number, boolean> = {};
+          checklistStatus.forEach((item: any) => {
+            completedMap[item.item_index] = item.completed;
+          });
+          setChecklistCompleted(completedMap);
+        } catch (error) {
+          console.error('Failed to load template data:', error);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch task details:', error);
       toast.error('Failed to load task details');
@@ -220,6 +287,56 @@ export default function TaskDetailPage() {
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                     {task.note}
                   </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Template Questions */}
+            {templateQuestions.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Template Questions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {templateQuestions.map((question) => {
+                    const answer = questionAnswers.find(a => a.question_id === question.id);
+                    return (
+                      <div key={question.id} className="space-y-2">
+                        <p className="font-medium text-sm">{question.question_text}</p>
+                        <div className="text-sm text-muted-foreground">
+                          {answer ? (
+                            <span>{answer.question_answer}</span>
+                          ) : (
+                            <span className="italic">No answer provided</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Checklist */}
+            {checklistItems.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Checklist</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {checklistItems.map((item, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={checklistCompleted[index] || false}
+                        disabled
+                        className="mr-2"
+                      />
+                      <span className={checklistCompleted[index] ? 'line-through text-muted-foreground' : ''}>
+                        {item}
+                      </span>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             )}
