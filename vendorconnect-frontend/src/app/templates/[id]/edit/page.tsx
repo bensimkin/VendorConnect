@@ -28,7 +28,7 @@ interface Question {
   id?: number;
   task_brief_templates_id?: number;
   question_text: string;
-  question_type: 'text' | 'textarea' | 'select' | 'checkbox';
+  question_type: 'text' | 'textarea' | 'select' | 'checkbox' | 'radio';
   order?: number;
 }
 
@@ -355,6 +355,7 @@ export default function EditTemplatePage() {
                           <option value="textarea">Long Text</option>
                           <option value="select">Dropdown</option>
                           <option value="checkbox">Checkbox</option>
+                          <option value="radio">Radio Buttons</option>
                         </select>
                       </div>
                     </div>
