@@ -26,16 +26,17 @@ interface Template {
 
 interface Question {
   id?: number;
-  question: string;
-  type: 'text' | 'textarea' | 'select' | 'checkbox';
-  required: boolean;
-  order: number;
+  task_brief_templates_id?: number;
+  question_text: string;
+  question_type: 'text' | 'textarea' | 'select' | 'checkbox';
+  order?: number;
 }
 
 interface ChecklistItem {
   id?: number;
-  item: string;
-  order: number;
+  task_brief_templates_id?: number;
+  checklist: string | string[];
+  order?: number;
 }
 
 export default function EditTemplatePage() {
@@ -52,9 +53,10 @@ export default function EditTemplatePage() {
     task_type_id: '',
   });
   
-  // For future enhancement - questions and checklists
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
+  const [checklistItems, setChecklistItems] = useState<string[]>([]);
+  const [savingQuestions, setSavingQuestions] = useState(false);
+  const [savingChecklist, setSavingChecklist] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -62,9 +64,11 @@ export default function EditTemplatePage() {
 
   const fetchData = async () => {
     try {
-      const [templateRes, taskTypesRes] = await Promise.all([
+      const [templateRes, taskTypesRes, questionsRes, checklistRes] = await Promise.all([
         apiClient.get(`/task-brief-templates/${templateId}`),
         apiClient.get('/task-types'),
+        apiClient.get(`/task-brief-questions?template_id=${templateId}`),
+        apiClient.get(`/task-brief-checklists?template_id=${templateId}`),
       ]);
 
       const templateData = templateRes.data.data;
@@ -77,7 +81,26 @@ export default function EditTemplatePage() {
       const types = taskTypesRes.data.data || [];
       setTaskTypes(types);
       
-      // TODO: Fetch questions and checklist items when APIs are available
+      // Load existing questions
+      const questionsData = questionsRes.data.data?.data || questionsRes.data.data || [];
+      setQuestions(questionsData);
+      
+      // Load existing checklist
+      const checklistData = checklistRes.data.data?.data || checklistRes.data.data || [];
+      if (checklistData.length > 0 && checklistData[0].checklist) {
+        // Handle both array and string formats
+        const checklist = checklistData[0].checklist;
+        if (Array.isArray(checklist)) {
+          setChecklistItems(checklist);
+        } else if (typeof checklist === 'string') {
+          try {
+            const parsed = JSON.parse(checklist);
+            setChecklistItems(Array.isArray(parsed) ? parsed : [checklist]);
+          } catch {
+            setChecklistItems([checklist]);
+          }
+        }
+      }
       
     } catch (error) {
       console.error('Failed to fetch template data:', error);
@@ -110,7 +133,6 @@ export default function EditTemplatePage() {
 
       await apiClient.put(`/task-brief-templates/${templateId}`, payload);
       toast.success('Template updated successfully');
-      router.push('/templates');
     } catch (error: any) {
       console.error('Failed to update template:', error);
       toast.error(error.response?.data?.message || 'Failed to update template');
@@ -123,10 +145,9 @@ export default function EditTemplatePage() {
     setQuestions([
       ...questions,
       {
-        question: '',
-        type: 'text',
-        required: false,
-        order: questions.length,
+        question_text: '',
+        question_type: 'text',
+        task_brief_templates_id: parseInt(templateId),
       },
     ]);
   };
@@ -137,28 +158,89 @@ export default function EditTemplatePage() {
     ));
   };
 
-  const removeQuestion = (index: number) => {
+  const removeQuestion = async (index: number) => {
+    const question = questions[index];
+    if (question.id) {
+      try {
+        await apiClient.delete(`/task-brief-questions/${question.id}`);
+        toast.success('Question deleted successfully');
+      } catch (error) {
+        toast.error('Failed to delete question');
+        return;
+      }
+    }
     setQuestions(questions.filter((_, i) => i !== index));
   };
 
-  const addChecklistItem = () => {
-    setChecklistItems([
-      ...checklistItems,
-      {
-        item: '',
-        order: checklistItems.length,
-      },
-    ]);
+  const saveQuestions = async () => {
+    setSavingQuestions(true);
+    try {
+      for (const question of questions) {
+        if (!question.question_text.trim()) continue;
+        
+        const payload = {
+          task_brief_templates_id: parseInt(templateId),
+          question_text: question.question_text,
+          question_type: question.question_type,
+        };
+
+        if (question.id) {
+          await apiClient.put(`/task-brief-questions/${question.id}`, payload);
+        } else {
+          await apiClient.post('/task-brief-questions', payload);
+        }
+      }
+      toast.success('Questions saved successfully');
+      fetchData(); // Reload to get updated IDs
+    } catch (error: any) {
+      console.error('Failed to save questions:', error);
+      toast.error('Failed to save questions');
+    } finally {
+      setSavingQuestions(false);
+    }
   };
 
-  const updateChecklistItem = (index: number, item: string) => {
-    setChecklistItems(checklistItems.map((c, i) => 
-      i === index ? { ...c, item } : c
+  const addChecklistItem = () => {
+    setChecklistItems([...checklistItems, '']);
+  };
+
+  const updateChecklistItem = (index: number, value: string) => {
+    setChecklistItems(checklistItems.map((item, i) => 
+      i === index ? value : item
     ));
   };
 
   const removeChecklistItem = (index: number) => {
     setChecklistItems(checklistItems.filter((_, i) => i !== index));
+  };
+
+  const saveChecklist = async () => {
+    setSavingChecklist(true);
+    try {
+      const filteredItems = checklistItems.filter(item => item.trim());
+      
+      // First check if a checklist already exists
+      const existingRes = await apiClient.get(`/task-brief-checklists?template_id=${templateId}`);
+      const existing = existingRes.data.data?.data?.[0] || existingRes.data.data?.[0];
+      
+      const payload = {
+        task_brief_templates_id: parseInt(templateId),
+        checklist: filteredItems,
+      };
+
+      if (existing?.id) {
+        await apiClient.put(`/task-brief-checklists/${existing.id}`, payload);
+      } else {
+        await apiClient.post('/task-brief-checklists', payload);
+      }
+      
+      toast.success('Checklist saved successfully');
+    } catch (error: any) {
+      console.error('Failed to save checklist:', error);
+      toast.error('Failed to save checklist');
+    } finally {
+      setSavingChecklist(false);
+    }
   };
 
   if (loading) {
@@ -231,154 +313,150 @@ export default function EditTemplatePage() {
                   ))}
                 </select>
               </div>
+
+              <Button type="submit" disabled={saving}>
+                {saving ? 'Saving...' : 'Save Template Details'}
+              </Button>
             </CardContent>
           </Card>
+        </form>
 
-          {/* Questions Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Template Questions</CardTitle>
-              <CardDescription>
-                Questions to ask when creating a task from this template
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {questions.length > 0 ? (
-                <div className="space-y-3">
-                  {questions.map((question, index) => (
-                    <div key={index} className="flex gap-2 items-start p-3 border rounded-lg">
-                      <GripVertical className="h-5 w-5 text-muted-foreground mt-2 cursor-move" />
-                      <div className="flex-1 space-y-2">
-                        <Input
-                          placeholder="Question text"
-                          value={question.question}
-                          onChange={(e) => updateQuestion(index, { question: e.target.value })}
-                        />
-                        <div className="flex gap-2">
-                          <select
-                            value={question.type}
-                            onChange={(e) => updateQuestion(index, { type: e.target.value as Question['type'] })}
-                            className="px-2 py-1 border rounded text-sm"
-                          >
-                            <option value="text">Short Text</option>
-                            <option value="textarea">Long Text</option>
-                            <option value="select">Dropdown</option>
-                            <option value="checkbox">Checkbox</option>
-                          </select>
-                          <label className="flex items-center gap-1 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={question.required}
-                              onChange={(e) => updateQuestion(index, { required: e.target.checked })}
-                            />
-                            Required
-                          </label>
-                        </div>
+        {/* Questions Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Template Questions</CardTitle>
+            <CardDescription>
+              Questions to ask when creating a task from this template
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {questions.length > 0 ? (
+              <div className="space-y-3">
+                {questions.map((question, index) => (
+                  <div key={index} className="flex gap-2 items-start p-3 border rounded-lg">
+                    <GripVertical className="h-5 w-5 text-muted-foreground mt-2 cursor-move" />
+                    <div className="flex-1 space-y-2">
+                      <Input
+                        placeholder="Question text"
+                        value={question.question_text}
+                        onChange={(e) => updateQuestion(index, { question_text: e.target.value })}
+                      />
+                      <div className="flex gap-2">
+                        <select
+                          value={question.question_type}
+                          onChange={(e) => updateQuestion(index, { question_type: e.target.value as Question['question_type'] })}
+                          className="px-2 py-1 border rounded text-sm"
+                        >
+                          <option value="text">Short Text</option>
+                          <option value="textarea">Long Text</option>
+                          <option value="select">Dropdown</option>
+                          <option value="checkbox">Checkbox</option>
+                        </select>
                       </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => removeQuestion(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No questions added yet
-                </p>
-              )}
-              
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => removeQuestion(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No questions added yet
+              </p>
+            )}
+            
+            <div className="flex gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={addQuestion}
-                className="w-full"
-                disabled
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Question (Coming Soon)
+                Add Question
               </Button>
-            </CardContent>
-          </Card>
-
-          {/* Checklist Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Template Checklist</CardTitle>
-              <CardDescription>
-                Default checklist items for tasks created from this template
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {checklistItems.length > 0 ? (
-                <div className="space-y-2">
-                  {checklistItems.map((item, index) => (
-                    <div key={index} className="flex gap-2 items-center">
-                      <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
-                      <Input
-                        placeholder="Checklist item"
-                        value={item.item}
-                        onChange={(e) => updateChecklistItem(index, e.target.value)}
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => removeChecklistItem(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No checklist items added yet
-                </p>
+              {questions.length > 0 && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={saveQuestions}
+                  disabled={savingQuestions}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {savingQuestions ? 'Saving...' : 'Save Questions'}
+                </Button>
               )}
-              
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Checklist Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Template Checklist</CardTitle>
+            <CardDescription>
+              Default checklist items for tasks created from this template
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {checklistItems.length > 0 ? (
+              <div className="space-y-2">
+                {checklistItems.map((item, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
+                    <Input
+                      placeholder="Checklist item"
+                      value={item}
+                      onChange={(e) => updateChecklistItem(index, e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => removeChecklistItem(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No checklist items added yet
+              </p>
+            )}
+            
+            <div className="flex gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={addChecklistItem}
-                className="w-full"
-                disabled
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Checklist Item (Coming Soon)
+                Add Checklist Item
               </Button>
-            </CardContent>
-          </Card>
-
-          {/* Actions */}
-          <div className="flex justify-end gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push('/templates')}
-              disabled={saving}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? (
-                <>Saving...</>
-              ) : (
-                <>
+              {checklistItems.length > 0 && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={saveChecklist}
+                  disabled={savingChecklist}
+                >
                   <Save className="h-4 w-4 mr-2" />
-                  Save Changes
-                </>
+                  {savingChecklist ? 'Saving...' : 'Save Checklist'}
+                </Button>
               )}
-            </Button>
-          </div>
-        </form>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );

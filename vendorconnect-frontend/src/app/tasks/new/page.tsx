@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import apiClient from '@/lib/api-client';
 import { toast } from 'react-hot-toast';
-import { ArrowLeft, Save, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, Save, Calendar, FileText, HelpCircle, CheckSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Status {
@@ -36,6 +36,17 @@ interface Template {
   task_type_id: number;
 }
 
+interface TemplateQuestion {
+  id: number;
+  question_text: string;
+  question_type: string;
+}
+
+interface TemplateChecklist {
+  id: number;
+  checklist: string | string[];
+}
+
 export default function NewTaskPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -44,6 +55,9 @@ export default function NewTaskPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [templateQuestions, setTemplateQuestions] = useState<TemplateQuestion[]>([]);
+  const [templateChecklist, setTemplateChecklist] = useState<string[]>([]);
+  const [questionAnswers, setQuestionAnswers] = useState<Record<number, string>>({});
   
   const [formData, setFormData] = useState({
     title: '',
@@ -91,8 +105,13 @@ export default function NewTaskPage() {
     
     if (templateId) {
       try {
-        const response = await apiClient.get(`/task-brief-templates/${templateId}`);
-        const template = response.data.data;
+        const [templateRes, questionsRes, checklistRes] = await Promise.all([
+          apiClient.get(`/task-brief-templates/${templateId}`),
+          apiClient.get(`/task-brief-questions?template_id=${templateId}`),
+          apiClient.get(`/task-brief-checklists?template_id=${templateId}`),
+        ]);
+        
+        const template = templateRes.data.data;
         
         // Pre-fill form with template data
         if (template.template_name) {
@@ -102,11 +121,39 @@ export default function NewTaskPage() {
           }));
         }
         
+        // Load questions
+        const questions = questionsRes.data.data?.data || questionsRes.data.data || [];
+        setTemplateQuestions(questions);
+        setQuestionAnswers({});
+        
+        // Load checklist
+        const checklistData = checklistRes.data.data?.data || checklistRes.data.data || [];
+        if (checklistData.length > 0 && checklistData[0].checklist) {
+          const checklist = checklistData[0].checklist;
+          if (Array.isArray(checklist)) {
+            setTemplateChecklist(checklist);
+          } else if (typeof checklist === 'string') {
+            try {
+              const parsed = JSON.parse(checklist);
+              setTemplateChecklist(Array.isArray(parsed) ? parsed : [checklist]);
+            } catch {
+              setTemplateChecklist([checklist]);
+            }
+          }
+        } else {
+          setTemplateChecklist([]);
+        }
+        
         toast.success('Template loaded successfully');
       } catch (error) {
         console.error('Failed to load template:', error);
         toast.error('Failed to load template details');
       }
+    } else {
+      // Clear template data when no template is selected
+      setTemplateQuestions([]);
+      setTemplateChecklist([]);
+      setQuestionAnswers({});
     }
   };
 
@@ -299,6 +346,75 @@ export default function NewTaskPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Template Questions */}
+          {templateQuestions.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <HelpCircle className="h-5 w-5" />
+                  <CardTitle>Template Questions</CardTitle>
+                </div>
+                <CardDescription>Please answer the following questions</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {templateQuestions.map((question) => (
+                  <div key={question.id} className="space-y-2">
+                    <Label>{question.question_text}</Label>
+                    {question.question_type === 'textarea' ? (
+                      <Textarea
+                        value={questionAnswers[question.id] || ''}
+                        onChange={(e) => setQuestionAnswers({
+                          ...questionAnswers,
+                          [question.id]: e.target.value
+                        })}
+                        rows={3}
+                      />
+                    ) : (
+                      <Input
+                        type={question.question_type === 'checkbox' ? 'checkbox' : 'text'}
+                        value={questionAnswers[question.id] || ''}
+                        onChange={(e) => setQuestionAnswers({
+                          ...questionAnswers,
+                          [question.id]: question.question_type === 'checkbox' 
+                            ? e.target.checked ? 'Yes' : 'No'
+                            : e.target.value
+                        })}
+                      />
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Template Checklist */}
+          {templateChecklist.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CheckSquare className="h-5 w-5" />
+                  <CardTitle>Task Checklist</CardTitle>
+                </div>
+                <CardDescription>This task will include the following checklist items</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 text-sm">
+                  {templateChecklist.map((item, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="w-4 h-4 border rounded flex items-center justify-center">
+                        <CheckSquare className="h-3 w-3 text-muted-foreground" />
+                      </div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-4">
+                  These items will be added to the task and can be checked off as completed.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
