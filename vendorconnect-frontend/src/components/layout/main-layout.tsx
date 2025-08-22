@@ -186,11 +186,17 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
 
-        <main className="py-8">
+        <main className="py-8 pb-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {children}
           </div>
         </main>
+        
+        <footer className="absolute bottom-0 left-0 right-0 border-t bg-white dark:bg-gray-800 px-6 py-3">
+          <div className="text-center text-xs text-muted-foreground">
+            Copyright © 2025 BUSINESSNET PTY LTD. All rights reserved.
+          </div>
+        </footer>
       </div>
     </div>
   );

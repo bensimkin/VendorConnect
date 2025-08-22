@@ -26,7 +26,7 @@ class TaskBriefChecklistController extends BaseController
             }
 
             if ($request->has('template_id')) {
-                $query->where('template_id', $request->template_id);
+                $query->where('task_brief_templates_id', $request->template_id);
             }
 
             // Apply sorting
