@@ -26,6 +26,7 @@ import { useTheme } from 'next-themes';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare },
+  { name: 'Templates', href: '/templates', icon: FileText },
   { name: 'Users', href: '/users', icon: Users },
   { name: 'Clients', href: '/clients', icon: Building2 },
   { name: 'Projects', href: '/projects', icon: FolderOpen },
