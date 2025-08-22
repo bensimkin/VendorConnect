@@ -14,7 +14,7 @@ import { ArrowLeft, Save, FileText, Plus, Trash2, GripVertical } from 'lucide-re
 
 interface TaskType {
   id: number;
-  name: string;
+  task_type: string;
 }
 
 interface Template {
@@ -226,7 +226,7 @@ export default function EditTemplatePage() {
                   <option value="">Select a task type</option>
                   {taskTypes.map((type) => (
                     <option key={type.id} value={type.id}>
-                      {type.name}
+                      {type.task_type}
                     </option>
                   ))}
                 </select>
