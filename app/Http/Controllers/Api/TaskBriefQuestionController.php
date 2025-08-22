@@ -76,7 +76,7 @@ class TaskBriefQuestionController extends BaseController
     public function show($id)
     {
         try {
-            $question = TaskBriefQuestion::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $question = TaskBriefQuestion::find($id);
 
             if (!$question) {
                 return $this->sendNotFound('Task brief question not found');
@@ -94,7 +94,7 @@ class TaskBriefQuestionController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $question = TaskBriefQuestion::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $question = TaskBriefQuestion::find($id);
 
             if (!$question) {
                 return $this->sendNotFound('Task brief question not found');
@@ -133,7 +133,7 @@ class TaskBriefQuestionController extends BaseController
     public function destroy($id)
     {
         try {
-            $question = TaskBriefQuestion::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $question = TaskBriefQuestion::find($id);
 
             if (!$question) {
                 return $this->sendNotFound('Task brief question not found');
