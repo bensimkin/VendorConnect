@@ -12,25 +12,26 @@ import { format } from 'date-fns';
 interface Task {
   id: number;
   title: string;
-  description: string;
-  status: {
+  description?: string;
+  status?: {
     id: number;
     name: string;
-    color: string;
+    color?: string;
   };
-  priority: {
+  priority?: {
     id: number;
     name: string;
-    color: string;
+    color?: string;
   };
-  assigned_to: {
+  users?: Array<{
     id: number;
     first_name: string;
     last_name: string;
-  };
-  due_date: string;
+  }>;
+  start_date?: string;
+  end_date?: string;
   created_at: string;
-  tags: { id: number; name: string }[];
+  tags?: Array<{ id: number; name: string }>;
 }
 
 export default function TasksPage() {
@@ -46,16 +47,21 @@ export default function TasksPage() {
   const fetchTasks = async () => {
     try {
       const response = await apiClient.get('/tasks');
-      setTasks(response.data.data);
+      // Handle paginated response
+      const taskData = response.data.data?.data || response.data.data || [];
+      setTasks(Array.isArray(taskData) ? taskData : []);
     } catch (error) {
       console.error('Failed to fetch tasks:', error);
+      setTasks([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
+  const getStatusIcon = (statusName?: string) => {
+    if (!statusName) return <Clock className="h-4 w-4 text-gray-500" />;
+    
+    switch (statusName.toLowerCase()) {
       case 'completed':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'in progress':
@@ -68,11 +74,29 @@ export default function TasksPage() {
   };
 
   const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || task.status.name === selectedStatus;
+    const matchesSearch = 
+      (task.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (task.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = 
+      selectedStatus === 'all' || 
+      task.status?.name === selectedStatus;
+    
     return matchesSearch && matchesStatus;
   });
+
+  const getStatusColor = (color?: string) => {
+    return color || '#6b7280'; // Default gray color
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'No date set';
+    try {
+      return format(new Date(dateString), 'MMM dd, yyyy');
+    } catch {
+      return 'Invalid date';
+    }
+  };
 
   if (loading) {
     return (
@@ -123,67 +147,96 @@ export default function TasksPage() {
         </Card>
 
         {/* Tasks Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredTasks.map((task) => (
-            <Card key={task.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg">{task.title}</CardTitle>
-                    <CardDescription className="line-clamp-2">{task.description}</CardDescription>
-                  </div>
-                  {getStatusIcon(task.status.name)}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span>{task.assigned_to.first_name} {task.assigned_to.last_name}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>Due {format(new Date(task.due_date), 'MMM dd, yyyy')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="px-2 py-1 text-xs rounded-full"
-                      style={{
-                        backgroundColor: task.priority.color + '20',
-                        color: task.priority.color,
-                      }}
-                    >
-                      {task.priority.name}
-                    </span>
-                    <span
-                      className="px-2 py-1 text-xs rounded-full"
-                      style={{
-                        backgroundColor: task.status.color + '20',
-                        color: task.status.color,
-                      }}
-                    >
-                      {task.status.name}
-                    </span>
-                  </div>
-                  {task.tags.length > 0 && (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Tag className="h-3 w-3 text-muted-foreground" />
-                      {task.tags.map((tag) => (
-                        <span key={tag.id} className="text-xs text-muted-foreground">
-                          {tag.name}
-                        </span>
-                      ))}
+        {filteredTasks.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {filteredTasks.map((task) => (
+              <Card key={task.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1 flex-1">
+                      <CardTitle className="text-lg line-clamp-2">
+                        {task.title || 'Untitled Task'}
+                      </CardTitle>
+                      {task.description && (
+                        <CardDescription className="line-clamp-2">
+                          {task.description}
+                        </CardDescription>
+                      )}
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {filteredTasks.length === 0 && (
+                    {getStatusIcon(task.status?.name)}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {/* Assigned Users */}
+                    {task.users && task.users.length > 0 && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="truncate">
+                          {task.users.map(user => 
+                            `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown User'
+                          ).join(', ')}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Due Date */}
+                    {task.end_date && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span>Due {formatDate(task.end_date)}</span>
+                      </div>
+                    )}
+                    
+                    {/* Priority and Status */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {task.priority && (
+                        <span
+                          className="px-2 py-1 text-xs rounded-full"
+                          style={{
+                            backgroundColor: `${getStatusColor(task.priority.color)}20`,
+                            color: getStatusColor(task.priority.color),
+                          }}
+                        >
+                          {task.priority.name || 'No Priority'}
+                        </span>
+                      )}
+                      {task.status && (
+                        <span
+                          className="px-2 py-1 text-xs rounded-full"
+                          style={{
+                            backgroundColor: `${getStatusColor(task.status.color)}20`,
+                            color: getStatusColor(task.status.color),
+                          }}
+                        >
+                          {task.status.name || 'No Status'}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Tags */}
+                    {task.tags && task.tags.length > 0 && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Tag className="h-3 w-3 text-muted-foreground" />
+                        {task.tags.map((tag) => (
+                          <span key={tag.id} className="text-xs text-muted-foreground">
+                            {tag.name || 'Unnamed Tag'}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No tasks found matching your criteria.</p>
+            <p className="text-muted-foreground">
+              {searchTerm || selectedStatus !== 'all' 
+                ? 'No tasks found matching your criteria.' 
+                : 'No tasks available. Create your first task to get started!'}
+            </p>
           </div>
         )}
       </div>
