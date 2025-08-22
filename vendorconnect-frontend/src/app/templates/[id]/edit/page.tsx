@@ -232,7 +232,6 @@ export default function EditTemplatePage() {
         const payload = {
           template_id: parseInt(templateId),
           item: filteredItems[i],
-          order: i,
         };
         await apiClient.post('/task-brief-checklists', payload);
       }
