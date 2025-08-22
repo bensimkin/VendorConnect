@@ -12,14 +12,14 @@ import { format } from 'date-fns';
 interface Client {
   id: number;
   name: string;
-  email: string;
-  phone: string;
-  address: string;
-  company: string;
-  status: number;
+  email?: string;
+  phone?: string;
+  address?: string;
+  company?: string;
+  status?: number;
   created_at: string;
-  projects_count: number;
-  active_projects: number;
+  projects_count?: number;
+  active_projects?: number;
 }
 
 export default function ClientsPage() {
@@ -34,9 +34,12 @@ export default function ClientsPage() {
   const fetchClients = async () => {
     try {
       const response = await apiClient.get('/clients');
-      setClients(response.data.data);
+      // Handle paginated response
+      const clientData = response.data.data?.data || response.data.data || [];
+      setClients(Array.isArray(clientData) ? clientData : []);
     } catch (error) {
       console.error('Failed to fetch clients:', error);
+      setClients([]);
     } finally {
       setLoading(false);
     }
@@ -45,9 +48,9 @@ export default function ClientsPage() {
   const filteredClients = clients.filter(client => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      client.name.toLowerCase().includes(searchLower) ||
-      client.email.toLowerCase().includes(searchLower) ||
-      client.company?.toLowerCase().includes(searchLower)
+      (client.name?.toLowerCase() || '').includes(searchLower) ||
+      (client.email?.toLowerCase() || '').includes(searchLower) ||
+      (client.company?.toLowerCase() || '').includes(searchLower)
     );
   });
 
@@ -94,78 +97,82 @@ export default function ClientsPage() {
         </Card>
 
         {/* Clients Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredClients.map((client) => (
-            <Card key={client.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-xl">{client.name}</CardTitle>
-                    {client.company && (
-                      <CardDescription className="flex items-center mt-1">
-                        <Building className="mr-1 h-3 w-3" />
-                        {client.company}
-                      </CardDescription>
+        {filteredClients.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredClients.map((client) => (
+              <Card key={client.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-xl">{client.name || 'Unnamed Client'}</CardTitle>
+                      {client.company && (
+                        <CardDescription className="flex items-center mt-1">
+                          <Building className="mr-1 h-3 w-3" />
+                          {client.company}
+                        </CardDescription>
+                      )}
+                    </div>
+                    <div
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        client.status === 1
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                      }`}
+                    >
+                      {client.status === 1 ? 'Active' : 'Inactive'}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2 text-sm">
+                    {client.email && (
+                      <div className="flex items-center text-muted-foreground">
+                        <Mail className="mr-2 h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">{client.email}</span>
+                      </div>
                     )}
-                  </div>
-                  <div
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      client.status === 1
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                    }`}
-                  >
-                    {client.status === 1 ? 'Active' : 'Inactive'}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center text-muted-foreground">
-                    <Mail className="mr-2 h-4 w-4 flex-shrink-0" />
-                    <span className="truncate">{client.email}</span>
-                  </div>
-                  {client.phone && (
-                    <div className="flex items-center text-muted-foreground">
-                      <Phone className="mr-2 h-4 w-4 flex-shrink-0" />
-                      <span>{client.phone}</span>
-                    </div>
-                  )}
-                  {client.address && (
-                    <div className="flex items-center text-muted-foreground">
-                      <MapPin className="mr-2 h-4 w-4 flex-shrink-0" />
-                      <span className="truncate">{client.address}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="flex items-center space-x-4 text-sm">
-                    <div className="flex items-center">
-                      <Briefcase className="mr-1 h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{client.projects_count || 0}</span>
-                      <span className="text-muted-foreground ml-1">projects</span>
-                    </div>
-                    {client.active_projects > 0 && (
-                      <div className="text-green-600 dark:text-green-400">
-                        {client.active_projects} active
+                    {client.phone && (
+                      <div className="flex items-center text-muted-foreground">
+                        <Phone className="mr-2 h-4 w-4 flex-shrink-0" />
+                        <span>{client.phone}</span>
+                      </div>
+                    )}
+                    {client.address && (
+                      <div className="flex items-center text-muted-foreground">
+                        <MapPin className="mr-2 h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">{client.address}</span>
                       </div>
                     )}
                   </div>
-                </div>
 
-                <div className="flex items-center text-xs text-muted-foreground">
-                  <Calendar className="mr-1 h-3 w-3" />
-                  Added {format(new Date(client.created_at), 'MMM dd, yyyy')}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <div className="flex items-center space-x-4 text-sm">
+                      <div className="flex items-center">
+                        <Briefcase className="mr-1 h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{client.projects_count || 0}</span>
+                        <span className="text-muted-foreground ml-1">projects</span>
+                      </div>
+                      {(client.active_projects || 0) > 0 && (
+                        <div className="text-green-600 dark:text-green-400">
+                          {client.active_projects} active
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-        {filteredClients.length === 0 && (
+                  <div className="flex items-center text-xs text-muted-foreground">
+                    <Calendar className="mr-1 h-3 w-3" />
+                    Added {format(new Date(client.created_at), 'MMM dd, yyyy')}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No clients found matching your search.</p>
+            <p className="text-muted-foreground">
+              {searchTerm ? 'No clients found matching your search.' : 'No clients available. Create your first client to get started!'}
+            </p>
           </div>
         )}
       </div>
