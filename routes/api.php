@@ -161,6 +161,8 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{id}', [ClientController::class, 'destroy']);
             Route::delete('/', [ClientController::class, 'destroyMultiple']);
             Route::delete('/files/{fileId}', [ClientController::class, 'deleteFile']);
+            Route::get('/{id}/projects', [ClientController::class, 'projects']);
+            Route::get('/{id}/tasks', [ClientController::class, 'tasks']);
         });
         
         // Tags
