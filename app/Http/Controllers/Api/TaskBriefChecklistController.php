@@ -50,7 +50,8 @@ class TaskBriefChecklistController extends BaseController
         try {
             $validator = Validator::make($request->all(), [
                 'template_id' => 'required|exists:task_brief_templates,id',
-                'item' => 'required|string',
+                'checklist' => 'required|array',
+                'checklist.*' => 'required|string',
             ]);
 
             if ($validator->fails()) {
@@ -59,7 +60,7 @@ class TaskBriefChecklistController extends BaseController
 
             $checklist = TaskBriefChecklist::create([
                 'task_brief_templates_id' => $request->template_id,
-                'checklist' => [$request->item],
+                'checklist' => $request->checklist,
             ]);
 
             return $this->sendResponse($checklist, 'Task brief checklist created successfully');
@@ -101,15 +102,16 @@ class TaskBriefChecklistController extends BaseController
 
             $validator = Validator::make($request->all(), [
                 'template_id' => 'sometimes|required|exists:task_brief_templates,id',
-                'item' => 'sometimes|required|string',
+                'checklist' => 'sometimes|required|array',
+                'checklist.*' => 'sometimes|required|string',
             ]);
 
             if ($validator->fails()) {
                 return $this->sendValidationError($validator->errors());
             }
 
-            if ($request->has('item')) {
-                $checklist->checklist = [$request->item];
+            if ($request->has('checklist')) {
+                $checklist->checklist = $request->checklist;
             }
             if ($request->has('template_id')) {
                 $checklist->task_brief_templates_id = $request->template_id;
