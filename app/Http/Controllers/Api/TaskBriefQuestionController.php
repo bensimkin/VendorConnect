@@ -62,8 +62,8 @@ class TaskBriefQuestionController extends BaseController
             }
 
             $question = TaskBriefQuestion::create([
-                'template_id' => $request->template_id,
-                'question' => $request->question,
+                'task_brief_templates_id' => $request->template_id,
+                'question_text' => $request->question,
                 'question_type' => $request->question_type,
                 'options' => $request->options,
                 'required' => $request->get('required', false),
@@ -120,7 +120,16 @@ class TaskBriefQuestionController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $question->update($request->only(['template_id', 'question', 'question_type', 'options', 'required', 'order']));
+            $validated = $request->only(['template_id', 'question', 'question_type', 'options', 'required', 'order']);
+            if (isset($validated['template_id'])) {
+                $validated['task_brief_templates_id'] = $validated['template_id'];
+                unset($validated['template_id']);
+            }
+            if (isset($validated['question'])) {
+                $validated['question_text'] = $validated['question'];
+                unset($validated['question']);
+            }
+            $question->update($validated);
 
             return $this->sendResponse($question, 'Task brief question updated successfully');
         } catch (\Exception $e) {
