@@ -101,7 +101,8 @@ export default function TaskTypesPage() {
       setTaskTypes(taskTypes.filter(type => type.id !== id));
     } catch (error: any) {
       console.error('Failed to delete task type:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete task type. It may be in use by templates.');
+      const message = error.response?.data?.message || error.response?.data?.error || 'Failed to delete task type. It may be in use by tasks or templates.';
+      toast.error(message);
     }
   };
 
