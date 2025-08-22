@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import apiClient from '@/lib/api-client';
 import { toast } from 'react-hot-toast';
-import { ArrowLeft, Save, Calendar } from 'lucide-react';
+import { ArrowLeft, Save, Calendar, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Status {
@@ -30,12 +30,20 @@ interface User {
   email: string;
 }
 
+interface Template {
+  id: number;
+  template_name: string;
+  task_type_id: number;
+}
+
 export default function NewTaskPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [priorities, setPriorities] = useState<Priority[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -53,15 +61,17 @@ export default function NewTaskPage() {
 
   const fetchFormData = async () => {
     try {
-      const [statusRes, priorityRes, userRes] = await Promise.all([
+      const [statusRes, priorityRes, userRes, templateRes] = await Promise.all([
         apiClient.get('/statuses'),
         apiClient.get('/priorities'),
         apiClient.get('/users'),
+        apiClient.get('/task-brief-templates'),
       ]);
 
       setStatuses(statusRes.data.data || []);
       setPriorities(priorityRes.data.data || []);
       setUsers(userRes.data.data?.data || userRes.data.data || []);
+      setTemplates(templateRes.data.data?.data || templateRes.data.data || []);
 
       // Set default values
       if (statusRes.data.data?.length > 0) {
@@ -73,6 +83,30 @@ export default function NewTaskPage() {
     } catch (error) {
       console.error('Failed to fetch form data:', error);
       toast.error('Failed to load form data');
+    }
+  };
+
+  const handleTemplateChange = async (templateId: string) => {
+    setSelectedTemplate(templateId);
+    
+    if (templateId) {
+      try {
+        const response = await apiClient.get(`/task-brief-templates/${templateId}`);
+        const template = response.data.data;
+        
+        // Pre-fill form with template data
+        if (template.template_name) {
+          setFormData(prev => ({
+            ...prev,
+            title: template.template_name,
+          }));
+        }
+        
+        toast.success('Template loaded successfully');
+      } catch (error) {
+        console.error('Failed to load template:', error);
+        toast.error('Failed to load template details');
+      }
     }
   };
 
@@ -136,6 +170,33 @@ export default function NewTaskPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Template Selection */}
+          {templates.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Use Template (Optional)</CardTitle>
+                <CardDescription>Start with a pre-defined template</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <select
+                    value={selectedTemplate}
+                    onChange={(e) => handleTemplateChange(e.target.value)}
+                    className="flex-1 px-3 py-2 border rounded-md bg-background"
+                  >
+                    <option value="">None - Start from scratch</option>
+                    {templates.map((template) => (
+                      <option key={template.id} value={template.id}>
+                        {template.template_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Task Details</CardTitle>
