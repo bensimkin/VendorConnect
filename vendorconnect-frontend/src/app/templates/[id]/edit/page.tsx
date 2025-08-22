@@ -179,8 +179,8 @@ export default function EditTemplatePage() {
         if (!question.question_text.trim()) continue;
         
         const payload = {
-          task_brief_templates_id: parseInt(templateId),
-          question_text: question.question_text,
+          template_id: parseInt(templateId),
+          question: question.question_text,
           question_type: question.question_type,
         };
 
@@ -219,22 +219,26 @@ export default function EditTemplatePage() {
     try {
       const filteredItems = checklistItems.filter(item => item.trim());
       
-      // First check if a checklist already exists
+      // Delete existing checklist items
       const existingRes = await apiClient.get(`/task-brief-checklists?template_id=${templateId}`);
-      const existing = existingRes.data.data?.data?.[0] || existingRes.data.data?.[0];
+      const existingItems = existingRes.data.data?.data || existingRes.data.data || [];
       
-      const payload = {
-        task_brief_templates_id: parseInt(templateId),
-        checklist: filteredItems,
-      };
-
-      if (existing?.id) {
-        await apiClient.put(`/task-brief-checklists/${existing.id}`, payload);
-      } else {
+      for (const item of existingItems) {
+        await apiClient.delete(`/task-brief-checklists/${item.id}`);
+      }
+      
+      // Create new checklist items
+      for (let i = 0; i < filteredItems.length; i++) {
+        const payload = {
+          template_id: parseInt(templateId),
+          item: filteredItems[i],
+          order: i,
+        };
         await apiClient.post('/task-brief-checklists', payload);
       }
       
       toast.success('Checklist saved successfully');
+      fetchData(); // Reload
     } catch (error: any) {
       console.error('Failed to save checklist:', error);
       toast.error('Failed to save checklist');

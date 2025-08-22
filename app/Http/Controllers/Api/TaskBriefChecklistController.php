@@ -61,8 +61,8 @@ class TaskBriefChecklistController extends BaseController
             }
 
             $checklist = TaskBriefChecklist::create([
-                'template_id' => $request->template_id,
-                'item' => $request->item,
+                'task_brief_templates_id' => $request->template_id,
+                'checklist' => [$request->item],
                 'description' => $request->description,
                 'required' => $request->get('required', false),
                 'order' => $request->get('order', 0),
@@ -117,7 +117,13 @@ class TaskBriefChecklistController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $checklist->update($request->only(['template_id', 'item', 'description', 'required', 'order']));
+            if ($request->has('item')) {
+                $checklist->checklist = [$request->item];
+            }
+            if ($request->has('template_id')) {
+                $checklist->task_brief_templates_id = $request->template_id;
+            }
+            $checklist->save();
 
             return $this->sendResponse($checklist, 'Task brief checklist updated successfully');
         } catch (\Exception $e) {
