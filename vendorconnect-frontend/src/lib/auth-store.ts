@@ -36,7 +36,12 @@ export const useAuthStore = create<AuthState>()(
           const response = await apiClient.post('/auth/login', { email, password });
           const { user, token, permissions } = response.data.data;
           
+          // Save to localStorage
           localStorage.setItem('auth_token', token);
+          
+          // Also set as a cookie for middleware
+          document.cookie = `auth_token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+          
           set({ user, token, permissions, isLoading: false });
           
           toast.success('Login successful!');
@@ -53,6 +58,8 @@ export const useAuthStore = create<AuthState>()(
           console.error('Logout error:', error);
         } finally {
           localStorage.removeItem('auth_token');
+          // Remove cookie
+          document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
           set({ user: null, token: null, permissions: [] });
           window.location.href = '/login';
         }
@@ -70,6 +77,7 @@ export const useAuthStore = create<AuthState>()(
           set({ user: response.data, token });
         } catch (error) {
           localStorage.removeItem('auth_token');
+          document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
           set({ user: null, token: null, permissions: [] });
         }
       },

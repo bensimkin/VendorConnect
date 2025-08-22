@@ -41,8 +41,11 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await login(data.email, data.password);
-      router.push('/dashboard');
+      console.log('Login successful, redirecting to dashboard...');
+      // Force navigation using window.location as a temporary fix
+      window.location.href = '/dashboard';
     } catch (error: any) {
+      console.error('Login error:', error);
       const message = error.response?.data?.message || 'Login failed. Please try again.';
       toast.error(message);
     } finally {
