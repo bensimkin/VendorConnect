@@ -219,20 +219,27 @@ export default function EditTemplatePage() {
     try {
       const filteredItems = checklistItems.filter(item => item.trim());
       
-      // Delete existing checklist items
-      const existingRes = await apiClient.get(`/task-brief-checklists?template_id=${templateId}`);
-      const existingItems = existingRes.data.data?.data || existingRes.data.data || [];
-      
-      for (const item of existingItems) {
-        await apiClient.delete(`/task-brief-checklists/${item.id}`);
+      if (filteredItems.length === 0) {
+        toast.error('Please add at least one checklist item');
+        setSavingChecklist(false);
+        return;
       }
       
-      // Create new checklist items
-      for (let i = 0; i < filteredItems.length; i++) {
-        const payload = {
-          template_id: parseInt(templateId),
-          item: filteredItems[i],
-        };
+      // Get existing checklist record
+      const existingRes = await apiClient.get(`/task-brief-checklists?template_id=${templateId}`);
+      const existingData = existingRes.data.data?.data || existingRes.data.data || [];
+      const existingChecklist = existingData[0];
+      
+      const payload = {
+        template_id: parseInt(templateId),
+        checklist: filteredItems, // Send full array
+      };
+      
+      if (existingChecklist) {
+        // Update existing record
+        await apiClient.put(`/task-brief-checklists/${existingChecklist.id}`, { checklist: filteredItems });
+      } else {
+        // Create new record
         await apiClient.post('/task-brief-checklists', payload);
       }
       
