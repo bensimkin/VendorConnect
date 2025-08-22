@@ -25,10 +25,9 @@ class ClientController extends BaseController
             if ($request->has('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
-                    $q->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('company_name', 'like', "%{$search}%");
+                                    $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('company', 'like', "%{$search}%");
                 });
             }
 
@@ -62,21 +61,14 @@ class ClientController extends BaseController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'first_name' => 'required|string|max:255',
-                'last_name' => 'required|string|max:255',
+                'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:clients,email',
                 'phone' => 'nullable|string|max:20',
-                'company_name' => 'nullable|string|max:255',
+                'company' => 'nullable|string|max:255',
                 'address' => 'nullable|string',
-                'city' => 'nullable|string|max:100',
-                'state' => 'nullable|string|max:100',
-                'zip_code' => 'nullable|string|max:20',
-                'country' => 'nullable|string|max:100',
                 'website' => 'nullable|url',
                 'notes' => 'nullable|string',
                 'status' => 'sometimes|boolean',
-                'user_ids' => 'nullable|array',
-                'user_ids.*' => 'exists:users,id',
             ]);
 
             if ($validator->fails()) {
@@ -86,16 +78,11 @@ class ClientController extends BaseController
             DB::beginTransaction();
 
             $client = Client::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
+                'name' => $request->name,
                 'email' => $request->email,
                 'phone' => $request->phone,
-                'company_name' => $request->company_name,
+                'company' => $request->company,
                 'address' => $request->address,
-                'city' => $request->city,
-                'state' => $request->state,
-                'zip_code' => $request->zip_code,
-                'country' => $request->country,
                 'website' => $request->website,
                 'notes' => $request->notes,
                 'workspace_id' => $request->user()->workspace_id,
@@ -152,21 +139,14 @@ class ClientController extends BaseController
             }
 
             $validator = Validator::make($request->all(), [
-                'first_name' => 'sometimes|required|string|max:255',
-                'last_name' => 'sometimes|required|string|max:255',
+                'name' => 'sometimes|required|string|max:255',
                 'email' => 'sometimes|required|email|unique:clients,email,' . $id,
                 'phone' => 'nullable|string|max:20',
-                'company_name' => 'nullable|string|max:255',
+                'company' => 'nullable|string|max:255',
                 'address' => 'nullable|string',
-                'city' => 'nullable|string|max:100',
-                'state' => 'nullable|string|max:100',
-                'zip_code' => 'nullable|string|max:20',
-                'country' => 'nullable|string|max:100',
                 'website' => 'nullable|url',
                 'notes' => 'nullable|string',
                 'status' => 'sometimes|boolean',
-                'user_ids' => 'nullable|array',
-                'user_ids.*' => 'exists:users,id',
             ]);
 
             if ($validator->fails()) {
@@ -176,18 +156,15 @@ class ClientController extends BaseController
             DB::beginTransaction();
 
             $client->update($request->only([
-                'first_name', 'last_name', 'email', 'phone', 'company_name',
-                'address', 'city', 'state', 'zip_code', 'country', 'website', 'notes', 'status'
+                'name', 'email', 'phone', 'company',
+                'address', 'website', 'notes', 'status'
             ]));
 
-            // Sync users
-            if ($request->has('user_ids')) {
-                $client->users()->sync($request->user_ids);
-            }
+
 
             DB::commit();
 
-            $client->load(['users', 'tasks']);
+            $client->load(['tasks']);
 
             return $this->sendResponse($client, 'Client updated successfully');
         } catch (\Exception $e) {
