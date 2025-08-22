@@ -39,7 +39,7 @@ interface Template {
 interface TemplateQuestion {
   id: number;
   question_text: string;
-  question_type: string;
+  question_type: 'text' | 'textarea' | 'select' | 'checkbox' | 'radio';
 }
 
 interface TemplateChecklist {
@@ -370,15 +370,58 @@ export default function NewTaskPage() {
                         })}
                         rows={3}
                       />
-                    ) : (
-                      <Input
-                        type={question.question_type === 'checkbox' ? 'checkbox' : 'text'}
+                    ) : question.question_type === 'select' ? (
+                      <select
+                        className="w-full px-3 py-2 border rounded-md"
                         value={questionAnswers[question.id] || ''}
                         onChange={(e) => setQuestionAnswers({
                           ...questionAnswers,
-                          [question.id]: question.question_type === 'checkbox' 
-                            ? e.target.checked ? 'Yes' : 'No'
-                            : e.target.value
+                          [question.id]: e.target.value
+                        })}
+                      >
+                        <option value="">Select an option</option>
+                        <option value="Option 1">Option 1</option>
+                        <option value="Option 2">Option 2</option>
+                        <option value="Option 3">Option 3</option>
+                      </select>
+                    ) : question.question_type === 'radio' ? (
+                      <div className="space-y-2">
+                        {['Option 1', 'Option 2', 'Option 3'].map((option) => (
+                          <label key={option} className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              name={`question-${question.id}`}
+                              value={option}
+                              checked={questionAnswers[question.id] === option}
+                              onChange={(e) => setQuestionAnswers({
+                                ...questionAnswers,
+                                [question.id]: e.target.value
+                              })}
+                            />
+                            <span>{option}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : question.question_type === 'checkbox' ? (
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={questionAnswers[question.id] === 'Yes'}
+                          onChange={(e) => setQuestionAnswers({
+                            ...questionAnswers,
+                            [question.id]: e.target.checked ? 'Yes' : 'No'
+                          })}
+                          className="mr-2"
+                        />
+                        <span>Check if applicable</span>
+                      </div>
+                    ) : (
+                      <Input
+                        type="text"
+                        value={questionAnswers[question.id] || ''}
+                        onChange={(e) => setQuestionAnswers({
+                          ...questionAnswers,
+                          [question.id]: e.target.value
                         })}
                       />
                     )}
