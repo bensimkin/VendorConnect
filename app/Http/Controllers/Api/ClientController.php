@@ -259,4 +259,44 @@ class ClientController extends BaseController
             return $this->sendServerError('Error deleting file: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get client projects
+     */
+    public function projects($id)
+    {
+        try {
+            $client = Client::find($id);
+
+            if (!$client) {
+                return $this->sendNotFound('Client not found');
+            }
+
+            $projects = $client->projects()->with(['status', 'client'])->paginate(15);
+
+            return $this->sendPaginatedResponse($projects, 'Client projects retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving client projects: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get client tasks
+     */
+    public function tasks($id)
+    {
+        try {
+            $client = Client::find($id);
+
+            if (!$client) {
+                return $this->sendNotFound('Client not found');
+            }
+
+            $tasks = $client->tasks()->with(['status', 'priority', 'assigned_to'])->paginate(15);
+
+            return $this->sendPaginatedResponse($tasks, 'Client tasks retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving client tasks: ' . $e->getMessage());
+        }
+    }
 }
