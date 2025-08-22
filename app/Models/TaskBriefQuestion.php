@@ -12,8 +12,13 @@ class TaskBriefQuestion extends Model
         "task_brief_templates_id",
         "question_text",
         "question_type",
+        "options",
         "created_at",
         "updated_at",
+    ];
+
+    protected $casts = [
+        'options' => 'array',
     ];
 
     public function briefTemplate()
