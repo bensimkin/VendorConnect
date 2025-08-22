@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ interface Task {
 }
 
 export default function TasksPage() {
+  const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -119,7 +121,7 @@ export default function TasksPage() {
             <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
             <p className="text-muted-foreground">Manage and track all your tasks</p>
           </div>
-          <Button>
+          <Button onClick={() => router.push('/tasks/new')}>
             <Plus className="mr-2 h-4 w-4" />
             New Task
           </Button>
@@ -150,7 +152,11 @@ export default function TasksPage() {
         {filteredTasks.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredTasks.map((task) => (
-              <Card key={task.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+              <Card 
+                key={task.id} 
+                className="hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => router.push(`/tasks/${task.id}`)}
+              >
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div className="space-y-1 flex-1">
