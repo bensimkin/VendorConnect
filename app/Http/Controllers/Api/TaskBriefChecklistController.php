@@ -64,6 +64,7 @@ class TaskBriefChecklistController extends BaseController
 
             return $this->sendResponse($checklist, 'Task brief checklist created successfully');
         } catch (\Exception $e) {
+            \Log::error('Task brief checklist creation error: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
             return $this->sendServerError('Error creating task brief checklist: ' . $e->getMessage());
         }
     }
@@ -117,6 +118,7 @@ class TaskBriefChecklistController extends BaseController
 
             return $this->sendResponse($checklist, 'Task brief checklist updated successfully');
         } catch (\Exception $e) {
+            \Log::error('Task brief checklist update error: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
             return $this->sendServerError('Error updating task brief checklist: ' . $e->getMessage());
         }
     }
