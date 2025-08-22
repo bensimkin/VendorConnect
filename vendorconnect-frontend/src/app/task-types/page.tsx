@@ -12,7 +12,7 @@ import { toast } from 'react-hot-toast';
 
 interface TaskType {
   id: number;
-  name: string;
+  task_type: string;
   created_at: string;
   updated_at: string;
 }
@@ -53,7 +53,7 @@ export default function TaskTypesPage() {
 
     try {
       const response = await apiClient.post('/task-types', {
-        name: newTypeName.trim(),
+        task_type: newTypeName.trim(),
       });
       toast.success('Task type created successfully');
       setTaskTypes([...taskTypes, response.data.data]);
@@ -74,11 +74,11 @@ export default function TaskTypesPage() {
     setSavingId(id);
     try {
       await apiClient.put(`/task-types/${id}`, {
-        name: editingName.trim(),
+        task_type: editingName.trim(),
       });
       toast.success('Task type updated successfully');
       setTaskTypes(taskTypes.map(type => 
-        type.id === id ? { ...type, name: editingName.trim() } : type
+        type.id === id ? { ...type, task_type: editingName.trim() } : type
       ));
       setEditingId(null);
       setEditingName('');
@@ -90,8 +90,8 @@ export default function TaskTypesPage() {
     }
   };
 
-  const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Are you sure you want to delete the task type "${name}"? This action cannot be undone.`)) {
+  const handleDelete = async (id: number, task_type: string) => {
+    if (!confirm(`Are you sure you want to delete the task type "${task_type}"? This action cannot be undone.`)) {
       return;
     }
 
@@ -107,7 +107,7 @@ export default function TaskTypesPage() {
 
   const startEditing = (type: TaskType) => {
     setEditingId(type.id);
-    setEditingName(type.name);
+    setEditingName(type.task_type);
   };
 
   const cancelEditing = () => {
@@ -116,7 +116,7 @@ export default function TaskTypesPage() {
   };
 
   const filteredTypes = taskTypes.filter(type =>
-    (type.name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    (type.task_type?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -252,7 +252,7 @@ export default function TaskTypesPage() {
                       <>
                         <div className="flex items-center gap-2">
                           <Tag className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{type.name}</span>
+                          <span className="font-medium">{type.task_type}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Button
@@ -266,7 +266,7 @@ export default function TaskTypesPage() {
                             size="sm"
                             variant="ghost"
                             className="text-destructive hover:text-destructive"
-                            onClick={() => handleDelete(type.id, type.name)}
+                            onClick={() => handleDelete(type.id, type.task_type)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
