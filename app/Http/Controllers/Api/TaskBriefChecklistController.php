@@ -74,7 +74,7 @@ class TaskBriefChecklistController extends BaseController
     public function show($id)
     {
         try {
-            $checklist = TaskBriefChecklist::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $checklist = TaskBriefChecklist::find($id);
 
             if (!$checklist) {
                 return $this->sendNotFound('Task brief checklist not found');
@@ -92,7 +92,7 @@ class TaskBriefChecklistController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $checklist = TaskBriefChecklist::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $checklist = TaskBriefChecklist::find($id);
 
             if (!$checklist) {
                 return $this->sendNotFound('Task brief checklist not found');
@@ -127,7 +127,7 @@ class TaskBriefChecklistController extends BaseController
     public function destroy($id)
     {
         try {
-            $checklist = TaskBriefChecklist::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $checklist = TaskBriefChecklist::find($id);
 
             if (!$checklist) {
                 return $this->sendNotFound('Task brief checklist not found');
