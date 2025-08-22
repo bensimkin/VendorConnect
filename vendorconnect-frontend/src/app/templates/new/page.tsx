@@ -13,7 +13,7 @@ import { ArrowLeft, Save, FileText } from 'lucide-react';
 
 interface TaskType {
   id: number;
-  name: string;
+  task_type: string;
 }
 
 export default function NewTemplatePage() {
@@ -131,7 +131,7 @@ export default function NewTemplatePage() {
                   <option value="">Select a task type</option>
                   {taskTypes.map((type) => (
                     <option key={type.id} value={type.id}>
-                      {type.name}
+                      {type.task_type}
                     </option>
                   ))}
                 </select>

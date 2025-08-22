@@ -12,7 +12,7 @@ import { toast } from 'react-hot-toast';
 
 interface TaskType {
   id: number;
-  name: string;
+  task_type: string;
 }
 
 interface Template {
@@ -135,7 +135,7 @@ export default function TemplatesPage() {
                       </CardTitle>
                       {template.task_type && (
                         <CardDescription>
-                          Task Type: {template.task_type.name}
+                          Task Type: {template.task_type.task_type}
                         </CardDescription>
                       )}
                     </div>
