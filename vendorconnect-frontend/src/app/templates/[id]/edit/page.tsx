@@ -29,6 +29,7 @@ interface Question {
   task_brief_templates_id?: number;
   question_text: string;
   question_type: 'text' | 'textarea' | 'select' | 'checkbox' | 'radio';
+  options?: string[];
   order?: number;
 }
 
@@ -182,6 +183,7 @@ export default function EditTemplatePage() {
           template_id: parseInt(templateId),
           question: question.question_text,
           question_type: question.question_type,
+          options: question.options || null,
         };
 
         if (question.id) {
@@ -364,6 +366,48 @@ export default function EditTemplatePage() {
                           <option value="radio">Radio Buttons</option>
                         </select>
                       </div>
+                      {(question.question_type === 'select' || question.question_type === 'radio') && (
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Options:</p>
+                          {(question.options || []).map((option, optionIndex) => (
+                            <div key={optionIndex} className="flex gap-2">
+                              <Input
+                                placeholder="Option text"
+                                value={option}
+                                onChange={(e) => {
+                                  const newOptions = [...(question.options || [])];
+                                  newOptions[optionIndex] = e.target.value;
+                                  updateQuestion(index, { options: newOptions });
+                                }}
+                                className="text-sm"
+                              />
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  const newOptions = [...(question.options || [])];
+                                  newOptions.splice(optionIndex, 1);
+                                  updateQuestion(index, { options: newOptions });
+                                }}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const newOptions = [...(question.options || []), ''];
+                              updateQuestion(index, { options: newOptions });
+                            }}
+                          >
+                            Add Option
+                          </Button>
+                        </div>
+                      )}
                     </div>
                     <Button
                       type="button"
