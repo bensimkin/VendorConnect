@@ -20,6 +20,7 @@ import {
   Moon,
   Sun,
   FileText,
+  Tag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
@@ -28,6 +29,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare },
   { name: 'Templates', href: '/templates', icon: FileText },
+  { name: 'Task Types', href: '/task-types', icon: Tag },
   { name: 'Users', href: '/users', icon: Users },
   { name: 'Clients', href: '/clients', icon: Building2 },
   { name: 'Projects', href: '/projects', icon: FolderOpen },
