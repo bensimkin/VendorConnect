@@ -51,9 +51,6 @@ class TaskBriefChecklistController extends BaseController
             $validator = Validator::make($request->all(), [
                 'template_id' => 'required|exists:task_brief_templates,id',
                 'item' => 'required|string',
-                'description' => 'nullable|string',
-                'required' => 'sometimes|boolean',
-                'order' => 'nullable|integer',
             ]);
 
             if ($validator->fails()) {
@@ -63,10 +60,6 @@ class TaskBriefChecklistController extends BaseController
             $checklist = TaskBriefChecklist::create([
                 'task_brief_templates_id' => $request->template_id,
                 'checklist' => [$request->item],
-                'description' => $request->description,
-                'required' => $request->get('required', false),
-                'order' => $request->get('order', 0),
-                'workspace_id' => Auth::user()->workspace_id,
             ]);
 
             return $this->sendResponse($checklist, 'Task brief checklist created successfully');
@@ -108,9 +101,6 @@ class TaskBriefChecklistController extends BaseController
             $validator = Validator::make($request->all(), [
                 'template_id' => 'sometimes|required|exists:task_brief_templates,id',
                 'item' => 'sometimes|required|string',
-                'description' => 'nullable|string',
-                'required' => 'sometimes|boolean',
-                'order' => 'nullable|integer',
             ]);
 
             if ($validator->fails()) {
