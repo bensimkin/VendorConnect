@@ -52,6 +52,7 @@ class TaskBriefQuestionController extends BaseController
                 'template_id' => 'required|exists:task_brief_templates,id',
                 'question' => 'required|string',
                 'question_type' => 'required|string|in:text,textarea,select,checkbox,radio',
+                'options' => 'nullable|array',
             ]);
 
             if ($validator->fails()) {
@@ -62,6 +63,7 @@ class TaskBriefQuestionController extends BaseController
                 'task_brief_templates_id' => $request->template_id,
                 'question_text' => $request->question,
                 'question_type' => $request->question_type,
+                'options' => $request->options,
             ]);
 
             return $this->sendResponse($question, 'Task brief question created successfully');
@@ -104,13 +106,14 @@ class TaskBriefQuestionController extends BaseController
                 'template_id' => 'sometimes|required|exists:task_brief_templates,id',
                 'question' => 'sometimes|required|string',
                 'question_type' => 'sometimes|required|string|in:text,textarea,select,checkbox,radio',
+                'options' => 'nullable|array',
             ]);
 
             if ($validator->fails()) {
                 return $this->sendValidationError($validator->errors());
             }
 
-            $validated = $request->only(['template_id', 'question', 'question_type']);
+            $validated = $request->only(['template_id', 'question', 'question_type', 'options']);
             if (isset($validated['template_id'])) {
                 $validated['task_brief_templates_id'] = $validated['template_id'];
                 unset($validated['template_id']);
