@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ interface Client {
 }
 
 export default function ClientsPage() {
+  const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,7 +77,7 @@ export default function ClientsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Clients</h1>
             <p className="text-muted-foreground">Manage your client relationships and projects</p>
           </div>
-          <Button>
+          <Button onClick={() => router.push('/clients/new')}>
             <Plus className="mr-2 h-4 w-4" />
             New Client
           </Button>
