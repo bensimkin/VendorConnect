@@ -40,6 +40,7 @@ interface TemplateQuestion {
   id: number;
   question_text: string;
   question_type: 'text' | 'textarea' | 'select' | 'checkbox' | 'radio';
+  options?: string[];
 }
 
 interface TemplateChecklist {
@@ -380,14 +381,14 @@ export default function NewTaskPage() {
                         })}
                       >
                         <option value="">Select an option</option>
-                        <option value="Option 1">Option 1</option>
-                        <option value="Option 2">Option 2</option>
-                        <option value="Option 3">Option 3</option>
+                        {(question.options || []).map((option, idx) => (
+                          <option key={idx} value={option}>{option}</option>
+                        ))}
                       </select>
                     ) : question.question_type === 'radio' ? (
                       <div className="space-y-2">
-                        {['Option 1', 'Option 2', 'Option 3'].map((option) => (
-                          <label key={option} className="flex items-center space-x-2">
+                        {(question.options || []).map((option, idx) => (
+                          <label key={idx} className="flex items-center space-x-2">
                             <input
                               type="radio"
                               name={`question-${question.id}`}
