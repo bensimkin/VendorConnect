@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import apiClient from '@/lib/api-client';
-import { Plus, Search, Building, Mail, Phone, MapPin, Calendar, Briefcase } from 'lucide-react';
+import { Plus, Search, Building, Mail, Phone, MapPin, Calendar, Briefcase, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Client {
@@ -56,6 +57,21 @@ export default function ClientsPage() {
     );
   });
 
+  const handleDeleteClient = async (clientId: number, clientName: string) => {
+    if (!confirm(`Are you sure you want to delete "${clientName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await apiClient.delete(`/clients/${clientId}`);
+      toast.success('Client deleted successfully');
+      fetchClients(); // Refresh the list
+    } catch (error: any) {
+      console.error('Failed to delete client:', error);
+      toast.error('Failed to delete client');
+    }
+  };
+
   if (loading) {
     return (
       <MainLayout>
@@ -102,7 +118,7 @@ export default function ClientsPage() {
         {filteredClients.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredClients.map((client) => (
-              <Card key={client.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push(`/clients/${client.id}/edit`)}>
+              <Card key={client.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push(`/clients/${client.id}`)}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
@@ -159,6 +175,29 @@ export default function ClientsPage() {
                           {client.active_projects} active
                         </div>
                       )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/clients/${client.id}/edit`);
+                        }}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClient(client.id, client.name);
+                        }}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
                   </div>
 
