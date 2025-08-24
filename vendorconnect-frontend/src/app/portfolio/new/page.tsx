@@ -325,9 +325,9 @@ export default function NewPortfolioPage() {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="" disabled>
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
                           {formData.project_id ? "No tasks found for this project" : "No tasks available"}
-                        </SelectItem>
+                        </div>
                       )}
                     </SelectContent>
                   </Select>
