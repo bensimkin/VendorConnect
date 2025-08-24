@@ -17,6 +17,8 @@ class Status extends Model
         'admin_id'
     ];
 
+    protected $appends = ['name'];
+
     public function projects()
     {
         return $this->hasMany(Project::class)->where('projects.workspace_id', session()->get('workspace_id'));
@@ -39,5 +41,10 @@ class Status extends Model
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'role_status');
+    }
+
+    public function getNameAttribute()
+    {
+        return $this->title;
     }
 }
