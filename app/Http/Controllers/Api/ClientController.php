@@ -70,6 +70,11 @@ class ClientController extends BaseController
                 'website' => 'nullable|url',
                 'notes' => 'nullable|string',
                 'status' => 'sometimes|boolean',
+                'city' => 'nullable|string|max:255',
+                'state' => 'nullable|string|max:255',
+                'country' => 'nullable|string|max:255',
+                'zip' => 'nullable|string|max:255',
+                'dob' => 'nullable|date',
             ]);
 
             if ($validator->fails()) {
@@ -93,6 +98,11 @@ class ClientController extends BaseController
                 'client_note' => $request->notes,
                 'admin_id' => $request->user()->id,
                 'status' => $request->get('status', 1),
+                'city' => $request->city,
+                'state' => $request->state,
+                'country' => $request->country,
+                'zip' => $request->zip,
+                'dob' => $request->dob,
             ]);
 
             // Attach users
@@ -179,6 +189,11 @@ class ClientController extends BaseController
                 'website' => 'nullable|url',
                 'notes' => 'nullable|string',
                 'status' => 'sometimes|boolean',
+                'city' => 'nullable|string|max:255',
+                'state' => 'nullable|string|max:255',
+                'country' => 'nullable|string|max:255',
+                'zip' => 'nullable|string|max:255',
+                'dob' => 'nullable|date',
             ]);
 
             if ($validator->fails()) {
@@ -188,7 +203,7 @@ class ClientController extends BaseController
             DB::beginTransaction();
 
             // Split name into first_name and last_name if name is provided
-            $updateData = $request->only(['email', 'phone', 'company', 'address', 'status']);
+            $updateData = $request->only(['email', 'phone', 'company', 'address', 'status', 'city', 'state', 'country', 'zip', 'dob']);
             
             if ($request->has('name')) {
                 $nameParts = explode(' ', trim($request->name), 2);
