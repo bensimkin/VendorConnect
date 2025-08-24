@@ -82,6 +82,7 @@ class AuthController extends Controller
                     'email' => $user->email,
                     'photo' => $user->photo,
                     'status' => $user->status,
+                    'roles' => $user->roles()->select('id', 'name')->get()->toArray(),
                 ],
                 'permissions' => $permissions,
                 'token' => $token,
