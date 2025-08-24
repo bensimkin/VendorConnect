@@ -36,6 +36,11 @@ interface Template {
   task_type_id: number;
 }
 
+interface TaskType {
+  id: number;
+  name: string;
+}
+
 interface TemplateQuestion {
   id: number;
   question_text: string;
@@ -54,6 +59,7 @@ export default function NewTaskPage() {
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [priorities, setPriorities] = useState<Priority[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [templateQuestions, setTemplateQuestions] = useState<TemplateQuestion[]>([]);
@@ -65,6 +71,7 @@ export default function NewTaskPage() {
     description: '',
     status_id: '',
     priority_id: '',
+    task_type_id: '',
     user_ids: [] as number[],
     start_date: '',
     end_date: '',
@@ -76,16 +83,18 @@ export default function NewTaskPage() {
 
   const fetchFormData = async () => {
     try {
-      const [statusRes, priorityRes, userRes, templateRes] = await Promise.all([
+      const [statusRes, priorityRes, userRes, taskTypeRes, templateRes] = await Promise.all([
         apiClient.get('/statuses'),
         apiClient.get('/priorities'),
         apiClient.get('/users'),
+        apiClient.get('/task-types'),
         apiClient.get('/task-brief-templates'),
       ]);
 
       setStatuses(statusRes.data.data || []);
       setPriorities(priorityRes.data.data || []);
       setUsers(userRes.data.data?.data || userRes.data.data || []);
+      setTaskTypes(taskTypeRes.data.data || []);
       setTemplates(templateRes.data.data?.data || templateRes.data.data || []);
 
       // Set default values
@@ -173,6 +182,7 @@ export default function NewTaskPage() {
         description: formData.description || null,
         status_id: parseInt(formData.status_id),
         priority_id: parseInt(formData.priority_id),
+        task_type_id: formData.task_type_id ? parseInt(formData.task_type_id) : null,
         user_ids: formData.user_ids,
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
@@ -273,7 +283,7 @@ export default function NewTaskPage() {
                 />
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <select
@@ -301,6 +311,23 @@ export default function NewTaskPage() {
                     {priorities.map((priority) => (
                       <option key={priority.id} value={priority.id}>
                         {priority.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="task_type">Task Type</Label>
+                  <select
+                    id="task_type"
+                    value={formData.task_type_id}
+                    onChange={(e) => setFormData({ ...formData, task_type_id: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-md bg-background"
+                  >
+                    <option value="">Select Task Type</option>
+                    {taskTypes.map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {type.name}
                       </option>
                     ))}
                   </select>
