@@ -136,9 +136,16 @@ export default function EditTaskPage() {
 
   const fetchData = async () => {
     try {
+      console.log('Starting fetchData for taskId:', taskId);
+      
       // Fetch task details
       const taskRes = await apiClient.get(`/tasks/${taskId}`);
       console.log('Task API response:', taskRes.data);
+      
+      if (!taskRes.data || !taskRes.data.data) {
+        console.error('Invalid API response structure:', taskRes);
+        throw new Error('Invalid API response');
+      }
       
       const task: Task = taskRes.data.data;
       console.log('Task object:', task);
