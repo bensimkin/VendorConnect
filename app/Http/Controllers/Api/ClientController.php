@@ -206,7 +206,7 @@ class ClientController extends BaseController
 
             DB::commit();
 
-            $client->load(['tasks']);
+            $client->load(['clientTasks']);
 
             return $this->sendResponse($client, 'Client updated successfully');
         } catch (\Exception $e) {
