@@ -47,6 +47,7 @@ interface Task {
     id: number;
     template_name: string;
   };
+  close_deadline?: boolean;
 }
 
 interface User {
@@ -128,6 +129,7 @@ export default function EditTaskPage() {
     project_id: 0,
     end_date: '',
     task_type_id: 0,
+    close_deadline: false,
   });
 
   useEffect(() => {
@@ -165,6 +167,7 @@ export default function EditTaskPage() {
           project_id: task?.project?.id || 0,
           end_date: task?.due_date ? task.due_date.split('T')[0] : '',
           task_type_id: task?.task_type?.id || 0,
+          close_deadline: task?.close_deadline || false,
         });
 
       // Fetch dropdown data
@@ -468,6 +471,22 @@ export default function EditTaskPage() {
                     value={formData.end_date}
                     onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="close_deadline">Strict Deadline</Label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      id="close_deadline"
+                      type="checkbox"
+                      checked={formData.close_deadline}
+                      onChange={(e) => setFormData({ ...formData, close_deadline: e.target.checked })}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      If enabled, task will be automatically marked as "Rejected" when deadline passes
+                    </span>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
