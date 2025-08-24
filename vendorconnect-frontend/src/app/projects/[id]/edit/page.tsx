@@ -93,12 +93,16 @@ export default function EditProjectPage() {
   const fetchFormData = async () => {
     try {
       // Fetch clients
-      const clientsResponse = await apiClient.get('/clients?per_page=all');
+      const clientsResponse = await apiClient.get('/clients');
       setClients(clientsResponse.data.data || []);
 
-      // Fetch statuses
-      const statusesResponse = await apiClient.get('/statuses?per_page=all');
-      setStatuses(statusesResponse.data.data || []);
+      // Fetch project statuses (Active, Inactive, Completed)
+      const statusesResponse = await apiClient.get('/statuses');
+      const allStatuses = statusesResponse.data.data || [];
+      const projectStatuses = allStatuses.filter((status: any) => 
+        ['active', 'inactive', 'completed'].includes(status.slug)
+      );
+      setStatuses(projectStatuses);
     } catch (error) {
       console.error('Failed to fetch form data:', error);
     }
