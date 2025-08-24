@@ -31,7 +31,7 @@ export default function NewTemplatePage() {
 
   const fetchTaskTypes = async () => {
     try {
-      const response = await apiClient.get('/task-types');
+      const response = await apiClient.get('/task-types?per_page=all');
       const types = response.data.data || [];
       setTaskTypes(types);
       

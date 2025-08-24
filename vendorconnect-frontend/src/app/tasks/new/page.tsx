@@ -87,7 +87,7 @@ export default function NewTaskPage() {
         apiClient.get('/statuses'),
         apiClient.get('/priorities'),
         apiClient.get('/users'),
-        apiClient.get('/task-types'),
+        apiClient.get('/task-types?per_page=all'),
         apiClient.get('/task-brief-templates'),
       ]);
 

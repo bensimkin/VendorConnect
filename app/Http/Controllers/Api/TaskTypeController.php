@@ -36,6 +36,12 @@ class TaskTypeController extends BaseController
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
+            // If per_page is set to 'all', return all results without pagination
+            if ($request->get('per_page') === 'all') {
+                $taskTypes = $query->get();
+                return $this->sendResponse($taskTypes, 'Task types retrieved successfully');
+            }
+
             $taskTypes = $query->paginate($request->get('per_page', 15));
 
             return $this->sendPaginatedResponse($taskTypes, 'Task types retrieved successfully');
