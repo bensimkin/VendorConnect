@@ -117,8 +117,22 @@ class ClientController extends BaseController
     public function show($id)
     {
         try {
+            \Log::info('=== CLIENT SHOW REQUEST START ===');
             \Log::info('ClientController::show called with ID: ' . $id);
+            \Log::info('Request method: ' . request()->method());
+            \Log::info('Request URL: ' . request()->fullUrl());
+            \Log::info('Request headers: ' . json_encode(request()->headers->all()));
             \Log::info('Auth user: ' . json_encode(Auth::user()));
+            \Log::info('Auth check: ' . (Auth::check() ? 'true' : 'false'));
+            
+            // Check if client exists first
+            $clientExists = Client::where('id', $id)->exists();
+            \Log::info('Client exists in database: ' . ($clientExists ? 'true' : 'false'));
+            
+            if (!$clientExists) {
+                \Log::warning('Client with ID ' . $id . ' does not exist in database');
+                return $this->sendNotFound('Client not found');
+            }
             
             $client = Client::with(['tasks'])
                 ->find($id);
@@ -131,10 +145,15 @@ class ClientController extends BaseController
             }
 
             \Log::info('Client data: ' . json_encode($client->toArray()));
+            \Log::info('=== CLIENT SHOW REQUEST SUCCESS ===');
             return $this->sendResponse($client, 'Client retrieved successfully');
         } catch (\Exception $e) {
+            \Log::error('=== CLIENT SHOW REQUEST ERROR ===');
             \Log::error('ClientController::show error: ' . $e->getMessage());
+            \Log::error('Error class: ' . get_class($e));
+            \Log::error('Error file: ' . $e->getFile() . ':' . $e->getLine());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('=== CLIENT SHOW REQUEST ERROR END ===');
             return $this->sendServerError('Error retrieving client: ' . $e->getMessage());
         }
     }
