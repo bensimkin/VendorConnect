@@ -111,10 +111,6 @@ export default function LoginPage() {
           </CardFooter>
         </form>
       </Card>
-      
-      <div className="text-center text-xs text-muted-foreground mt-8">
-        Copyright © 2025 BUSINESSNET PTY LTD. All rights reserved.
-      </div>
     </div>
   );
 }
