@@ -23,6 +23,13 @@ interface Client {
   status?: number;
   created_at: string;
   updated_at: string;
+  // New fields
+  city?: string;
+  state?: string;
+  country?: string;
+  zip?: string;
+  dob?: string;
+  doj?: string;
 }
 
 interface Project {
@@ -221,6 +228,40 @@ export default function ClientDetailPage() {
                       <div>
                         <p className="text-sm font-medium">Address</p>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{client.address}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Location Fields */}
+                  {(client.city || client.state || client.country || client.zip) && (
+                    <div className="col-span-2">
+                      <p className="text-sm font-medium mb-2">Location Details</p>
+                      <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                        {client.city && <span>City: {client.city}</span>}
+                        {client.state && <span>State: {client.state}</span>}
+                        {client.country && <span>Country: {client.country}</span>}
+                        {client.zip && <span>ZIP: {client.zip}</span>}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Date Fields */}
+                  {(client.dob || client.doj) && (
+                    <div className="col-span-2">
+                      <p className="text-sm font-medium mb-2">Important Dates</p>
+                      <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                        {client.dob && (
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="h-3 w-3" />
+                            <span>DOB: {formatDate(client.dob)}</span>
+                          </div>
+                        )}
+                        {client.doj && (
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="h-3 w-3" />
+                            <span>DOJ: {formatDate(client.doj)}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
