@@ -28,10 +28,10 @@ function NewProjectPageContent() {
   const [clients, setClients] = useState<Client[]>([]);
   
   const [formData, setFormData] = useState({
-    name: '',
+    title: '',
     description: '',
     client_id: clientId || '',
-    start_date: '',
+    start_date: new Date().toISOString().split('T')[0], // Default to today
     end_date: '',
     budget: '',
   });
@@ -54,7 +54,7 @@ function NewProjectPageContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim()) {
+    if (!formData.title.trim()) {
       toast.error('Project name is required');
       return;
     }
@@ -70,6 +70,7 @@ function NewProjectPageContent() {
         ...formData,
         client_id: parseInt(formData.client_id),
         budget: formData.budget ? parseFloat(formData.budget) : null,
+        end_date: formData.end_date || null, // Set to null if empty
       };
 
       await apiClient.post('/projects', payload);
@@ -108,11 +109,11 @@ function NewProjectPageContent() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Project Name *</Label>
+                <Label htmlFor="title">Project Name *</Label>
                 <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Enter project name"
                   required
                 />
@@ -159,12 +160,13 @@ function NewProjectPageContent() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="end_date">End Date</Label>
+                  <Label htmlFor="end_date">End Date (Optional)</Label>
                   <Input
                     id="end_date"
                     type="date"
                     value={formData.end_date}
                     onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                    min={formData.start_date} // End date should be after start date
                   />
                 </div>
               </div>
