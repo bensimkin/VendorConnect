@@ -17,6 +17,8 @@ class Priority extends Model
         'admin_id'
     ];
 
+    protected $appends = ['name'];
+
     // public static function all($columns = ['*'])
     // {
     //     // Create a default priority object
@@ -60,5 +62,10 @@ class Priority extends Model
     public function tasks()
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function getNameAttribute()
+    {
+        return $this->title;
     }
 }
