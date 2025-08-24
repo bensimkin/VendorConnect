@@ -130,7 +130,7 @@ export default function EditProjectPage() {
         start_date: formData.start_date,
         end_date: formData.end_date || null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
-        status_id: parseInt(formData.status_id) || 1,
+        status_id: parseInt(formData.status_id) || 20, // Default to Active (ID: 20)
       };
 
       await apiClient.put(`/projects/${projectId}`, payload);
