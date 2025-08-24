@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import apiClient from '@/lib/api-client';
-import { Plus, Search, Mail, Phone, Shield, Edit, Trash2, UserCheck, UserX } from 'lucide-react';
+import { Plus, Search, Mail, Phone, Calendar, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface User {
@@ -14,14 +16,15 @@ interface User {
   first_name: string;
   last_name: string;
   email: string;
-  phone: string;
-  status: number;
+  phone?: string;
+  role?: string;
+  status?: number;
   created_at: string;
-  roles: { id: number; name: string }[];
-  photo: string | null;
+  updated_at: string;
 }
 
 export default function UsersPage() {
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,19 +36,35 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       const response = await apiClient.get('/users');
-      setUsers(response.data.data);
+      const userData = response.data.data?.data || response.data.data || [];
+      setUsers(Array.isArray(userData) ? userData : []);
     } catch (error) {
       console.error('Failed to fetch users:', error);
+      setUsers([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (userId: number) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await apiClient.delete(`/users/${userId}`);
+      toast.success('User deleted successfully');
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Failed to delete user:', error);
+      toast.error('Failed to delete user');
     }
   };
 
   const filteredUsers = users.filter(user => {
     const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
     const email = user.email.toLowerCase();
-    const search = searchTerm.toLowerCase();
-    return fullName.includes(search) || email.includes(search);
+    return fullName.includes(searchTerm.toLowerCase()) || email.includes(searchTerm.toLowerCase());
   });
 
   if (loading) {
@@ -67,9 +86,9 @@ export default function UsersPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-            <p className="text-muted-foreground">Manage system users and their permissions</p>
+            <p className="text-muted-foreground">Manage your team members</p>
           </div>
-          <Button>
+          <Button onClick={() => router.push('/users/new')}>
             <Plus className="mr-2 h-4 w-4" />
             New User
           </Button>
@@ -81,7 +100,7 @@ export default function UsersPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Search users by name or email..."
+                placeholder="Search users..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -91,97 +110,85 @@ export default function UsersPage() {
         </Card>
 
         {/* Users Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredUsers.map((user) => (
-            <Card key={user.id} className="overflow-hidden">
-              <CardHeader className="pb-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      {user.photo ? (
-                        <img
-                          src={user.photo}
-                          alt={`${user.first_name} ${user.last_name}`}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-lg font-semibold text-primary">
-                          {user.first_name[0]}{user.last_name[0]}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">
+        {filteredUsers.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredUsers.map((user) => (
+              <Card key={user.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <CardTitle className="text-xl">
                         {user.first_name} {user.last_name}
                       </CardTitle>
-                      <CardDescription>{user.email}</CardDescription>
+                      <CardDescription>{user.role || 'User'}</CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={user.status === 1 ? "default" : "secondary"}>
+                        {user.status === 1 ? 'Active' : 'Inactive'}
+                      </Badge>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Edit className="h-4 w-4" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{user.email}</span>
+                    </div>
+                    {user.phone && (
+                      <div className="flex items-center space-x-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{user.phone}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">Joined {format(new Date(user.created_at), 'MMM d, yyyy')}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/users/${user.id}/edit`)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/users/${user.id}`)}
+                    >
+                      View
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(user.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2 text-sm">
-                  {user.phone && (
-                    <div className="flex items-center text-muted-foreground">
-                      <Phone className="mr-2 h-4 w-4" />
-                      <span>{user.phone}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center text-muted-foreground">
-                    <Mail className="mr-2 h-4 w-4" />
-                    <span className="truncate">{user.email}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="flex items-center space-x-2">
-                    <Shield className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex flex-wrap gap-1">
-                      {user.roles.map((role) => (
-                        <span
-                          key={role.id}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary"
-                        >
-                          {role.name}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    {user.status === 1 ? (
-                      <span className="flex items-center text-green-600 text-xs">
-                        <UserCheck className="mr-1 h-3 w-3" />
-                        Active
-                      </span>
-                    ) : (
-                      <span className="flex items-center text-red-600 text-xs">
-                        <UserX className="mr-1 h-3 w-3" />
-                        Inactive
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="text-xs text-muted-foreground">
-                  Joined {format(new Date(user.created_at), 'MMM dd, yyyy')}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {filteredUsers.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No users found matching your search.</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
+        ) : (
+          <Card>
+            <CardContent className="text-center py-12">
+              <p className="text-muted-foreground">
+                {searchTerm ? 'No users found matching your search.' : 'No users found.'}
+              </p>
+              {!searchTerm && (
+                <Button onClick={() => router.push('/users/new')} className="mt-4">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add First User
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         )}
       </div>
     </MainLayout>
