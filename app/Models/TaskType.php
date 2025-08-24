@@ -14,6 +14,8 @@ class TaskType extends Model
         "updated_at"
     ];
 
+    protected $appends = ['name'];
+
     public function briefTemplate()
     {
         return $this->hasMany(TaskBriefTemplates::class);
@@ -22,5 +24,10 @@ class TaskType extends Model
     public function tasks()
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function getNameAttribute()
+    {
+        return $this->task_type;
     }
 }
