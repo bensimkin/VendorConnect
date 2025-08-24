@@ -137,6 +137,7 @@ export default function EditTaskPage() {
   const fetchData = async () => {
     try {
       console.log('Starting fetchData for taskId:', taskId);
+      console.log('Auth token:', localStorage.getItem('auth_token'));
       
       // Fetch task details
       const taskRes = await apiClient.get(`/tasks/${taskId}`);
@@ -231,6 +232,8 @@ export default function EditTaskPage() {
 
     } catch (error: any) {
       console.error('Failed to fetch task data:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
       toast.error('Failed to load task');
       router.push('/tasks');
     } finally {
