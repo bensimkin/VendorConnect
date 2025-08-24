@@ -123,12 +123,11 @@ export default function EditTaskPage() {
     description: '',
     status_id: 0,
     priority_id: 0,
-    assigned_to_id: 0,
-    client_id: 0,
+    user_ids: [] as number[],
+    client_ids: [] as number[],
     project_id: 0,
-    due_date: '',
+    end_date: '',
     task_type_id: 0,
-    template_id: 0,
   });
 
   useEffect(() => {
@@ -146,12 +145,11 @@ export default function EditTaskPage() {
         description: task.description || '',
         status_id: task.status.id,
         priority_id: task.priority.id,
-        assigned_to_id: task.assigned_to?.id || 0,
-        client_id: task.client?.id || 0,
+        user_ids: task.assigned_to ? [task.assigned_to.id] : [],
+        client_ids: task.client ? [task.client.id] : [],
         project_id: task.project?.id || 0,
-        due_date: task.due_date ? task.due_date.split('T')[0] : '',
+        end_date: task.due_date ? task.due_date.split('T')[0] : '',
         task_type_id: task.task_type?.id || 0,
-        template_id: task.template?.id || 0,
       });
 
       // Fetch dropdown data
@@ -268,8 +266,6 @@ export default function EditTaskPage() {
   };
 
   const handleTemplateChange = async (templateId: number) => {
-    setFormData(prev => ({ ...prev, template_id: templateId }));
-    
     if (templateId) {
       try {
         // Load template questions
@@ -394,8 +390,11 @@ export default function EditTaskPage() {
                   <Label htmlFor="assigned_to">Assigned To</Label>
                   <select
                     id="assigned_to"
-                    value={formData.assigned_to_id}
-                    onChange={(e) => setFormData({ ...formData, assigned_to_id: parseInt(e.target.value) })}
+                    value={formData.user_ids[0] || ''}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      user_ids: e.target.value ? [parseInt(e.target.value)] : [] 
+                    })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
                     <option value="">Select User</option>
@@ -411,8 +410,11 @@ export default function EditTaskPage() {
                   <Label htmlFor="client">Client</Label>
                   <select
                     id="client"
-                    value={formData.client_id}
-                    onChange={(e) => setFormData({ ...formData, client_id: parseInt(e.target.value) })}
+                    value={formData.client_ids[0] || ''}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      client_ids: e.target.value ? [parseInt(e.target.value)] : [] 
+                    })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
                     <option value="">Select Client</option>
@@ -446,8 +448,8 @@ export default function EditTaskPage() {
                   <Input
                     id="due_date"
                     type="date"
-                    value={formData.due_date}
-                    onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                    value={formData.end_date}
+                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
                   />
                 </div>
 
@@ -468,22 +470,7 @@ export default function EditTaskPage() {
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="template">Template</Label>
-                  <select
-                    id="template"
-                    value={formData.template_id}
-                    onChange={(e) => handleTemplateChange(parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border rounded-md"
-                  >
-                    <option value="">Select Template</option>
-                    {templates.map((template) => (
-                      <option key={template.id} value={template.id}>
-                        {template.template_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+
               </div>
 
               <div className="space-y-2">
