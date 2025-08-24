@@ -12,12 +12,12 @@ import { format } from 'date-fns';
 
 interface Project {
   id: number;
-  name: string;
+  title: string;
   description?: string;
-  client?: {
+  clients?: Array<{
     id: number;
     name: string;
-  };
+  }>;
   status?: string;
   start_date?: string;
   end_date?: string;
