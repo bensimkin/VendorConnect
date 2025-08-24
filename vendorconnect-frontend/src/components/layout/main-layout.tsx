@@ -90,7 +90,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             })}
             
             {/* Admin Navigation */}
-            {user?.role === 'admin' && (
+            {user?.roles?.some(role => role.name === 'Admin') && (
               <>
                 <div className="px-3 py-2">
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -159,7 +159,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             })}
             
             {/* Admin Navigation */}
-            {user?.role === 'admin' && (
+            {user?.roles?.some(role => role.name === 'Admin') && (
               <>
                 <div className="px-3 py-2">
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
