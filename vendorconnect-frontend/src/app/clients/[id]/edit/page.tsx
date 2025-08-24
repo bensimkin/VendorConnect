@@ -28,6 +28,7 @@ interface Client {
   country?: string;
   zip?: string;
   dob?: string;
+  status?: number;
 }
 
 export default function EditClientPage() {
@@ -51,6 +52,7 @@ export default function EditClientPage() {
     country: '',
     zip: '',
     dob: '',
+    status: 1,
   });
 
   useEffect(() => {
@@ -76,6 +78,7 @@ export default function EditClientPage() {
         country: clientData.country || '',
         zip: clientData.zip || '',
         dob: clientData.dob || '',
+        status: clientData.status || 1,
       });
     } catch (error: any) {
       console.error('Failed to fetch client:', error);
@@ -260,6 +263,22 @@ export default function EditClientPage() {
                     value={formData.dob}
                     onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="status"
+                    type="checkbox"
+                    checked={formData.status === 1}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.checked ? 1 : 0 })}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {formData.status === 1 ? 'Active' : 'Inactive'} - {formData.status === 1 ? 'Client can access the system' : 'Client is disabled'}
+                  </span>
                 </div>
               </div>
 
