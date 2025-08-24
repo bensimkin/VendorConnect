@@ -198,7 +198,7 @@ export default function EditClientPage() {
                   <Input
                     id="doj"
                     type="text"
-                    value={client?.doj ? new Date(client.doj).toLocaleDateString() : 'Not set'}
+                    value={client?.created_at ? new Date(client.created_at).toLocaleDateString() : 'Not set'}
                     disabled
                     className="bg-gray-50"
                   />
