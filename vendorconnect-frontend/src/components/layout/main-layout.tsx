@@ -21,6 +21,7 @@ import {
   Sun,
   FileText,
   Tag,
+  Briefcase,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
@@ -33,6 +34,7 @@ const navigation = [
   { name: 'Users', href: '/users', icon: Users },
   { name: 'Clients', href: '/clients', icon: Building2 },
   { name: 'Projects', href: '/projects', icon: FolderOpen },
+  { name: 'Portfolio', href: '/portfolio', icon: Briefcase },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

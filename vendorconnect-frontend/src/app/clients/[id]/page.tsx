@@ -58,6 +58,24 @@ interface Task {
   created_at: string;
 }
 
+interface Portfolio {
+  id: number;
+  title: string;
+  description?: string;
+  deliverable_type: 'design' | 'document' | 'presentation' | 'other';
+  status: 'completed' | 'in_progress' | 'review';
+  created_at: string;
+  project?: {
+    id: number;
+    title: string;
+  };
+  taskType?: {
+    id: number;
+    task_type: string;
+  };
+  file_count: number;
+}
+
 export default function ClientDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -66,6 +84,7 @@ export default function ClientDetailPage() {
   const [client, setClient] = useState<Client | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,15 +93,17 @@ export default function ClientDetailPage() {
 
   const fetchClientData = async () => {
     try {
-      const [clientRes, projectsRes, tasksRes] = await Promise.all([
+      const [clientRes, projectsRes, tasksRes, portfoliosRes] = await Promise.all([
         apiClient.get(`/clients/${clientId}`),
         apiClient.get(`/clients/${clientId}/projects`),
         apiClient.get(`/clients/${clientId}/tasks`),
+        apiClient.get(`/clients/${clientId}/portfolio`),
       ]);
 
       setClient(clientRes.data.data);
       setProjects(projectsRes.data.data?.data || projectsRes.data.data || []);
       setTasks(tasksRes.data.data?.data || tasksRes.data.data || []);
+      setPortfolios(portfoliosRes.data.data?.data || portfoliosRes.data.data || []);
     } catch (error: any) {
       console.error('Failed to fetch client data:', error);
       toast.error('Failed to load client data');
@@ -387,6 +408,90 @@ export default function ClientDetailPage() {
                   <p className="text-sm text-muted-foreground text-center py-4">
                     No tasks found for this client
                   </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Portfolio */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Briefcase className="h-5 w-5" />
+                    Portfolio ({portfolios.length})
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push(`/portfolio?client_id=${clientId}`)}
+                  >
+                    View All
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {portfolios.length > 0 ? (
+                  <div className="space-y-3">
+                    {portfolios.slice(0, 5).map((portfolio) => (
+                      <div
+                        key={portfolio.id}
+                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{portfolio.title}</p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              {portfolio.deliverable_type}
+                            </Badge>
+                            {portfolio.project && (
+                              <span className="truncate">{portfolio.project.title}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 ml-2">
+                          <Badge
+                            variant={portfolio.status === 'completed' ? 'default' : 'secondary'}
+                            className="text-xs"
+                          >
+                            {portfolio.status.replace('_', ' ')}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => router.push(`/portfolio/${portfolio.id}`)}
+                          >
+                            View
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {portfolios.length > 5 && (
+                      <div className="text-center pt-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => router.push(`/portfolio?client_id=${clientId}`)}
+                        >
+                          View All Portfolio Items
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <Briefcase className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground mb-3">
+                      No portfolio items yet
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/portfolio/new?client_id=${clientId}`)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Portfolio Item
+                    </Button>
+                  </div>
                 )}
               </CardContent>
             </Card>
