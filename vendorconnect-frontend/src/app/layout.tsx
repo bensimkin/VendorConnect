@@ -9,9 +9,6 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'VendorConnect - Vendor Management System',
   description: 'Modern vendor and task management platform',
-  authors: [{ name: 'BUSINESSNET PTY LTD' }],
-  creator: 'BUSINESSNET PTY LTD',
-  publisher: 'BUSINESSNET PTY LTD',
 }
 
 export default function RootLayout({

@@ -2,8 +2,6 @@
   "name": "vendorconnect-frontend",
   "version": "0.1.0",
   "private": true,
-  "author": "BUSINESSNET PTY LTD",
-  "copyright": "Copyright © 2025 BUSINESSNET PTY LTD. All rights reserved.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
