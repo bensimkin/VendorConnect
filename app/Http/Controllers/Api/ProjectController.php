@@ -76,9 +76,14 @@ class ProjectController extends BaseController
                 'user_ids.*' => 'exists:users,id',
                 'client_ids' => 'nullable|array',
                 'client_ids.*' => 'exists:clients,id',
-                'client_id' => 'required|exists:clients,id',
+                'client_id' => 'nullable|exists:clients,id',
                 'budget' => 'nullable|numeric|min:0',
             ]);
+
+            // Custom validation to ensure either client_id or client_ids is provided
+            if (!$request->has('client_id') && !$request->has('client_ids')) {
+                return $this->sendValidationError(['client_id' => ['A client must be selected.']]);
+            }
 
             if ($validator->fails()) {
                 return $this->sendValidationError($validator->errors());
@@ -103,6 +108,8 @@ class ProjectController extends BaseController
             // Attach clients
             if ($request->has('client_ids')) {
                 $project->clients()->attach($request->client_ids);
+            } elseif ($request->has('client_id')) {
+                $project->clients()->attach($request->client_id);
             }
 
             DB::commit();
