@@ -75,6 +75,7 @@ export default function NewTaskPage() {
     user_ids: [] as number[],
     start_date: '',
     end_date: '',
+    close_deadline: false,
   });
 
   useEffect(() => {
@@ -194,6 +195,7 @@ export default function NewTaskPage() {
         user_ids: formData.user_ids,
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
+        close_deadline: formData.close_deadline,
       };
 
       const response = await apiClient.post('/tasks', payload);
@@ -377,6 +379,22 @@ export default function NewTaskPage() {
                       min={formData.start_date}
                       className="pl-10"
                     />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="close_deadline">Strict Deadline</Label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      id="close_deadline"
+                      type="checkbox"
+                      checked={formData.close_deadline}
+                      onChange={(e) => setFormData({ ...formData, close_deadline: e.target.checked })}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      If enabled, task will be automatically marked as "Rejected" when deadline passes
+                    </span>
                   </div>
                 </div>
               </div>
