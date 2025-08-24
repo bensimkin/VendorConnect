@@ -138,18 +138,25 @@ export default function EditTaskPage() {
     try {
       // Fetch task details
       const taskRes = await apiClient.get(`/tasks/${taskId}`);
+      console.log('Task API response:', taskRes.data);
+      
       const task: Task = taskRes.data.data;
+      console.log('Task object:', task);
+      
+      if (!task) {
+        throw new Error('Task not found');
+      }
 
       setFormData({
-        title: task.title || '',
-        description: task.description || '',
-        status_id: task.status?.id || '',
-        priority_id: task.priority?.id || '',
-        user_ids: task.assigned_to?.id ? [task.assigned_to.id] : [],
-        client_ids: task.client?.id ? [task.client.id] : [],
-        project_id: task.project?.id || 0,
-        end_date: task.due_date ? task.due_date.split('T')[0] : '',
-        task_type_id: task.task_type?.id || 0,
+        title: task?.title || '',
+        description: task?.description || '',
+        status_id: task?.status?.id || '',
+        priority_id: task?.priority?.id || '',
+        user_ids: task?.assigned_to?.id ? [task.assigned_to.id] : [],
+        client_ids: task?.client?.id ? [task.client.id] : [],
+        project_id: task?.project?.id || 0,
+        end_date: task?.due_date ? task.due_date.split('T')[0] : '',
+        task_type_id: task?.task_type?.id || 0,
       });
 
       // Fetch dropdown data
