@@ -157,7 +157,7 @@ export default function EditTaskPage() {
         apiClient.get('/users'),
         apiClient.get('/clients'),
         apiClient.get('/projects'),
-        apiClient.get('/task-types'),
+        apiClient.get('/task-types?per_page=all'),
         apiClient.get('/task-brief-templates'),
         apiClient.get('/statuses'),
         apiClient.get('/priorities'),
