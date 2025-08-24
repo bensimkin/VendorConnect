@@ -120,7 +120,7 @@ class ClientController extends BaseController
             \Log::info('ClientController::show called with ID: ' . $id);
             \Log::info('Auth user: ' . json_encode(Auth::user()));
             
-            $client = Client::with(['users', 'tasks'])
+            $client = Client::with(['tasks'])
                 ->find($id);
 
             \Log::info('Client query result: ' . ($client ? 'found' : 'not found'));
