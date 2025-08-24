@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import apiClient from '@/lib/api-client';
 import { Plus, Search, Mail, Phone, Calendar, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'react-hot-toast';
 
 interface User {
   id: number;
