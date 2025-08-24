@@ -141,12 +141,12 @@ export default function EditTaskPage() {
       const task: Task = taskRes.data.data;
 
       setFormData({
-        title: task.title,
+        title: task.title || '',
         description: task.description || '',
         status_id: task.status?.id || '',
         priority_id: task.priority?.id || '',
-        user_ids: task.assigned_to ? [task.assigned_to.id] : [],
-        client_ids: task.client ? [task.client.id] : [],
+        user_ids: task.assigned_to?.id ? [task.assigned_to.id] : [],
+        client_ids: task.client?.id ? [task.client.id] : [],
         project_id: task.project?.id || 0,
         end_date: task.due_date ? task.due_date.split('T')[0] : '',
         task_type_id: task.task_type?.id || 0,
