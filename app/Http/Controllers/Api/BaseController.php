@@ -12,17 +12,36 @@ class BaseController extends Controller
      */
     public function sendResponse($result, $message = 'Success')
     {
+        \Log::info('=== SEND RESPONSE START ===');
         \Log::info('BaseController::sendResponse called with message: ' . $message);
         \Log::info('Response data type: ' . gettype($result));
+        \Log::info('Response data class: ' . (is_object($result) ? get_class($result) : 'not object'));
         
-        $response = [
-            'success' => true,
-            'message' => $message,
-            'data' => $result
-        ];
+        try {
+            $response = [
+                'success' => true,
+                'message' => $message,
+                'data' => $result
+            ];
 
-        \Log::info('Response structure: ' . json_encode($response));
-        return response()->json($response, 200);
+            \Log::info('Response structure: ' . json_encode($response));
+            \Log::info('=== SEND RESPONSE SUCCESS ===');
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
+            \Log::error('=== SEND RESPONSE ERROR ===');
+            \Log::error('Error in sendResponse: ' . $e->getMessage());
+            \Log::error('Error class: ' . get_class($e));
+            \Log::error('Error file: ' . $e->getFile() . ':' . $e->getLine());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('=== SEND RESPONSE ERROR END ===');
+            
+            // Fallback response
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal server error during response generation',
+                'data' => null
+            ], 500);
+        }
     }
 
     /**
@@ -101,6 +120,12 @@ class BaseController extends Controller
      */
     public function sendServerError($message = 'Internal server error')
     {
+        \Log::error('=== SERVER ERROR RESPONSE ===');
+        \Log::error('sendServerError called with message: ' . $message);
+        \Log::error('Request URL: ' . request()->fullUrl());
+        \Log::error('Request method: ' . request()->method());
+        \Log::error('Auth user: ' . json_encode(Auth::user()));
+        \Log::error('=== SERVER ERROR RESPONSE END ===');
         return $this->sendError($message, [], 500);
     }
 }
