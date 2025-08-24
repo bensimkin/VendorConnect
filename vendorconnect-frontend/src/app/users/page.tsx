@@ -29,6 +29,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deletingUsers, setDeletingUsers] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetchUsers();
@@ -47,18 +48,40 @@ export default function UsersPage() {
     }
   };
 
-  const handleDelete = async (userId: number) => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+  const handleDelete = async (userId: number, userName: string) => {
+    if (!confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
       return;
     }
 
+    setDeletingUsers(prev => new Set(prev).add(userId));
+
     try {
-      await apiClient.delete(`/users/${userId}`);
-      toast.success('User deleted successfully');
-      fetchUsers();
+      const response = await apiClient.delete(`/users/${userId}`);
+      
+      if (response.data.success) {
+        toast.success('User deleted successfully');
+        fetchUsers();
+      } else {
+        toast.error(response.data.message || 'Failed to delete user');
+      }
     } catch (error: any) {
       console.error('Failed to delete user:', error);
-      toast.error('Failed to delete user');
+      
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.response?.status === 403) {
+        toast.error('Cannot delete your own account');
+      } else if (error.response?.status === 404) {
+        toast.error('User not found');
+      } else {
+        toast.error('Failed to delete user');
+      }
+    } finally {
+      setDeletingUsers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(userId);
+        return newSet;
+      });
     }
   };
 
@@ -167,9 +190,14 @@ export default function UsersPage() {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDelete(user.id)}
+                      disabled={deletingUsers.has(user.id)}
+                      onClick={() => handleDelete(user.id, `${user.first_name} ${user.last_name}`)}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      {deletingUsers.has(user.id) ? (
+                        <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </CardContent>
