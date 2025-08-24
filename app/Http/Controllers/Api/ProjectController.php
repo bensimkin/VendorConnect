@@ -123,7 +123,6 @@ class ProjectController extends BaseController
     {
         try {
             $project = Project::with(['users', 'clients', 'tasks'])
-                ->where('workspace_id', Auth::user()->workspace_id)
                 ->find($id);
 
             if (!$project) {
@@ -142,7 +141,7 @@ class ProjectController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $project = Project::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $project = Project::find($id);
 
             if (!$project) {
                 return $this->sendNotFound('Project not found');
@@ -197,7 +196,7 @@ class ProjectController extends BaseController
     public function destroy($id)
     {
         try {
-            $project = Project::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $project = Project::find($id);
 
             if (!$project) {
                 return $this->sendNotFound('Project not found');
@@ -222,7 +221,7 @@ class ProjectController extends BaseController
     public function getStatistics($id)
     {
         try {
-            $project = Project::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $project = Project::find($id);
 
             if (!$project) {
                 return $this->sendNotFound('Project not found');
