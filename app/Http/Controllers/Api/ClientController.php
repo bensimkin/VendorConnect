@@ -117,15 +117,24 @@ class ClientController extends BaseController
     public function show($id)
     {
         try {
+            \Log::info('ClientController::show called with ID: ' . $id);
+            \Log::info('Auth user: ' . json_encode(Auth::user()));
+            
             $client = Client::with(['users', 'tasks'])
                 ->find($id);
 
+            \Log::info('Client query result: ' . ($client ? 'found' : 'not found'));
+            
             if (!$client) {
+                \Log::warning('Client not found with ID: ' . $id);
                 return $this->sendNotFound('Client not found');
             }
 
+            \Log::info('Client data: ' . json_encode($client->toArray()));
             return $this->sendResponse($client, 'Client retrieved successfully');
         } catch (\Exception $e) {
+            \Log::error('ClientController::show error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return $this->sendServerError('Error retrieving client: ' . $e->getMessage());
         }
     }
