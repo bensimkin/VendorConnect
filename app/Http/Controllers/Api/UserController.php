@@ -181,7 +181,7 @@ class UserController extends BaseController
     public function destroy($id)
     {
         try {
-            $user = User::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $user = User::find($id);
 
             if (!$user) {
                 return $this->sendNotFound('User not found');
@@ -215,9 +215,7 @@ class UserController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $users = User::whereIn('id', $request->user_ids)
-                ->where('workspace_id', Auth::user()->workspace_id)
-                ->get();
+            $users = User::whereIn('id', $request->user_ids)->get();
 
             // Prevent deleting self
             $users = $users->filter(function ($user) {
