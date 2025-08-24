@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\TaskBriefChecklistController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\PortfolioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -163,6 +164,21 @@ Route::prefix('priorities')->group(function () {
             Route::delete('/files/{fileId}', [ClientController::class, 'deleteFile']);
             Route::get('/{id}/projects', [ClientController::class, 'projects']);
             Route::get('/{id}/tasks', [ClientController::class, 'tasks']);
+            Route::get('/{id}/portfolio', [PortfolioController::class, 'clientPortfolio']);
+            Route::get('/{id}/portfolio/stats', [PortfolioController::class, 'clientStats']);
+        });
+        
+        // Portfolios
+        Route::prefix('portfolios')->group(function () {
+            Route::get('/', [PortfolioController::class, 'index']);
+            Route::post('/', [PortfolioController::class, 'store']);
+            Route::get('/{id}', [PortfolioController::class, 'show']);
+            Route::put('/{id}', [PortfolioController::class, 'update']);
+            Route::delete('/{id}', [PortfolioController::class, 'destroy']);
+            
+            // Portfolio media
+            Route::post('/{id}/media', [PortfolioController::class, 'uploadMedia']);
+            Route::delete('/{id}/media/{mediaId}', [PortfolioController::class, 'deleteMedia']);
         });
         
         // Tags
