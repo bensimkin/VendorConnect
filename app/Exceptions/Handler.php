@@ -45,7 +45,16 @@ class Handler extends ExceptionHandler
     public function register()
     {
         $this->reportable(function (Throwable $e) {
-            //
+            \Log::error('=== UNHANDLED EXCEPTION ===');
+            \Log::error('Exception class: ' . get_class($e));
+            \Log::error('Exception message: ' . $e->getMessage());
+            \Log::error('Exception file: ' . $e->getFile() . ':' . $e->getLine());
+            \Log::error('Request URL: ' . request()->fullUrl());
+            \Log::error('Request method: ' . request()->method());
+            \Log::error('Request headers: ' . json_encode(request()->headers->all()));
+            \Log::error('Auth user: ' . json_encode(auth()->user()));
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('=== UNHANDLED EXCEPTION END ===');
         });
     }
 
