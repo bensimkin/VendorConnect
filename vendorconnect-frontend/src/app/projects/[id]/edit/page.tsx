@@ -71,8 +71,10 @@ export default function EditProjectPage() {
       const projectData = response.data.data;
       setProject(projectData);
       
+      console.log('Project data loaded:', projectData);
+      
       // Pre-populate form data
-      setFormData({
+      const formDataToSet = {
         title: projectData.title || '',
         description: projectData.description || '',
         client_id: projectData.clients?.[0]?.id?.toString() || '',
@@ -80,7 +82,10 @@ export default function EditProjectPage() {
         end_date: projectData.end_date || '',
         budget: projectData.budget?.toString() || '',
         status_id: projectData.status_id?.toString() || '',
-      });
+      };
+      
+      console.log('Form data being set:', formDataToSet);
+      setFormData(formDataToSet);
     } catch (error: any) {
       console.error('Failed to fetch project:', error);
       toast.error('Failed to load project details');
@@ -102,6 +107,8 @@ export default function EditProjectPage() {
       const projectStatuses = allStatuses.filter((status: any) => 
         ['active', 'inactive', 'completed'].includes(status.slug)
       );
+      console.log('All statuses:', allStatuses);
+      console.log('Project statuses:', projectStatuses);
       setStatuses(projectStatuses);
     } catch (error) {
       console.error('Failed to fetch form data:', error);
@@ -132,6 +139,9 @@ export default function EditProjectPage() {
         budget: formData.budget ? parseFloat(formData.budget) : null,
         status_id: parseInt(formData.status_id) || 20, // Default to Active (ID: 20)
       };
+
+      console.log('Form Data:', formData);
+      console.log('Payload being sent:', payload);
 
       await apiClient.put(`/projects/${projectId}`, payload);
       toast.success('Project updated successfully');
