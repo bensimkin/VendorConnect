@@ -12,8 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Clear existing priorities
-        DB::table('priorities')->truncate();
+        // Delete existing priorities (handles foreign key constraints)
+        DB::table('priorities')->delete();
+        
+        // Reset auto-increment
+        DB::statement('ALTER TABLE priorities AUTO_INCREMENT = 1');
         
         // Insert the new priority values
         $priorities = [
@@ -33,6 +36,6 @@ return new class extends Migration
     public function down(): void
     {
         // Clear the priorities table
-        DB::table('priorities')->truncate();
+        DB::table('priorities')->delete();
     }
 };
