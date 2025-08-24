@@ -22,6 +22,8 @@ interface Client {
 interface Task {
   id: number;
   title: string;
+  project_id?: number;
+  task_type_id?: number;
 }
 
 interface Project {
@@ -39,7 +41,8 @@ export default function NewPortfolioPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -59,15 +62,44 @@ export default function NewPortfolioPage() {
     fetchFormData();
   }, []);
 
+  // Filter tasks when project changes
+  useEffect(() => {
+    if (formData.project_id) {
+      const projectTasks = allTasks.filter(task => task.project_id === parseInt(formData.project_id));
+      setFilteredTasks(projectTasks);
+      
+      // Clear task and task type if they don't belong to the selected project
+      if (formData.task_id) {
+        const selectedTask = projectTasks.find(task => task.id === parseInt(formData.task_id));
+        if (!selectedTask) {
+          setFormData(prev => ({ ...prev, task_id: '', task_type_id: '' }));
+        }
+      }
+    } else {
+      setFilteredTasks(allTasks);
+    }
+  }, [formData.project_id, allTasks]);
+
+  // Auto-populate task type when task is selected
+  useEffect(() => {
+    if (formData.task_id) {
+      const selectedTask = allTasks.find(task => task.id === parseInt(formData.task_id));
+      if (selectedTask?.task_type_id) {
+        setFormData(prev => ({ ...prev, task_type_id: selectedTask.task_type_id.toString() }));
+      }
+    }
+  }, [formData.task_id, allTasks]);
+
   const fetchFormData = async () => {
     try {
       // Fetch clients
       const clientsResponse = await apiClient.get('/clients');
       setClients(clientsResponse.data.data || []);
 
-      // Fetch tasks
+      // Fetch tasks with project and task type info
       const tasksResponse = await apiClient.get('/tasks');
-      setTasks(tasksResponse.data.data || []);
+      setAllTasks(tasksResponse.data.data || []);
+      setFilteredTasks(tasksResponse.data.data || []);
 
       // Fetch projects
       const projectsResponse = await apiClient.get('/projects');
@@ -256,34 +288,16 @@ export default function NewPortfolioPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="task_id">Related Task</Label>
-                  <Select
-                    value={formData.task_id}
-                    onValueChange={(value) => setFormData({ ...formData, task_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a task (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tasks.map((task) => (
-                        <SelectItem key={task.id} value={task.id.toString()}>
-                          {task.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="project_id">Related Project</Label>
                   <Select
                     value={formData.project_id}
-                    onValueChange={(value) => setFormData({ ...formData, project_id: value })}
+                    onValueChange={(value) => setFormData({ ...formData, project_id: value, task_id: '', task_type_id: '' })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a project (optional)" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="">All Projects</SelectItem>
                       {projects.map((project) => (
                         <SelectItem key={project.id} value={project.id.toString()}>
                           {project.title}
@@ -294,13 +308,40 @@ export default function NewPortfolioPage() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="task_id">Related Task</Label>
+                  <Select
+                    value={formData.task_id}
+                    onValueChange={(value) => setFormData({ ...formData, task_id: value })}
+                    disabled={!formData.project_id}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={formData.project_id ? "Select a task (optional)" : "Select a project first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredTasks.length > 0 ? (
+                        filteredTasks.map((task) => (
+                          <SelectItem key={task.id} value={task.id.toString()}>
+                            {task.title}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>
+                          {formData.project_id ? "No tasks found for this project" : "No tasks available"}
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="task_type_id">Task Type</Label>
                   <Select
                     value={formData.task_type_id}
                     onValueChange={(value) => setFormData({ ...formData, task_type_id: value })}
+                    disabled={!!formData.task_id}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select task type (optional)" />
+                      <SelectValue placeholder={formData.task_id ? "Auto-populated from task" : "Select task type (optional)"} />
                     </SelectTrigger>
                     <SelectContent>
                       {taskTypes.map((type) => (
@@ -310,6 +351,11 @@ export default function NewPortfolioPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formData.task_id && (
+                    <p className="text-xs text-muted-foreground">
+                      Task type is automatically set based on the selected task
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
