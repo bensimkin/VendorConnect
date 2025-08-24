@@ -161,13 +161,15 @@ class ProjectController extends BaseController
             }
 
             $validator = Validator::make($request->all(), [
-                'name' => 'sometimes|required|string|max:255',
+                'title' => 'sometimes|required|string|max:255',
                 'description' => 'nullable|string',
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date|after_or_equal:start_date',
-                'status' => 'sometimes|string|in:active,completed,on_hold,cancelled',
+                'status_id' => 'sometimes|exists:statuses,id',
+                'budget' => 'nullable|numeric|min:0',
                 'user_ids' => 'nullable|array',
                 'user_ids.*' => 'exists:users,id',
+                'client_id' => 'nullable|exists:clients,id',
                 'client_ids' => 'nullable|array',
                 'client_ids.*' => 'exists:clients,id',
             ]);
@@ -179,7 +181,7 @@ class ProjectController extends BaseController
             DB::beginTransaction();
 
             $project->update($request->only([
-                'name', 'description', 'start_date', 'end_date', 'status'
+                'title', 'description', 'start_date', 'end_date', 'status_id', 'budget'
             ]));
 
             // Sync users
@@ -187,8 +189,12 @@ class ProjectController extends BaseController
                 $project->users()->sync($request->user_ids);
             }
 
-            // Sync clients
-            if ($request->has('client_ids')) {
+            // Handle client assignment - support both single client_id and client_ids array
+            if ($request->has('client_id')) {
+                // Single client assignment
+                $project->clients()->sync([$request->client_id]);
+            } elseif ($request->has('client_ids')) {
+                // Multiple clients assignment
                 $project->clients()->sync($request->client_ids);
             }
 
