@@ -114,24 +114,24 @@ Route::prefix('v1')->group(function () {
         });
         
         // Statuses
-        Route::prefix('statuses')->group(function () {
-            Route::get('/', [StatusController::class, 'index']);
-            Route::post('/', [StatusController::class, 'store']);
-            Route::get('/{id}', [StatusController::class, 'show']);
-            Route::put('/{id}', [StatusController::class, 'update']);
-            Route::delete('/{id}', [StatusController::class, 'destroy']);
-            Route::delete('/', [StatusController::class, 'destroyMultiple']);
-        });
+Route::prefix('statuses')->group(function () {
+    Route::get('/', [StatusController::class, 'index']);
+    Route::post('/', [StatusController::class, 'store']);
+    Route::get('/{id}', [StatusController::class, 'show']);
+    Route::put('/{id}', [StatusController::class, 'update']);
+    Route::delete('/{id}', [StatusController::class, 'destroy']);
+    Route::delete('/', [StatusController::class, 'destroyMultiple']);
+});
         
         // Priorities
-        Route::prefix('priorities')->group(function () {
-            Route::get('/', [PriorityController::class, 'index']);
-            Route::post('/', [PriorityController::class, 'store']);
-            Route::get('/{id}', [PriorityController::class, 'show']);
-            Route::put('/{id}', [PriorityController::class, 'update']);
-            Route::delete('/{id}', [PriorityController::class, 'destroy']);
-            Route::delete('/', [PriorityController::class, 'destroyMultiple']);
-        });
+Route::prefix('priorities')->group(function () {
+    Route::get('/', [PriorityController::class, 'index']);
+    Route::post('/', [PriorityController::class, 'store']);
+    Route::get('/{id}', [PriorityController::class, 'show']);
+    Route::put('/{id}', [PriorityController::class, 'update']);
+    Route::delete('/{id}', [PriorityController::class, 'destroy']);
+    Route::delete('/', [PriorityController::class, 'destroyMultiple']);
+});
         
         // Users
         Route::prefix('users')->group(function () {
