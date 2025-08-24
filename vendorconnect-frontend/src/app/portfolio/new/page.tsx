@@ -84,7 +84,7 @@ export default function NewPortfolioPage() {
   useEffect(() => {
     if (formData.task_id) {
       const selectedTask = allTasks.find(task => task.id === parseInt(formData.task_id));
-      if (selectedTask?.task_type_id) {
+      if (selectedTask?.task_type_id !== undefined) {
         setFormData(prev => ({ ...prev, task_type_id: selectedTask.task_type_id.toString() }));
       }
     }
