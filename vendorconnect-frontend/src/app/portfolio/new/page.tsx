@@ -23,7 +23,7 @@ interface Task {
   id: number;
   title: string;
   project_id?: number;
-  task_type_id?: number;
+  task_type_id: number;
 }
 
 interface Project {
@@ -84,7 +84,7 @@ export default function NewPortfolioPage() {
   useEffect(() => {
     if (formData.task_id) {
       const selectedTask = allTasks.find(task => task.id === parseInt(formData.task_id));
-      if (selectedTask && selectedTask.task_type_id !== undefined) {
+      if (selectedTask && selectedTask.task_type_id) {
         setFormData(prev => ({ ...prev, task_type_id: selectedTask.task_type_id.toString() }));
       }
     }
