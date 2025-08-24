@@ -12,12 +12,16 @@ class BaseController extends Controller
      */
     public function sendResponse($result, $message = 'Success')
     {
+        \Log::info('BaseController::sendResponse called with message: ' . $message);
+        \Log::info('Response data type: ' . gettype($result));
+        
         $response = [
             'success' => true,
             'message' => $message,
             'data' => $result
         ];
 
+        \Log::info('Response structure: ' . json_encode($response));
         return response()->json($response, 200);
     }
 
