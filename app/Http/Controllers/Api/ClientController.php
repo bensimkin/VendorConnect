@@ -118,7 +118,6 @@ class ClientController extends BaseController
     {
         try {
             $client = Client::with(['users', 'tasks'])
-                ->where('workspace_id', Auth::user()->workspace_id ?? 1)
                 ->find($id);
 
             if (!$client) {
