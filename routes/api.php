@@ -48,7 +48,11 @@ Route::prefix('v1')->group(function () {
         
         // User profile
         Route::get('/user', function (Request $request) {
-            return $request->user();
+            $user = $request->user();
+            $user->load(['roles' => function($query) {
+                $query->select('id', 'name');
+            }]);
+            return $user;
         });
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::post('/auth/refresh', [AuthController::class, 'refresh']);
