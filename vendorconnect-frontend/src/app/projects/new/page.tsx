@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import MainLayout from '@/components/layout/main-layout';
@@ -18,7 +18,7 @@ interface Client {
   company?: string;
 }
 
-export default function NewProjectPage() {
+function NewProjectPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const clientId = searchParams.get('client_id');
@@ -198,5 +198,13 @@ export default function NewProjectPage() {
         </form>
       </div>
     </MainLayout>
+  );
+}
+
+export default function NewProjectPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewProjectPageContent />
+    </Suspense>
   );
 }
