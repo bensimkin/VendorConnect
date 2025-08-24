@@ -148,7 +148,7 @@ class TaskController extends BaseController
     public function show($id)
     {
         try {
-            $task = Task::with(['users', 'status', 'priority', 'taskType'])
+            $task = Task::with(['users', 'status', 'priority', 'taskType', 'project', 'clients'])
                 ->find($id);
 
             if (!$task) {
@@ -218,7 +218,7 @@ class TaskController extends BaseController
 
             DB::commit();
 
-            $task->load(['users', 'status', 'priority', 'taskType']);
+            $task->load(['users', 'status', 'priority', 'taskType', 'project', 'clients']);
 
             return $this->sendResponse($task, 'Task updated successfully');
         } catch (\Exception $e) {
