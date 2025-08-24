@@ -46,9 +46,23 @@ export default function TasksPage() {
     fetchTasks();
   }, []);
 
-  const fetchTasks = async () => {
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchTasks(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const fetchTasks = async (searchQuery = '') => {
     try {
-      const response = await apiClient.get('/tasks');
+      const params = new URLSearchParams();
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+      
+      const response = await apiClient.get(`/tasks?${params.toString()}`);
       // Handle paginated response
       const taskData = response.data.data?.data || response.data.data || [];
       setTasks(Array.isArray(taskData) ? taskData : []);
@@ -75,16 +89,13 @@ export default function TasksPage() {
     }
   };
 
+  // Use tasks directly since search is now server-side
   const filteredTasks = tasks.filter(task => {
-    const matchesSearch = 
-      (task.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (task.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-    
     const matchesStatus = 
       selectedStatus === 'all' || 
       task.status?.name === selectedStatus;
     
-    return matchesSearch && matchesStatus;
+    return matchesStatus;
   });
 
   const getStatusColor = (color?: string) => {
