@@ -135,7 +135,7 @@ export default function EditProjectPage() {
 
       await apiClient.put(`/projects/${projectId}`, payload);
       toast.success('Project updated successfully');
-      router.push(`/projects/${projectId}`);
+      router.push(`/projects/${projectId}?refresh=${Date.now()}`);
     } catch (error: any) {
       console.error('Failed to update project:', error);
       toast.error(error.response?.data?.message || 'Failed to update project');

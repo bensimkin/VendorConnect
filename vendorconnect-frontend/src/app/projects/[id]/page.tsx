@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +30,7 @@ interface Project {
 export default function ProjectDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const projectId = params.id as string;
 
   const [project, setProject] = useState<Project | null>(null);
@@ -39,7 +40,7 @@ export default function ProjectDetailPage() {
     if (projectId) {
       fetchProject();
     }
-  }, [projectId]);
+  }, [projectId, searchParams]);
 
   const fetchProject = async () => {
     try {
