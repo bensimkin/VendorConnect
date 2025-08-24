@@ -72,6 +72,22 @@ export default function ClientsPage() {
     }
   };
 
+  const handleToggleStatus = async (clientId: number, newStatus: number, clientName: string) => {
+    const action = newStatus === 1 ? 'activate' : 'deactivate';
+    if (!confirm(`Are you sure you want to ${action} "${clientName}"?`)) {
+      return;
+    }
+
+    try {
+      await apiClient.put(`/clients/${clientId}`, { status: newStatus });
+      toast.success(`Client ${action}d successfully`);
+      fetchClients(); // Refresh the list
+    } catch (error: any) {
+      console.error(`Failed to ${action} client:`, error);
+      toast.error(`Failed to ${action} client`);
+    }
+  };
+
   if (loading) {
     return (
       <MainLayout>
@@ -177,6 +193,18 @@ export default function ClientsPage() {
                       )}
                     </div>
                     <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleStatus(client.id, client.status === 1 ? 0 : 1, client.name);
+                        }}
+                        className={client.status === 1 ? 'text-orange-600 hover:text-orange-700 hover:bg-orange-50' : 'text-green-600 hover:text-green-700 hover:bg-green-50'}
+                        title={client.status === 1 ? 'Deactivate Client' : 'Activate Client'}
+                      >
+                        {client.status === 1 ? 'Deactivate' : 'Activate'}
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
