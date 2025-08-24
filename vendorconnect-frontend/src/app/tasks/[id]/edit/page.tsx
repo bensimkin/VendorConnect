@@ -155,17 +155,17 @@ export default function EditTaskPage() {
         throw new Error('Task not found');
       }
 
-      setFormData({
-        title: task?.title || '',
-        description: task?.description || '',
-        status_id: task?.status?.id || '',
-        priority_id: task?.priority?.id || '',
-        user_ids: task?.assigned_to?.id ? [task.assigned_to.id] : [],
-        client_ids: task?.client?.id ? [task.client.id] : [],
-        project_id: task?.project?.id || 0,
-        end_date: task?.due_date ? task.due_date.split('T')[0] : '',
-        task_type_id: task?.task_type?.id || 0,
-      });
+              setFormData({
+          title: task?.title || '',
+          description: task?.description || '',
+          status_id: task?.status?.id || 0,
+          priority_id: task?.priority?.id || 0,
+          user_ids: task?.assigned_to?.id ? [task.assigned_to.id] : [],
+          client_ids: task?.client?.id ? [task.client.id] : [],
+          project_id: task?.project?.id || 0,
+          end_date: task?.due_date ? task.due_date.split('T')[0] : '',
+          task_type_id: task?.task_type?.id || 0,
+        });
 
       // Fetch dropdown data
       const [usersRes, clientsRes, projectsRes, taskTypesRes, templatesRes, statusesRes, prioritiesRes] = await Promise.all([
