@@ -10,6 +10,7 @@ interface User {
   email: string;
   photo: string | null;
   status: number;
+  role?: string;
 }
 
 interface AuthState {
