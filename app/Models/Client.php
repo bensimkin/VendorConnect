@@ -81,6 +81,11 @@ class Client extends Authenticatable implements MustVerifyEmail
         return str($this->first_name . " " . $this->last_name);
     }
 
+    public function getNameAttribute()
+    {
+        return trim($this->first_name . ' ' . $this->last_name);
+    }
+
     public function todos($status = null, $search = '')
     {
         $query = $this->morphMany(Todo::class, 'creator')->where('workspace_id', session()->get('workspace_id'));
