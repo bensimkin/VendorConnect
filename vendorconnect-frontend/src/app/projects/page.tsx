@@ -43,9 +43,23 @@ export default function ProjectsPage() {
     fetchProjects();
   }, []);
 
-  const fetchProjects = async () => {
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchProjects(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const fetchProjects = async (searchQuery = '') => {
     try {
-      const response = await apiClient.get('/projects');
+      const params = new URLSearchParams();
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+      
+      const response = await apiClient.get(`/projects?${params.toString()}`);
       // Handle paginated response
       const projectData = response.data.data?.data || response.data.data || [];
       setProjects(Array.isArray(projectData) ? projectData : []);
@@ -89,17 +103,13 @@ export default function ProjectsPage() {
     }
   };
 
+  // Use projects directly since search is now server-side
   const filteredProjects = projects.filter(project => {
-    const matchesSearch = 
-      (project.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (project.description?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (project.client?.name?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-    
     const matchesStatus = 
       statusFilter === 'all' || 
       (project.status?.toLowerCase() || '') === statusFilter.toLowerCase();
     
-    return matchesSearch && matchesStatus;
+    return matchesStatus;
   });
 
   if (loading) {

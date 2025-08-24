@@ -35,9 +35,23 @@ export default function UsersPage() {
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchUsers(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const fetchUsers = async (searchQuery = '') => {
     try {
-      const response = await apiClient.get('/users');
+      const params = new URLSearchParams();
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+      
+      const response = await apiClient.get(`/users?${params.toString()}`);
       const userData = response.data.data?.data || response.data.data || [];
       setUsers(Array.isArray(userData) ? userData : []);
     } catch (error) {
@@ -85,11 +99,8 @@ export default function UsersPage() {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
-    const email = user.email.toLowerCase();
-    return fullName.includes(searchTerm.toLowerCase()) || email.includes(searchTerm.toLowerCase());
-  });
+  // Use users directly since search is now server-side
+  const filteredUsers = users;
 
   if (loading) {
     return (

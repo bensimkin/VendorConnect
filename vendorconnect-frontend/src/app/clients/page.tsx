@@ -34,9 +34,23 @@ export default function ClientsPage() {
     fetchClients();
   }, []);
 
-  const fetchClients = async () => {
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchClients(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const fetchClients = async (searchQuery = '') => {
     try {
-      const response = await apiClient.get('/clients');
+      const params = new URLSearchParams();
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+      
+      const response = await apiClient.get(`/clients?${params.toString()}`);
       // Handle paginated response
       const clientData = response.data.data?.data || response.data.data || [];
       setClients(Array.isArray(clientData) ? clientData : []);
@@ -48,14 +62,8 @@ export default function ClientsPage() {
     }
   };
 
-  const filteredClients = clients.filter(client => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      (client.name?.toLowerCase() || '').includes(searchLower) ||
-      (client.email?.toLowerCase() || '').includes(searchLower) ||
-      (client.company?.toLowerCase() || '').includes(searchLower)
-    );
-  });
+  // Use clients directly since search is now server-side
+  const filteredClients = clients;
 
   const handleDeleteClient = async (clientId: number, clientName: string) => {
     if (!confirm(`Are you sure you want to delete "${clientName}"? This action cannot be undone.`)) {
