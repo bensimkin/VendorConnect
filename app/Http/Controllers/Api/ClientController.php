@@ -134,7 +134,7 @@ class ClientController extends BaseController
                 return $this->sendNotFound('Client not found');
             }
             
-            $client = Client::with(['tasks'])
+            $client = Client::with(['clientTasks'])
                 ->find($id);
 
             \Log::info('Client query result: ' . ($client ? 'found' : 'not found'));
