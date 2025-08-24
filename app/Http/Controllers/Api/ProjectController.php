@@ -103,6 +103,7 @@ class ProjectController extends BaseController
                 'end_date' => $request->end_date ?: $request->start_date, // Use start_date as default if end_date is not provided
                 'status_id' => 1, // Default active status
                 'created_by' => $request->user()->id,
+                'workspace_id' => 1, // Default workspace for single-tenant system
             ]);
 
             // Attach users
