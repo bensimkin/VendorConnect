@@ -21,6 +21,13 @@ interface Client {
   company?: string;
   website?: string;
   notes?: string;
+  doj?: string;
+  created_at?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  zip?: string;
+  dob?: string;
 }
 
 export default function EditClientPage() {
@@ -30,6 +37,7 @@ export default function EditClientPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [client, setClient] = useState<Client | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -38,6 +46,11 @@ export default function EditClientPage() {
     company: '',
     website: '',
     notes: '',
+    city: '',
+    state: '',
+    country: '',
+    zip: '',
+    dob: '',
   });
 
   useEffect(() => {
@@ -47,16 +60,22 @@ export default function EditClientPage() {
   const fetchClient = async () => {
     try {
       const response = await apiClient.get(`/clients/${clientId}`);
-      const client: Client = response.data.data;
+      const clientData: Client = response.data.data;
       
+      setClient(clientData);
       setFormData({
-        name: client.name,
-        email: client.email || '',
-        phone: client.phone || '',
-        address: client.address || '',
-        company: client.company || '',
-        website: client.website || '',
-        notes: client.notes || '',
+        name: clientData.name,
+        email: clientData.email || '',
+        phone: clientData.phone || '',
+        address: clientData.address || '',
+        company: clientData.company || '',
+        website: clientData.website || '',
+        notes: clientData.notes || '',
+        city: clientData.city || '',
+        state: clientData.state || '',
+        country: clientData.country || '',
+        zip: clientData.zip || '',
+        dob: clientData.dob || '',
       });
     } catch (error: any) {
       console.error('Failed to fetch client:', error);
@@ -173,6 +192,17 @@ export default function EditClientPage() {
                     onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="doj">Date of Joining</Label>
+                  <Input
+                    id="doj"
+                    type="text"
+                    value={client?.doj ? new Date(client.doj).toLocaleDateString() : 'Not set'}
+                    disabled
+                    className="bg-gray-50"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -183,6 +213,54 @@ export default function EditClientPage() {
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   rows={3}
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="state">State/Province</Label>
+                  <Input
+                    id="state"
+                    value={formData.state}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="zip">ZIP/Postal Code</Label>
+                  <Input
+                    id="zip"
+                    value={formData.zip}
+                    onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="dob">Date of Birth</Label>
+                  <Input
+                    id="dob"
+                    type="date"
+                    value={formData.dob}
+                    onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
