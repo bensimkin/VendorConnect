@@ -98,6 +98,12 @@ class Client extends Authenticatable implements MustVerifyEmail
         if ($search !== '') {
             $query->where('title', 'like', '%' . $search . '%');
         }
+    }
+
+    public function portfolio()
+    {
+        return $this->hasMany(Portfolio::class);
+    }
 
         return $query;
     }
