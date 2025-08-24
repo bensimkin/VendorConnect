@@ -24,11 +24,12 @@ class ClientController extends BaseController
             // Apply filters
             if ($request->has('search')) {
                 $search = $request->search;
-                $query->where(function ($q) use ($search) {
-                                    $q->where('name', 'like', "%{$search}%")
+                            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('company', 'like', "%{$search}%");
-                });
+            });
             }
 
             if ($request->has('status')) {
@@ -77,17 +78,21 @@ class ClientController extends BaseController
 
             DB::beginTransaction();
 
+            // Split name into first_name and last_name
+            $nameParts = explode(' ', trim($request->name), 2);
+            $firstName = $nameParts[0];
+            $lastName = isset($nameParts[1]) ? $nameParts[1] : '';
+
             $client = Client::create([
-                'name' => $request->name,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'company' => $request->company,
                 'address' => $request->address,
-                'website' => $request->website,
-                'notes' => $request->notes,
-                'workspace_id' => $request->user()->workspace_id,
+                'client_note' => $request->notes,
+                'admin_id' => $request->user()->id,
                 'status' => $request->get('status', 1),
-                'created_by' => $request->user()->id,
             ]);
 
             // Attach users
@@ -132,7 +137,7 @@ class ClientController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $client = Client::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $client = Client::find($id);
 
             if (!$client) {
                 return $this->sendNotFound('Client not found');
@@ -155,10 +160,20 @@ class ClientController extends BaseController
 
             DB::beginTransaction();
 
-            $client->update($request->only([
-                'name', 'email', 'phone', 'company',
-                'address', 'website', 'notes', 'status'
-            ]));
+            // Split name into first_name and last_name if name is provided
+            $updateData = $request->only(['email', 'phone', 'company', 'address', 'status']);
+            
+            if ($request->has('name')) {
+                $nameParts = explode(' ', trim($request->name), 2);
+                $updateData['first_name'] = $nameParts[0];
+                $updateData['last_name'] = isset($nameParts[1]) ? $nameParts[1] : '';
+            }
+            
+            if ($request->has('notes')) {
+                $updateData['client_note'] = $request->notes;
+            }
+
+            $client->update($updateData);
 
 
 
@@ -179,7 +194,7 @@ class ClientController extends BaseController
     public function destroy($id)
     {
         try {
-            $client = Client::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $client = Client::find($id);
 
             if (!$client) {
                 return $this->sendNotFound('Client not found');
@@ -208,9 +223,7 @@ class ClientController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $clients = Client::whereIn('id', $request->client_ids)
-                ->where('workspace_id', Auth::user()->workspace_id)
-                ->get();
+            $clients = Client::whereIn('id', $request->client_ids)->get();
 
             foreach ($clients as $client) {
                 $client->delete();
