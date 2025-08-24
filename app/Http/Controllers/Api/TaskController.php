@@ -177,6 +177,7 @@ class TaskController extends BaseController
                 'description' => 'nullable|string',
                 'status_id' => 'sometimes|required|exists:statuses,id',
                 'priority_id' => 'sometimes|required|exists:priorities,id',
+                'task_type_id' => 'nullable|exists:task_types,id',
                 'project_id' => 'nullable|exists:projects,id',
                 'user_ids' => 'nullable|array',
                 'user_ids.*' => 'exists:users,id',
@@ -196,7 +197,7 @@ class TaskController extends BaseController
 
             $task->update($request->only([
                 'title', 'description', 'status_id', 'priority_id', 
-                'project_id', 'start_date', 'end_date'
+                'task_type_id', 'project_id', 'start_date', 'end_date'
             ]));
 
             // Sync users
