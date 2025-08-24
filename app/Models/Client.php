@@ -41,6 +41,8 @@ class Client extends Authenticatable implements MustVerifyEmail
         'client_note',
     ];
 
+    protected $appends = ['name'];
+
     /**
      * The attributes that should be hidden for serialization.
      *
