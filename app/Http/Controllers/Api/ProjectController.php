@@ -19,8 +19,8 @@ class ProjectController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = Project::with(['users', 'clients', 'tasks'])
-                ->where('workspace_id', $request->user()->workspace_id);
+            $query = Project::with(['users', 'clients', 'tasks']);
+            // Removed workspace filtering for single-tenant system
 
             // Apply filters
             if ($request->has('search')) {
@@ -67,7 +67,7 @@ class ProjectController extends BaseController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
+                'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date|after_or_equal:start_date',
@@ -76,6 +76,8 @@ class ProjectController extends BaseController
                 'user_ids.*' => 'exists:users,id',
                 'client_ids' => 'nullable|array',
                 'client_ids.*' => 'exists:clients,id',
+                'client_id' => 'required|exists:clients,id',
+                'budget' => 'nullable|numeric|min:0',
             ]);
 
             if ($validator->fails()) {
@@ -85,12 +87,11 @@ class ProjectController extends BaseController
             DB::beginTransaction();
 
             $project = Project::create([
-                'name' => $request->name,
+                'title' => $request->title,
                 'description' => $request->description,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
-                'status' => $request->get('status', 'active'),
-                'workspace_id' => $request->user()->workspace_id,
+                'status_id' => 1, // Default active status
                 'created_by' => $request->user()->id,
             ]);
 
