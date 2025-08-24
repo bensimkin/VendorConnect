@@ -17,11 +17,11 @@ interface Task {
   id: number;
   title: string;
   description?: string;
-  status: {
+  status?: {
     id: number;
     name: string;
   };
-  priority: {
+  priority?: {
     id: number;
     name: string;
   };
@@ -143,8 +143,8 @@ export default function EditTaskPage() {
       setFormData({
         title: task.title,
         description: task.description || '',
-        status_id: task.status.id,
-        priority_id: task.priority.id,
+        status_id: task.status?.id || '',
+        priority_id: task.priority?.id || '',
         user_ids: task.assigned_to ? [task.assigned_to.id] : [],
         client_ids: task.client ? [task.client.id] : [],
         project_id: task.project?.id || 0,
