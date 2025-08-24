@@ -178,8 +178,8 @@ export default function ProjectsPage() {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div className="space-y-1">
-                      <CardTitle className="text-xl">{project.name || 'Unnamed Project'}</CardTitle>
-                      <CardDescription>{project.client?.name || 'No Client'}</CardDescription>
+                      <CardTitle className="text-xl">{project.title || 'Unnamed Project'}</CardTitle>
+                      <CardDescription>{project.clients?.[0]?.name || 'No Client'}</CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(project.status)}
