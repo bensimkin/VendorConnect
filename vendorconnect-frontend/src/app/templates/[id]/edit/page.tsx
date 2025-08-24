@@ -67,7 +67,7 @@ export default function EditTemplatePage() {
     try {
       const [templateRes, taskTypesRes, questionsRes, checklistRes] = await Promise.all([
         apiClient.get(`/task-brief-templates/${templateId}`),
-        apiClient.get('/task-types'),
+        apiClient.get('/task-types?per_page=all'),
         apiClient.get(`/task-brief-questions?template_id=${templateId}`),
         apiClient.get(`/task-brief-checklists?template_id=${templateId}`),
       ]);
