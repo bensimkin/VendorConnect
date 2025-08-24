@@ -120,7 +120,7 @@ class ProjectController extends BaseController
 
             DB::commit();
 
-            $project->load(['users', 'clients', 'tasks']);
+            $project->load(['users', 'clients', 'tasks', 'status']);
 
             return $this->sendResponse($project, 'Project created successfully');
         } catch (\Exception $e) {
@@ -135,7 +135,7 @@ class ProjectController extends BaseController
     public function show($id)
     {
         try {
-            $project = Project::with(['users', 'clients', 'tasks'])
+            $project = Project::with(['users', 'clients', 'tasks', 'status'])
                 ->find($id);
 
             if (!$project) {
@@ -200,7 +200,7 @@ class ProjectController extends BaseController
 
             DB::commit();
 
-            $project->load(['users', 'clients', 'tasks']);
+            $project->load(['users', 'clients', 'tasks', 'status']);
 
             return $this->sendResponse($project, 'Project updated successfully');
         } catch (\Exception $e) {
