@@ -15,6 +15,7 @@ class Task extends Model implements HasMedia
         'title',
         'status_id',
         'task_type_id',
+        'project_id',
         'start_date',
         'close_deadline',
         'end_date',
