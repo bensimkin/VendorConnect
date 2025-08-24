@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\StatusController;
 use App\Http\Controllers\Api\PriorityController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserRoleController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\TagController;
 use App\Http\Controllers\Api\TaskBriefTemplateController;
@@ -151,6 +152,15 @@ Route::prefix('priorities')->group(function () {
             Route::get('/{id}', [UserRoleController::class, 'show']);
             Route::put('/{id}', [UserRoleController::class, 'update']);
             Route::delete('/{id}', [UserRoleController::class, 'destroy']);
+        });
+        
+        // Roles
+        Route::prefix('roles')->group(function () {
+            Route::get('/', [RoleController::class, 'index']);
+            Route::post('/', [RoleController::class, 'store']);
+            Route::get('/{id}', [RoleController::class, 'show']);
+            Route::put('/{id}', [RoleController::class, 'update']);
+            Route::delete('/{id}', [RoleController::class, 'destroy']);
         });
         
         // Clients
