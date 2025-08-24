@@ -98,12 +98,19 @@ export default function NewTaskPage() {
       setTemplates(templateRes.data.data?.data || templateRes.data.data || []);
 
       // Set default values
-      if (statusRes.data.data?.length > 0) {
-        setFormData(prev => ({ ...prev, status_id: statusRes.data.data[0].id.toString() }));
+      const pendingStatus = statusRes.data.data?.find((s: Status) => s.name === 'Pending');
+      const mediumPriority = priorityRes.data.data?.find((p: Priority) => p.name === 'Medium');
+      
+      if (pendingStatus) {
+        setFormData(prev => ({ ...prev, status_id: pendingStatus.id.toString() }));
       }
-      if (priorityRes.data.data?.length > 0) {
-        setFormData(prev => ({ ...prev, priority_id: priorityRes.data.data[0].id.toString() }));
+      if (mediumPriority) {
+        setFormData(prev => ({ ...prev, priority_id: mediumPriority.id.toString() }));
       }
+      
+      // Set start date to today
+      const today = new Date().toISOString().split('T')[0];
+      setFormData(prev => ({ ...prev, start_date: today }));
     } catch (error) {
       console.error('Failed to fetch form data:', error);
       toast.error('Failed to load form data');
@@ -128,6 +135,7 @@ export default function NewTaskPage() {
           setFormData(prev => ({
             ...prev,
             title: template.template_name,
+            task_type_id: template.task_type_id?.toString() || '',
           }));
         }
         

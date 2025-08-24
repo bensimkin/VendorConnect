@@ -256,10 +256,10 @@ export default function ClientDetailPage() {
                             <span>DOB: {formatDate(client.dob)}</span>
                           </div>
                         )}
-                        {client.doj && (
+                        {client.created_at && (
                           <div className="flex items-center space-x-2">
                             <Calendar className="h-3 w-3" />
-                            <span>DOJ: {formatDate(client.doj)}</span>
+                            <span>DOJ: {formatDate(client.created_at)}</span>
                           </div>
                         )}
                       </div>
