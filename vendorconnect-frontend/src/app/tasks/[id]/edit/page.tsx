@@ -161,8 +161,8 @@ export default function EditTaskPage() {
         apiClient.get('/projects'),
         apiClient.get('/task-types'),
         apiClient.get('/task-brief-templates'),
-        apiClient.get('/task-statuses'),
-        apiClient.get('/task-priorities'),
+        apiClient.get('/statuses'),
+        apiClient.get('/priorities'),
       ]);
 
       setUsers(usersRes.data.data?.data || usersRes.data.data || []);
