@@ -105,9 +105,6 @@ class Client extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Portfolio::class);
     }
 
-        return $query;
-    }
-
     public function status_projects($status_id)
     {
         return $this->belongsToMany(Project::class, 'client_project')
