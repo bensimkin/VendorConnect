@@ -112,7 +112,7 @@ export default function EditUserPage() {
 
     setSaving(true);
     try {
-      const payload = {
+      const payload: any = {
         ...formData,
         // Only include password fields if password is being changed
         ...(formData.password ? {
