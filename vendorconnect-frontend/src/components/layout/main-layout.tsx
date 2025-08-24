@@ -38,6 +38,11 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
+// Admin navigation items
+const adminNavigation = [
+  { name: 'Admin Settings', href: '/settings/admin', icon: Settings },
+];
+
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
@@ -83,6 +88,36 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 </Link>
               );
             })}
+            
+            {/* Admin Navigation */}
+            {user?.role === 'admin' && (
+              <>
+                <div className="px-3 py-2">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Admin
+                  </h3>
+                </div>
+                {adminNavigation.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-accent hover:text-accent-foreground"
+                      )}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </>
+            )}
           </div>
           <div className="border-t p-4">
             <Button
@@ -122,6 +157,35 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 </Link>
               );
             })}
+            
+            {/* Admin Navigation */}
+            {user?.role === 'admin' && (
+              <>
+                <div className="px-3 py-2">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Admin
+                  </h3>
+                </div>
+                {adminNavigation.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-accent hover:text-accent-foreground"
+                      )}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </>
+            )}
           </div>
           <div className="border-t p-4">
             <Button

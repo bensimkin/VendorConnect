@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\PriorityController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserRoleController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\TagController;
 use App\Http\Controllers\Api\TaskBriefTemplateController;
@@ -161,6 +162,15 @@ Route::prefix('priorities')->group(function () {
             Route::get('/{id}', [RoleController::class, 'show']);
             Route::put('/{id}', [RoleController::class, 'update']);
             Route::delete('/{id}', [RoleController::class, 'destroy']);
+        });
+        
+        // Settings
+        Route::prefix('settings')->group(function () {
+            Route::get('/', [SettingsController::class, 'index']);
+            Route::get('/project', [SettingsController::class, 'getProjectSettings']);
+            Route::get('/group/{group}', [SettingsController::class, 'getByGroup']);
+            Route::get('/{key}', [SettingsController::class, 'show']);
+            Route::put('/{key}', [SettingsController::class, 'update']);
         });
         
         // Clients
