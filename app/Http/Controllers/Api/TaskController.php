@@ -29,7 +29,7 @@ class TaskController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = Task::with(['users', 'status', 'priority', 'taskType']);
+            $query = Task::with(['users', 'status', 'priority', 'taskType', 'project']);
             // Removed workspace filtering for single-tenant system
 
             // Apply filters
