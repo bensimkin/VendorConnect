@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\BaseController;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\Client;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -71,7 +72,12 @@ class ProjectController extends BaseController
     public function store(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
+            // Check if multiple clients are allowed
+            $allowMultipleClients = Setting::isEnabled('allow_multiple_clients_per_project', false);
+            $requireProjectClient = Setting::isEnabled('require_project_client', true);
+            $maxClientsPerProject = Setting::getValue('max_clients_per_project', 5);
+
+            $validationRules = [
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'start_date' => 'nullable|date',
@@ -79,14 +85,27 @@ class ProjectController extends BaseController
                 'status' => 'sometimes|string|in:active,completed,on_hold,cancelled',
                 'user_ids' => 'nullable|array',
                 'user_ids.*' => 'exists:users,id',
-                'client_ids' => 'nullable|array',
-                'client_ids.*' => 'exists:clients,id',
-                'client_id' => 'nullable|exists:clients,id',
                 'budget' => 'nullable|numeric|min:0',
-            ]);
+            ];
 
-            // Custom validation to ensure either client_id or client_ids is provided
-            if (!$request->has('client_id') && !$request->has('client_ids')) {
+            if ($allowMultipleClients) {
+                $validationRules['client_ids'] = 'nullable|array';
+                $validationRules['client_ids.*'] = 'exists:clients,id';
+                $validationRules['client_id'] = 'nullable|exists:clients,id';
+                
+                // Validate max clients if multiple clients are provided
+                if ($request->has('client_ids') && count($request->client_ids) > $maxClientsPerProject) {
+                    return $this->sendValidationError(['client_ids' => ["Maximum {$maxClientsPerProject} clients allowed per project."]]);
+                }
+            } else {
+                $validationRules['client_id'] = 'required|exists:clients,id';
+                $validationRules['client_ids'] = 'prohibited';
+            }
+
+            $validator = Validator::make($request->all(), $validationRules);
+
+            // Custom validation to ensure at least one client is provided if required
+            if ($requireProjectClient && !$request->has('client_id') && !$request->has('client_ids')) {
                 return $this->sendValidationError(['client_id' => ['A client must be selected.']]);
             }
 
@@ -160,7 +179,11 @@ class ProjectController extends BaseController
                 return $this->sendNotFound('Project not found');
             }
 
-            $validator = Validator::make($request->all(), [
+            // Check if multiple clients are allowed
+            $allowMultipleClients = Setting::isEnabled('allow_multiple_clients_per_project', false);
+            $maxClientsPerProject = Setting::getValue('max_clients_per_project', 5);
+
+            $validationRules = [
                 'title' => 'sometimes|required|string|max:255',
                 'description' => 'nullable|string',
                 'start_date' => 'nullable|date',
@@ -169,10 +192,23 @@ class ProjectController extends BaseController
                 'budget' => 'nullable|numeric|min:0',
                 'user_ids' => 'nullable|array',
                 'user_ids.*' => 'exists:users,id',
-                'client_id' => 'nullable|exists:clients,id',
-                'client_ids' => 'nullable|array',
-                'client_ids.*' => 'exists:clients,id',
-            ]);
+            ];
+
+            if ($allowMultipleClients) {
+                $validationRules['client_ids'] = 'nullable|array';
+                $validationRules['client_ids.*'] = 'exists:clients,id';
+                $validationRules['client_id'] = 'nullable|exists:clients,id';
+                
+                // Validate max clients if multiple clients are provided
+                if ($request->has('client_ids') && count($request->client_ids) > $maxClientsPerProject) {
+                    return $this->sendValidationError(['client_ids' => ["Maximum {$maxClientsPerProject} clients allowed per project."]]);
+                }
+            } else {
+                $validationRules['client_id'] = 'nullable|exists:clients,id';
+                $validationRules['client_ids'] = 'prohibited';
+            }
+
+            $validator = Validator::make($request->all(), $validationRules);
 
             if ($validator->fails()) {
                 return $this->sendValidationError($validator->errors());
