@@ -68,6 +68,21 @@ class TaskController extends BaseController
 
             $tasks = $query->paginate($request->get('per_page', 15));
 
+            // Check for expired tasks with strict deadlines
+            $rejectedStatus = Status::where('title', 'Rejected')->first();
+            if ($rejectedStatus) {
+                foreach ($tasks->items() as $task) {
+                    if ($task->end_date && $task->close_deadline == 1) {
+                        $deadline = Carbon::parse($task->end_date);
+                        $current_time = now();
+                        
+                        if ($current_time > $deadline && $task->status_id != $rejectedStatus->id) {
+                            $task->update(['status_id' => $rejectedStatus->id]);
+                        }
+                    }
+                }
+            }
+
             return $this->sendPaginatedResponse($tasks, 'Tasks retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error retrieving tasks: ' . $e->getMessage());
@@ -155,6 +170,21 @@ class TaskController extends BaseController
                 return $this->sendNotFound('Task not found');
             }
 
+            // Check if task is expired and has strict deadline
+            if ($task->end_date && $task->close_deadline == 1) {
+                $deadline = Carbon::parse($task->end_date);
+                $current_time = now();
+                
+                if ($current_time > $deadline) {
+                    // Task is expired with strict deadline - mark as Rejected
+                    $rejectedStatus = Status::where('title', 'Rejected')->first();
+                    if ($rejectedStatus && $task->status_id != $rejectedStatus->id) {
+                        $task->update(['status_id' => $rejectedStatus->id]);
+                        $task->load(['users', 'status', 'priority', 'taskType', 'project', 'clients']);
+                    }
+                }
+            }
+
             return $this->sendResponse($task, 'Task retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error retrieving task: ' . $e->getMessage());
@@ -188,6 +218,7 @@ class TaskController extends BaseController
                 'tag_ids.*' => 'exists:tags,id',
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date|after_or_equal:start_date',
+                'close_deadline' => 'nullable|boolean',
             ]);
 
             if ($validator->fails()) {
@@ -198,7 +229,7 @@ class TaskController extends BaseController
 
             $task->update($request->only([
                 'title', 'description', 'status_id', 'priority_id', 
-                'task_type_id', 'project_id', 'start_date', 'end_date'
+                'task_type_id', 'project_id', 'start_date', 'end_date', 'close_deadline'
             ]));
 
             // Sync users
