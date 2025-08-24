@@ -398,7 +398,7 @@ export default function PortfolioDetailPage() {
                   <Button
                     variant="outline"
                     className="w-full justify-start"
-                    onClick={() => router.push(`/projects/${portfolio.project.id}`)}
+                    onClick={() => router.push(`/projects/${portfolio.project?.id}`)}
                   >
                     <Folder className="h-4 w-4 mr-2" />
                     View Project
@@ -408,7 +408,7 @@ export default function PortfolioDetailPage() {
                   <Button
                     variant="outline"
                     className="w-full justify-start"
-                    onClick={() => router.push(`/tasks/${portfolio.task.id}`)}
+                    onClick={() => router.push(`/tasks/${portfolio.task?.id}`)}
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     View Task
