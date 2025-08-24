@@ -16,7 +16,9 @@ class PriorityController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = Priority::where('admin_id', Auth::user()->admin_id);
+            // Get admin_id from user, or use a default value
+            $adminId = Auth::user()->admin_id ?? 1;
+            $query = Priority::where('admin_id', $adminId);
 
             // Apply filters
             if ($request->has('search')) {
@@ -67,7 +69,7 @@ class PriorityController extends BaseController
                 'description' => $request->description,
                 'color' => $request->color,
                 'level' => $request->level,
-                'admin_id' => Auth::user()->admin_id,
+                'admin_id' => Auth::user()->admin_id ?? 1,
                 'status' => $request->get('status', 1),
             ]);
 
@@ -83,7 +85,7 @@ class PriorityController extends BaseController
     public function show($id)
     {
         try {
-            $priority = Priority::where('admin_id', Auth::user()->admin_id)->find($id);
+            $priority = Priority::where('admin_id', Auth::user()->admin_id ?? 1)->find($id);
 
             if (!$priority) {
                 return $this->sendNotFound('Priority not found');
@@ -101,7 +103,7 @@ class PriorityController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $priority = Priority::where('admin_id', Auth::user()->admin_id)->find($id);
+            $priority = Priority::where('admin_id', Auth::user()->admin_id ?? 1)->find($id);
 
             if (!$priority) {
                 return $this->sendNotFound('Priority not found');
@@ -133,7 +135,7 @@ class PriorityController extends BaseController
     public function destroy($id)
     {
         try {
-            $priority = Priority::where('admin_id', Auth::user()->admin_id)->find($id);
+            $priority = Priority::where('admin_id', Auth::user()->admin_id ?? 1)->find($id);
 
             if (!$priority) {
                 return $this->sendNotFound('Priority not found');
@@ -168,7 +170,7 @@ class PriorityController extends BaseController
             }
 
             $priorities = Priority::whereIn('id', $request->priority_ids)
-                ->where('admin_id', Auth::user()->admin_id)
+                ->where('admin_id', Auth::user()->admin_id ?? 1)
                 ->get();
 
             foreach ($priorities as $priority) {
