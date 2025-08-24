@@ -109,7 +109,6 @@ class UserController extends BaseController
     {
         try {
             $user = User::with(['roles', 'permissions'])
-                ->where('workspace_id', Auth::user()->workspace_id)
                 ->find($id);
 
             if (!$user) {
@@ -128,7 +127,7 @@ class UserController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $user = User::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $user = User::find($id);
 
             if (!$user) {
                 return $this->sendNotFound('User not found');
