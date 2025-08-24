@@ -64,7 +64,7 @@ export default function NewPortfolioPage() {
 
   // Filter tasks when project changes
   useEffect(() => {
-    if (formData.project_id) {
+    if (formData.project_id && formData.project_id !== 'all') {
       const projectTasks = allTasks.filter(task => task.project_id === parseInt(formData.project_id));
       setFilteredTasks(projectTasks);
       
@@ -144,7 +144,7 @@ export default function NewPortfolioPage() {
         description: formData.description,
         client_id: parseInt(formData.client_id),
         task_id: formData.task_id ? parseInt(formData.task_id) : null,
-        project_id: formData.project_id ? parseInt(formData.project_id) : null,
+        project_id: formData.project_id && formData.project_id !== 'all' ? parseInt(formData.project_id) : null,
         task_type_id: formData.task_type_id ? parseInt(formData.task_type_id) : null,
         deliverable_type: formData.deliverable_type,
         status: formData.status,
@@ -297,7 +297,7 @@ export default function NewPortfolioPage() {
                       <SelectValue placeholder="Select a project (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Projects</SelectItem>
+                      <SelectItem value="all">All Projects</SelectItem>
                       {projects.map((project) => (
                         <SelectItem key={project.id} value={project.id.toString()}>
                           {project.title}
@@ -312,10 +312,10 @@ export default function NewPortfolioPage() {
                   <Select
                     value={formData.task_id}
                     onValueChange={(value) => setFormData({ ...formData, task_id: value })}
-                    disabled={!formData.project_id}
+                    disabled={!formData.project_id || formData.project_id === 'all'}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={formData.project_id ? "Select a task (optional)" : "Select a project first"} />
+                      <SelectValue placeholder={formData.project_id && formData.project_id !== 'all' ? "Select a task (optional)" : "Select a project first"} />
                     </SelectTrigger>
                     <SelectContent>
                       {filteredTasks.length > 0 ? (
@@ -326,7 +326,7 @@ export default function NewPortfolioPage() {
                         ))
                       ) : (
                         <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                          {formData.project_id ? "No tasks found for this project" : "No tasks available"}
+                          {formData.project_id && formData.project_id !== 'all' ? "No tasks found for this project" : "No tasks available"}
                         </div>
                       )}
                     </SelectContent>
