@@ -16,19 +16,16 @@ class StatusController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = Status::where('admin_id', Auth::user()->admin_id);
+            $query = Status::query();
+            // Remove admin_id filtering for single-tenant system
 
             // Apply filters
             if ($request->has('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('slug', 'like', "%{$search}%");
                 });
-            }
-
-            if ($request->has('status')) {
-                $query->where('status', $request->status);
             }
 
             // Apply sorting
@@ -81,7 +78,7 @@ class StatusController extends BaseController
     public function show($id)
     {
         try {
-            $status = Status::where('admin_id', Auth::user()->admin_id)->find($id);
+            $status = Status::find($id);
 
             if (!$status) {
                 return $this->sendNotFound('Status not found');
@@ -99,24 +96,22 @@ class StatusController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $status = Status::where('admin_id', Auth::user()->admin_id)->find($id);
+            $status = Status::find($id);
 
             if (!$status) {
                 return $this->sendNotFound('Status not found');
             }
 
             $validator = Validator::make($request->all(), [
-                'name' => 'sometimes|required|string|max:255',
-                'description' => 'nullable|string',
-                'color' => 'nullable|string|max:7',
-                'status' => 'sometimes|boolean',
+                'title' => 'sometimes|required|string|max:255',
+                'slug' => 'nullable|string|max:255',
             ]);
 
             if ($validator->fails()) {
                 return $this->sendValidationError($validator->errors());
             }
 
-            $status->update($request->only(['name', 'description', 'color', 'status']));
+            $status->update($request->only(['title', 'slug']));
 
             return $this->sendResponse($status, 'Status updated successfully');
         } catch (\Exception $e) {
@@ -130,15 +125,15 @@ class StatusController extends BaseController
     public function destroy($id)
     {
         try {
-            $status = Status::where('admin_id', Auth::user()->admin_id)->find($id);
+            $status = Status::find($id);
 
             if (!$status) {
                 return $this->sendNotFound('Status not found');
             }
 
-            // Check if status is being used by tasks
-            if ($status->tasks()->count() > 0) {
-                return $this->sendError('Cannot delete status that is being used by tasks');
+            // Check if status is being used by tasks or projects
+            if ($status->tasks()->count() > 0 || $status->projects()->count() > 0) {
+                return $this->sendError('Cannot delete status that is being used by tasks or projects');
             }
 
             $status->delete();
@@ -164,9 +159,7 @@ class StatusController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $statuses = Status::whereIn('id', $request->status_ids)
-                ->where('admin_id', Auth::user()->admin_id)
-                ->get();
+            $statuses = Status::whereIn('id', $request->status_ids)->get();
 
             foreach ($statuses as $status) {
                 // Check if status is being used by tasks
