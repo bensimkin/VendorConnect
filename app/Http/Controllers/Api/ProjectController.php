@@ -63,6 +63,9 @@ class ProjectController extends BaseController
                     $query->where('status_id', 17); // Completed status ID
                 }])
                 ->withCount(['users as team_members_count'])
+                ->withCount(['tasks.users as task_users_count' => function($query) {
+                    $query->distinct();
+                }])
                 ->paginate($request->get('per_page', 15));
 
             return $this->sendPaginatedResponse($projects, 'Projects retrieved successfully');
@@ -165,6 +168,15 @@ class ProjectController extends BaseController
             if (!$project) {
                 return $this->sendNotFound('Project not found');
             }
+
+            // Get users assigned to tasks within this project
+            $taskUsers = \App\Models\User::whereHas('tasks', function($query) use ($id) {
+                $query->where('project_id', $id);
+            })->get();
+
+            // Merge direct project users with task users
+            $allUsers = $project->users->merge($taskUsers)->unique('id');
+            $project->setRelation('users', $allUsers);
 
             return $this->sendResponse($project, 'Project retrieved successfully');
         } catch (\Exception $e) {
