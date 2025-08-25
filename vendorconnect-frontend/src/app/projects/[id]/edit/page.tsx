@@ -80,7 +80,7 @@ export default function EditProjectPage() {
         title: projectData.title || '',
         description: projectData.description || '',
         client_id: projectData.clients?.[0]?.id?.toString() || '',
-        client_ids: projectData.clients?.map(client => client.id) || [],
+        client_ids: projectData.clients?.map((client: any) => client.id) || [],
         start_date: projectData.start_date || '',
         end_date: projectData.end_date || '',
         budget: projectData.budget?.toString() || '',
