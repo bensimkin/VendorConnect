@@ -526,6 +526,16 @@ class TaskController extends BaseController
                 return $this->sendNotFound('Task not found');
             }
 
+            // Check if task is past due with strict deadline
+            if ($task->end_date && $task->close_deadline == 1) {
+                $deadline = Carbon::parse($task->end_date);
+                $current_time = now();
+                
+                if ($current_time > $deadline) {
+                    return $this->sendError('Cannot add comments to a task that is past its strict deadline', [], 403);
+                }
+            }
+
             $validator = Validator::make($request->all(), [
                 'message' => 'required|string',
                 'message_type' => 'sometimes|string|in:text,file,image',
@@ -659,6 +669,16 @@ class TaskController extends BaseController
                 return $this->sendNotFound('Task not found');
             }
 
+            // Check if task is past due with strict deadline
+            if ($task->end_date && $task->close_deadline == 1) {
+                $deadline = Carbon::parse($task->end_date);
+                $current_time = now();
+                
+                if ($current_time > $deadline) {
+                    return $this->sendError('Cannot submit answers for a task that is past its strict deadline', [], 403);
+                }
+            }
+
             $validator = Validator::make($request->all(), [
                 'question_id' => 'required|exists:task_brief_questions,id',
                 'answer' => 'nullable|string',
@@ -694,6 +714,16 @@ class TaskController extends BaseController
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
+            }
+
+            // Check if task is past due with strict deadline
+            if ($task->end_date && $task->close_deadline == 1) {
+                $deadline = Carbon::parse($task->end_date);
+                $current_time = now();
+                
+                if ($current_time > $deadline) {
+                    return $this->sendError('Cannot submit checklist answers for a task that is past its strict deadline', [], 403);
+                }
             }
 
             $validator = Validator::make($request->all(), [
