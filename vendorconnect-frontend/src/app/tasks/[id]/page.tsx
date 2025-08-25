@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import apiClient from '@/lib/api-client';
-import { ArrowLeft, Edit, Trash2, Calendar, User, Tag, MessageSquare, Paperclip, Clock, CheckCircle, AlertCircle, Plus } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Calendar, User, Tag, MessageSquare, Paperclip, Clock, CheckCircle, AlertCircle, Plus, Edit3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 
@@ -115,6 +115,12 @@ export default function TaskDetailPage() {
   const [submittingDeliverable, setSubmittingDeliverable] = useState(false);
   const [deliverables, setDeliverables] = useState<any[]>([]);
   const [comments, setComments] = useState<any[]>([]);
+  const [editingStatus, setEditingStatus] = useState(false);
+  const [editingPriority, setEditingPriority] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [updatingPriority, setUpdatingPriority] = useState(false);
+  const [statuses, setStatuses] = useState<any[]>([]);
+  const [priorities, setPriorities] = useState<any[]>([]);
 
   useEffect(() => {
     if (params.id) {
@@ -124,9 +130,21 @@ export default function TaskDetailPage() {
 
   const fetchTaskDetail = async (id: string) => {
     try {
+      // Fetch task details
       const response = await apiClient.get(`/tasks/${id}`);
       const taskData = response.data.data;
       setTask(taskData);
+
+      // Fetch statuses and priorities for inline editing (only once)
+      if (statuses.length === 0 || priorities.length === 0) {
+        const [statusesRes, prioritiesRes] = await Promise.all([
+          apiClient.get('/statuses'),
+          apiClient.get('/priorities')
+        ]);
+        
+        setStatuses(statusesRes.data.data || []);
+        setPriorities(prioritiesRes.data.data || []);
+      }
 
       // Load template questions and checklists from task data
       if (taskData.question_answers && taskData.question_answers.length > 0) {
@@ -287,6 +305,44 @@ export default function TaskDetailPage() {
     } catch (error) {
       console.error('Failed to delete comment:', error);
       toast.error('Failed to delete comment');
+    }
+  };
+
+  const handleUpdateStatus = async (statusId: number) => {
+    if (!task) return;
+
+    setUpdatingStatus(true);
+    try {
+      await apiClient.put(`/tasks/${task.id}`, {
+        status_id: statusId
+      });
+      toast.success('Status updated successfully');
+      setEditingStatus(false);
+      fetchTaskDetail(task.id.toString());
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      toast.error('Failed to update status');
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handleUpdatePriority = async (priorityId: number) => {
+    if (!task) return;
+
+    setUpdatingPriority(true);
+    try {
+      await apiClient.put(`/tasks/${task.id}`, {
+        priority_id: priorityId
+      });
+      toast.success('Priority updated successfully');
+      setEditingPriority(false);
+      fetchTaskDetail(task.id.toString());
+    } catch (error) {
+      console.error('Failed to update priority:', error);
+      toast.error('Failed to update priority');
+    } finally {
+      setUpdatingPriority(false);
     }
   };
 
@@ -755,30 +811,113 @@ export default function TaskDetailPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm font-medium mb-2">Status</p>
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(task.status?.name)}
-                    <Badge
-                      style={{
-                        backgroundColor: task.status?.color ? `${task.status.color}20` : undefined,
-                        color: task.status?.color || undefined,
-                      }}
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium">Status</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditingStatus(!editingStatus)}
+                      disabled={updatingStatus}
                     >
-                      {task.status?.name || 'No Status'}
-                    </Badge>
+                      <Edit3 className="h-3 w-3" />
+                    </Button>
                   </div>
+                  {editingStatus ? (
+                    <div className="space-y-2">
+                      <Select
+                        value={task.status?.id?.toString() || ''}
+                        onValueChange={(value) => handleUpdateStatus(parseInt(value))}
+                        disabled={updatingStatus}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {statuses.map((status) => (
+                            <SelectItem key={status.id} value={status.id.toString()}>
+                              <div className="flex items-center gap-2">
+                                {getStatusIcon(status.name)}
+                                <span>{status.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => setEditingStatus(false)}
+                          variant="outline"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(task.status?.name)}
+                      <Badge
+                        style={{
+                          backgroundColor: task.status?.color ? `${task.status.color}20` : undefined,
+                          color: task.status?.color || undefined,
+                        }}
+                      >
+                        {task.status?.name || 'No Status'}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
 
                 <div>
-                  <p className="text-sm font-medium mb-2">Priority</p>
-                  <Badge
-                    style={{
-                      backgroundColor: task.priority?.color ? `${task.priority.color}20` : undefined,
-                      color: task.priority?.color || undefined,
-                    }}
-                  >
-                    {task.priority?.name || 'No Priority'}
-                  </Badge>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium">Priority</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditingPriority(!editingPriority)}
+                      disabled={updatingPriority}
+                    >
+                      <Edit3 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  {editingPriority ? (
+                    <div className="space-y-2">
+                      <Select
+                        value={task.priority?.id?.toString() || ''}
+                        onValueChange={(value) => handleUpdatePriority(parseInt(value))}
+                        disabled={updatingPriority}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {priorities.map((priority) => (
+                            <SelectItem key={priority.id} value={priority.id.toString()}>
+                              <span>{priority.name}</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => setEditingPriority(false)}
+                          variant="outline"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Badge
+                      style={{
+                        backgroundColor: task.priority?.color ? `${task.priority.color}20` : undefined,
+                        color: task.priority?.color || undefined,
+                      }}
+                    >
+                      {task.priority?.name || 'No Priority'}
+                    </Badge>
+                  )}
                 </div>
 
                 {task.project && (
