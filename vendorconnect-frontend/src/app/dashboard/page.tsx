@@ -297,7 +297,7 @@ export default function DashboardPage() {
                     <div className="w-2 h-2 bg-primary rounded-full" />
                     <div className="flex-1 space-y-1">
                       <p className="text-sm">
-                        <span className="font-medium">{task.name || 'Unnamed Task'}</span>
+                        <span className="font-medium">{task.title || 'Unnamed Task'}</span>
                         {task.priority && (
                           <span className="ml-2 text-xs px-2 py-1 rounded-full bg-secondary">
                             {task.priority.name}
