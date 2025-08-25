@@ -26,6 +26,20 @@ class Task extends Model implements HasMedia
         'priority_id',
         'note',
         'deliverable_quantity',
+        'is_repeating',
+        'repeat_frequency',
+        'repeat_interval',
+        'repeat_until',
+        'repeat_active',
+        'parent_task_id',
+        'last_repeated_at',
+    ];
+
+    protected $casts = [
+        'is_repeating' => 'boolean',
+        'repeat_active' => 'boolean',
+        'repeat_until' => 'date',
+        'last_repeated_at' => 'datetime',
     ];
 
     public function registerMediaCollections(): void
@@ -121,6 +135,16 @@ class Task extends Model implements HasMedia
     public function tags()
     {
         return $this->belongsToMany(Tag::class, 'task_tag');
+    }
+
+    public function parentTask()
+    {
+        return $this->belongsTo(Task::class, 'parent_task_id');
+    }
+
+    public function childTasks()
+    {
+        return $this->hasMany(Task::class, 'parent_task_id');
     }
 
 
