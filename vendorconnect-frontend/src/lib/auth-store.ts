@@ -75,8 +75,10 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           const response = await apiClient.get('/user');
+          console.log('checkAuth response:', response.data);
           set({ user: response.data, token });
         } catch (error) {
+          console.error('checkAuth error:', error);
           localStorage.removeItem('auth_token');
           document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
           set({ user: null, token: null, permissions: [] });
