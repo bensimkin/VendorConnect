@@ -136,8 +136,8 @@ class TaskController extends BaseController
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
                 'note' => $template ? ($template->standard_brief ?: $request->note) : $request->note,
+                'deliverable_quantity' => $template ? ($template->deliverable_quantity ?: $request->get('deliverable_quantity', 1)) : $request->get('deliverable_quantity', 1),
                 'close_deadline' => $request->get('close_deadline', 0),
-
                 'created_by' => $request->user()->id,
             ]);
 

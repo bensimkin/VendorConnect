@@ -12,6 +12,7 @@ class TaskBriefTemplates extends Model
         "template_name",
         "standard_brief",
         "description",
+        "deliverable_quantity",
         "task_type_id",
         "created_at",
         "updated_at"

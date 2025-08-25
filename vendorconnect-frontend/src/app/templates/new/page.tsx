@@ -25,6 +25,7 @@ export default function NewTemplatePage() {
     template_name: '',
     standard_brief: '',
     description: '',
+    deliverable_quantity: 1,
     task_type_id: '',
   });
 
@@ -67,6 +68,7 @@ export default function NewTemplatePage() {
         template_name: formData.template_name.trim(),
         standard_brief: formData.standard_brief.trim() || null,
         description: formData.description.trim() || null,
+        deliverable_quantity: formData.deliverable_quantity,
         task_type_id: parseInt(formData.task_type_id),
       };
 
@@ -149,6 +151,21 @@ export default function NewTemplatePage() {
                 />
                 <p className="text-sm text-muted-foreground">
                   This description will be automatically added to the task description when using this template
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="deliverable_quantity">Default Quantity</Label>
+                <Input
+                  id="deliverable_quantity"
+                  type="number"
+                  min="1"
+                  value={formData.deliverable_quantity}
+                  onChange={(e) => setFormData({ ...formData, deliverable_quantity: parseInt(e.target.value) || 1 })}
+                  placeholder="e.g., 6"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Default number of deliverables when using this template (e.g., 6x Facebook ads)
                 </p>
               </div>
 
