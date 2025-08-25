@@ -26,16 +26,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 
+// Navigation items with role restrictions
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Tasks', href: '/tasks', icon: CheckSquare },
-  { name: 'Templates', href: '/templates', icon: FileText },
-  { name: 'Task Types', href: '/task-types', icon: Tag },
-  { name: 'Users', href: '/users', icon: Users },
-  { name: 'Clients', href: '/clients', icon: Building2 },
-  { name: 'Projects', href: '/projects', icon: FolderOpen },
-  { name: 'Portfolio', href: '/portfolio', icon: Briefcase },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Dashboard', href: '/dashboard', icon: Home, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
+  { name: 'Tasks', href: '/tasks', icon: CheckSquare, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
+  { name: 'Templates', href: '/templates', icon: FileText, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
+  { name: 'Task Types', href: '/task-types', icon: Tag, roles: ['Admin', 'sub admin'] },
+  { name: 'Users', href: '/users', icon: Users, roles: ['Admin'] },
+  { name: 'Clients', href: '/clients', icon: Building2, roles: ['Admin'] },
+  { name: 'Projects', href: '/projects', icon: FolderOpen, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
+  { name: 'Portfolio', href: '/portfolio', icon: Briefcase, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
+  { name: 'Settings', href: '/settings', icon: Settings, roles: ['Admin'] },
 ];
 
 // Admin navigation items
@@ -50,6 +51,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const { theme, setTheme } = useTheme();
   
   console.log('MainLayout loaded, user:', user);
+
+  // Helper function to check if user has access to navigation item
+  const hasAccess = (itemRoles: string[]) => {
+    if (!user?.roles) return false;
+    return user.roles.some(role => itemRoles.includes(role.name));
+  };
+
+  // Filter navigation items based on user roles
+  const filteredNavigation = navigation.filter(item => hasAccess(item.roles));
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,7 +81,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             </Button>
           </div>
           <div className="flex-1 space-y-1 px-2 py-4">
-            {navigation.map((item) => {
+            {filteredNavigation.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link
@@ -146,7 +156,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             <h2 className="text-xl font-semibold">VendorConnect</h2>
           </div>
           <div className="flex-1 space-y-1 px-2 py-4">
-            {navigation.map((item) => {
+            {filteredNavigation.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link

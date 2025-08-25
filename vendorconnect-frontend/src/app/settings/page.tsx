@@ -11,6 +11,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { useTheme } from 'next-themes';
 import apiClient from '@/lib/api-client';
 import { toast } from 'react-hot-toast';
+import RoleGuard from '@/components/auth/role-guard';
 import { User, Bell, Shield, Palette, Database, HelpCircle, Moon, Sun, Monitor } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -105,8 +106,9 @@ export default function SettingsPage() {
   };
 
   return (
-    <MainLayout>
-      <div className="space-y-8">
+    <RoleGuard allowedRoles={['Admin']}>
+      <MainLayout>
+        <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
           <p className="text-muted-foreground">Manage your account settings and preferences</p>
@@ -373,6 +375,7 @@ export default function SettingsPage() {
           </Card>
         </div>
       </div>
-    </MainLayout>
+      </MainLayout>
+    </RoleGuard>
   );
 }
