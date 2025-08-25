@@ -90,48 +90,51 @@ export default function TaskDetailPage() {
       const taskData = response.data.data;
       setTask(taskData);
 
-      // Load template questions and answers if template exists
-      if (taskData.template?.id) {
-        try {
-          const [questionsRes, answersRes, checklistRes, checklistStatusRes] = await Promise.all([
-            apiClient.get(`/task-brief-questions?template_id=${taskData.template.id}`),
-            apiClient.get(`/tasks/${id}/question-answers`),
-            apiClient.get(`/task-brief-checklists?template_id=${taskData.template.id}`),
-            apiClient.get(`/tasks/${id}/checklist-status`),
-          ]);
-
-          const questions = questionsRes.data.data?.data || questionsRes.data.data || [];
-          setTemplateQuestions(questions);
-
-          const answers = answersRes.data.data?.data || answersRes.data.data || [];
-          setQuestionAnswers(answers);
-
-          // Load checklist
-          const checklistData = checklistRes.data.data?.data || checklistRes.data.data || [];
-          if (checklistData.length > 0 && checklistData[0].checklist) {
-            const checklist = checklistData[0].checklist;
-            if (Array.isArray(checklist)) {
-              setChecklistItems(checklist);
-            } else if (typeof checklist === 'string') {
-              try {
-                const parsed = JSON.parse(checklist);
-                setChecklistItems(Array.isArray(parsed) ? parsed : [checklist]);
-              } catch {
-                setChecklistItems([checklist]);
-              }
-            }
+      // Load template questions and answers from task data
+      if (taskData.question_answers && taskData.question_answers.length > 0) {
+        const questions: TemplateQuestion[] = [];
+        const answers: QuestionAnswer[] = [];
+        
+        taskData.question_answers.forEach((qa: any) => {
+          if (qa.brief_questions) {
+            questions.push({
+              id: qa.brief_questions.id,
+              question_text: qa.brief_questions.question_text,
+              question_type: qa.brief_questions.question_type,
+              options: qa.brief_questions.options,
+            });
+            answers.push({
+              id: qa.id,
+              question_id: qa.question_id,
+              question_answer: qa.question_answer,
+              briefQuestions: {
+                id: qa.brief_questions.id,
+                question_text: qa.brief_questions.question_text,
+                question_type: qa.brief_questions.question_type,
+                options: qa.brief_questions.options,
+              },
+            });
           }
+        });
+        
+        setTemplateQuestions(questions);
+        setQuestionAnswers(answers);
+      }
 
-          // Load checklist completion status
-          const checklistStatus = checklistStatusRes.data.data?.data || checklistStatusRes.data.data || [];
-          const completedMap: Record<number, boolean> = {};
-          checklistStatus.forEach((item: any) => {
-            completedMap[item.item_index] = item.completed;
-          });
-          setChecklistCompleted(completedMap);
-        } catch (error) {
-          console.error('Failed to load template data:', error);
-        }
+      // Load checklist from task data
+      if (taskData.checklist_answers && taskData.checklist_answers.length > 0) {
+        const checklistItems: string[] = [];
+        const completedMap: Record<number, boolean> = {};
+        
+        taskData.checklist_answers.forEach((ca: any, index: number) => {
+          if (ca.notes) {
+            checklistItems.push(ca.notes);
+            completedMap[index] = ca.completed || false;
+          }
+        });
+        
+        setChecklistItems(checklistItems);
+        setChecklistCompleted(completedMap);
       }
     } catch (error) {
       console.error('Failed to fetch task details:', error);
