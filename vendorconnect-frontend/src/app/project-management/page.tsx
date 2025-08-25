@@ -243,16 +243,11 @@ export default function ProjectManagementPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <CardTitle className="text-lg">{project.title}</CardTitle>
-                          {project.status && (
-                            <Badge
-                              style={{
-                                backgroundColor: getStatusColor(project.status.color) + '20',
-                                color: getStatusColor(project.status.color),
-                              }}
-                            >
-                              {project.status.title}
-                            </Badge>
-                          )}
+                                                     {project.status && (
+                             <Badge variant="secondary">
+                               {project.status.title}
+                             </Badge>
+                           )}
                         </div>
                         <div className="flex items-center gap-6 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
