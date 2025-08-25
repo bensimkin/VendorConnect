@@ -48,6 +48,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const { user, logout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme, setTheme } = useTheme();
+  
+  console.log('MainLayout loaded, user:', user);
 
   return (
     <div className="min-h-screen bg-background">
@@ -91,7 +93,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             
             {/* Debug: User roles */}
             <div className="px-3 py-2 text-xs text-red-500">
-              Debug: User roles = {JSON.stringify(user?.roles)}
+              Debug: Component loaded! User = {user ? 'YES' : 'NO'}, Roles = {JSON.stringify(user?.roles)}
             </div>
             
             {/* Admin Navigation */}
