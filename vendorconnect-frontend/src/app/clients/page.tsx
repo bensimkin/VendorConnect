@@ -50,6 +50,8 @@ export default function ClientsPage() {
       if (searchQuery) {
         params.append('search', searchQuery);
       }
+      // Request more clients per page to show all clients
+      params.append('per_page', '50');
       
       const response = await apiClient.get(`/clients?${params.toString()}`);
       // Handle paginated response
