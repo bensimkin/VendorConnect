@@ -243,4 +243,185 @@ class DashboardController extends BaseController
 
         return $projectQuery->orderBy('updated_at', 'desc')->limit(10)->get();
     }
+
+    /**
+     * Get tasker dashboard data
+     */
+    public function taskerDashboard()
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user->hasRole('tasker')) {
+                return $this->sendError('Unauthorized access', [], 403);
+            }
+
+            // Get completed status ID
+            $completedStatus = Status::where('title', 'Completed')->first();
+            $completedStatusId = $completedStatus ? $completedStatus->id : null;
+
+            // Overview statistics
+            $totalTasks = Task::whereHas('users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            })->count();
+
+            $completedTasks = Task::whereHas('users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            })->where('status_id', $completedStatusId)->count();
+
+            $pendingTasks = Task::whereHas('users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            })->where('status_id', '!=', $completedStatusId)->count();
+
+            $overdueTasks = Task::whereHas('users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            })->where('end_date', '<', Carbon::now())
+              ->where('status_id', '!=', $completedStatusId)->count();
+
+            // Recent tasks
+            $recentTasks = Task::with(['status', 'priority', 'project'])
+                ->whereHas('users', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                })
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get();
+
+            // Upcoming deadlines (next 7 days)
+            $upcomingDeadlines = Task::with(['priority'])
+                ->whereHas('users', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                })
+                ->where('end_date', '>=', Carbon::now())
+                ->where('end_date', '<=', Carbon::now()->addDays(7))
+                ->where('status_id', '!=', $completedStatusId)
+                ->orderBy('end_date', 'asc')
+                ->limit(10)
+                ->get()
+                ->map(function ($task) {
+                    $task->days_until_due = Carbon::now()->diffInDays($task->end_date, false);
+                    return $task;
+                });
+
+            // Recent deliverables
+            $recentDeliverables = TaskDeliverable::with(['task'])
+                ->whereHas('task.users', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                })
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get()
+                ->map(function ($deliverable) {
+                    return [
+                        'id' => $deliverable->id,
+                        'title' => $deliverable->title,
+                        'task_title' => $deliverable->task->title,
+                        'created_at' => $deliverable->created_at,
+                    ];
+                });
+
+            $dashboardData = [
+                'overview' => [
+                    'total_tasks' => $totalTasks,
+                    'completed_tasks' => $completedTasks,
+                    'pending_tasks' => $pendingTasks,
+                    'overdue_tasks' => $overdueTasks,
+                ],
+                'recent_tasks' => $recentTasks,
+                'upcoming_deadlines' => $upcomingDeadlines,
+                'recent_deliverables' => $recentDeliverables,
+            ];
+
+            return $this->sendResponse($dashboardData, 'Tasker dashboard data retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving tasker dashboard data: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get requester dashboard data
+     */
+    public function requesterDashboard()
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user->hasRole('requester')) {
+                return $this->sendError('Unauthorized access', [], 403);
+            }
+
+            // Get completed status ID
+            $completedStatus = Status::where('title', 'Completed')->first();
+            $completedStatusId = $completedStatus ? $completedStatus->id : null;
+
+            // Overview statistics
+            $totalTasks = Task::where('created_by', $user->id)->count();
+            $completedTasks = Task::where('created_by', $user->id)
+                ->where('status_id', $completedStatusId)->count();
+            $pendingTasks = Task::where('created_by', $user->id)
+                ->where('status_id', '!=', $completedStatusId)->count();
+            $overdueTasks = Task::where('created_by', $user->id)
+                ->where('end_date', '<', Carbon::now())
+                ->where('status_id', '!=', $completedStatusId)->count();
+            $totalProjects = Project::where('created_by', $user->id)->count();
+
+            // Recent tasks
+            $recentTasks = Task::with(['status', 'priority', 'project', 'users'])
+                ->where('created_by', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get();
+
+            // Recent projects
+            $recentProjects = Project::with(['status'])
+                ->where('created_by', $user->id)
+                ->withCount(['tasks as total_tasks'])
+                ->withCount(['tasks as completed_tasks' => function ($query) use ($completedStatusId) {
+                    if ($completedStatusId) {
+                        $query->where('status_id', $completedStatusId);
+                    }
+                }])
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get();
+
+            // Recent deliverables from their tasks
+            $recentDeliverables = TaskDeliverable::with(['task', 'creator'])
+                ->whereHas('task', function ($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                })
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get()
+                ->map(function ($deliverable) {
+                    return [
+                        'id' => $deliverable->id,
+                        'title' => $deliverable->title,
+                        'task_title' => $deliverable->task->title,
+                        'created_by' => [
+                            'first_name' => $deliverable->creator->first_name,
+                            'last_name' => $deliverable->creator->last_name,
+                        ],
+                        'created_at' => $deliverable->created_at,
+                    ];
+                });
+
+            $dashboardData = [
+                'overview' => [
+                    'total_tasks' => $totalTasks,
+                    'completed_tasks' => $completedTasks,
+                    'pending_tasks' => $pendingTasks,
+                    'overdue_tasks' => $overdueTasks,
+                    'total_projects' => $totalProjects,
+                ],
+                'recent_tasks' => $recentTasks,
+                'recent_projects' => $recentProjects,
+                'recent_deliverables' => $recentDeliverables,
+            ];
+
+            return $this->sendResponse($dashboardData, 'Requester dashboard data retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving requester dashboard data: ' . $e->getMessage());
+        }
+    }
 }
