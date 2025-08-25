@@ -18,7 +18,10 @@ interface Project {
     id: number;
     name: string;
   }>;
-  status?: string;
+  status?: {
+    id: number;
+    title: string;
+  };
   start_date?: string;
   end_date?: string;
   budget?: number;
@@ -188,9 +191,9 @@ export default function ProjectsPage() {
                       <CardDescription>{project.clients?.[0]?.name || 'No Client'}</CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
-                      {getStatusIcon(project.status)}
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
-                        {project.status || 'No Status'}
+                      {getStatusIcon(project.status?.title)}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status?.title)}`}>
+                        {project.status?.title || 'No Status'}
                       </span>
                     </div>
                   </div>
