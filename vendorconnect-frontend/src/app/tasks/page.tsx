@@ -29,6 +29,14 @@ interface Task {
     first_name: string;
     last_name: string;
   }>;
+  clients?: Array<{
+    id: number;
+    name: string;
+  }>;
+  project?: {
+    id: number;
+    name: string;
+  };
   start_date?: string;
   end_date?: string;
   created_at: string;
@@ -185,6 +193,26 @@ export default function TasksPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
+                    {/* Project */}
+                    {task.project && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Tag className="h-4 w-4 text-muted-foreground" />
+                        <span className="truncate text-blue-600">
+                          {task.project.name || 'Unnamed Project'}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Clients */}
+                    {task.clients && task.clients.length > 0 && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="truncate text-green-600">
+                          {task.clients.map(client => client.name || 'Unnamed Client').join(', ')}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Assigned Users */}
                     {task.users && task.users.length > 0 && (
                       <div className="flex items-center gap-2 text-sm">
