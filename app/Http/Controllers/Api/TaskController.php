@@ -100,6 +100,7 @@ class TaskController extends BaseController
                 'description' => 'nullable|string',
                 'status_id' => 'required|exists:statuses,id',
                 'priority_id' => 'required|exists:priorities,id',
+                'task_type_id' => 'nullable|exists:task_types,id',
                 'project_id' => 'required|exists:projects,id',
                 'user_ids' => 'nullable|array',
                 'user_ids.*' => 'exists:users,id',
