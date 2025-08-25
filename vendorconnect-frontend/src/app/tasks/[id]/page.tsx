@@ -508,8 +508,8 @@ export default function TaskDetailPage() {
             {/* Deliverable */}
             <Card>
               <CardHeader>
-                <CardTitle>Deliverable</CardTitle>
-                <CardDescription>Add a deliverable that will automatically be added to the client's portfolio</CardDescription>
+                <CardTitle>Deliverables</CardTitle>
+                <CardDescription>Add deliverables for this task</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {task.has_deliverable ? (
@@ -537,7 +537,7 @@ export default function TaskDetailPage() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-sm text-muted-foreground mb-4">No deliverable added yet</p>
+                    <p className="text-sm text-muted-foreground mb-4">No deliverables added yet</p>
                     <Button
                       onClick={() => setShowDeliverableForm(true)}
                       size="sm"
