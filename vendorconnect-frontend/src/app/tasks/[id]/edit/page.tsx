@@ -195,8 +195,8 @@ export default function EditTaskPage() {
       setPriorities(prioritiesRes.data.data?.data || prioritiesRes.data.data || []);
 
       // Load template questions if template exists
-      if (task.template?.id) {
-        const questionsRes = await apiClient.get(`/task-brief-questions?template_id=${task.template.id}`);
+      if (taskData.template?.id) {
+        const questionsRes = await apiClient.get(`/task-brief-questions?template_id=${taskData.template.id}`);
         const questions = questionsRes.data.data?.data || questionsRes.data.data || [];
         setTemplateQuestions(questions);
 
