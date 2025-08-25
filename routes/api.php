@@ -91,6 +91,9 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/question-answer', [TaskController::class, 'submitQuestionAnswer']);
             Route::post('/{id}/checklist-answer', [TaskController::class, 'submitChecklistAnswer']);
             
+            // Task deliverables
+            Route::post('/{id}/deliverable', [TaskController::class, 'addDeliverable']);
+            
             // Task media
             Route::post('/{id}/media', [TaskController::class, 'uploadMedia']);
             Route::get('/{id}/media', [TaskController::class, 'getMedia']);
