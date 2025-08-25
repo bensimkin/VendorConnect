@@ -382,26 +382,26 @@ export default function NewTaskPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="clients">Clients</Label>
+                  <Label htmlFor="client">Client</Label>
                   <select
-                    id="clients"
-                    multiple
-                    value={formData.client_ids.map(id => id.toString())}
+                    id="client"
+                    value={formData.client_ids[0] || ''}
                     onChange={(e) => {
-                      const selectedOptions = Array.from(e.target.selectedOptions, option => parseInt(option.value));
-                      setFormData({ ...formData, client_ids: selectedOptions });
+                      const clientId = e.target.value ? parseInt(e.target.value) : null;
+                      setFormData({ 
+                        ...formData, 
+                        client_ids: clientId ? [clientId] : [] 
+                      });
                     }}
-                    className="w-full px-3 py-2 border rounded-md bg-background min-h-[100px]"
+                    className="w-full px-3 py-2 border rounded-md bg-background"
                   >
+                    <option value="">Select Client (Optional)</option>
                     {clients.map((client) => (
                       <option key={client.id} value={client.id}>
                         {client.name} {client.company && `(${client.company})`}
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-muted-foreground">
-                    Hold Ctrl/Cmd to select multiple clients
-                  </p>
                 </div>
               </div>
             </CardContent>
