@@ -211,8 +211,8 @@ export default function EditTaskPage() {
       }
 
       // Load checklist if template exists
-      if (task.template?.id) {
-        const checklistRes = await apiClient.get(`/task-brief-checklists?template_id=${task.template.id}`);
+      if (taskData.template?.id) {
+        const checklistRes = await apiClient.get(`/task-brief-checklists?template_id=${taskData.template.id}`);
         const checklistData = checklistRes.data.data?.data || checklistRes.data.data || [];
         if (checklistData.length > 0 && checklistData[0].checklist) {
           const checklist = checklistData[0].checklist;
