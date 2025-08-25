@@ -22,6 +22,7 @@ import {
   FileText,
   Tag,
   Briefcase,
+  BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
@@ -35,6 +36,7 @@ const navigation = [
   { name: 'Users', href: '/users', icon: Users, roles: ['Admin'] },
   { name: 'Clients', href: '/clients', icon: Building2, roles: ['Admin'] },
   { name: 'Projects', href: '/projects', icon: FolderOpen, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
+  { name: 'Project Management', href: '/project-management', icon: BarChart3, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
   { name: 'Portfolio', href: '/portfolio', icon: Briefcase, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
   { name: 'Settings', href: '/settings', icon: Settings, roles: ['Admin'] },
 ];

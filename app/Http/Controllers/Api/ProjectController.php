@@ -185,6 +185,57 @@ class ProjectController extends BaseController
     }
 
     /**
+     * Get tasks for a specific project
+     */
+    public function getTasks($id)
+    {
+        try {
+            $user = Auth::user();
+            
+            // Check if project exists
+            $project = Project::find($id);
+            if (!$project) {
+                return $this->sendNotFound('Project not found');
+            }
+
+            // Build task query with role-based filtering
+            $taskQuery = Task::with(['users', 'status', 'priority', 'taskType'])
+                ->where('project_id', $id);
+
+            // Apply role-based filtering
+            if ($user->hasRole('requester')) {
+                // Requesters only see tasks they created
+                $taskQuery->where('created_by', $user->id);
+            } elseif ($user->hasRole('tasker')) {
+                // Taskers only see tasks they're assigned to
+                $taskQuery->whereHas('users', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                });
+            }
+            // Admins and sub-admins see all tasks
+
+            $tasks = $taskQuery->orderBy('created_at', 'desc')->get();
+
+            // Apply role-based data protection to task users
+            if (!$user->hasRole(['admin', 'sub_admin'])) {
+                // Remove sensitive data from assigned users for requesters and taskers
+                foreach ($tasks as $task) {
+                    if ($task->users) {
+                        foreach ($task->users as $taskUser) {
+                            unset($taskUser->email);
+                            unset($taskUser->phone);
+                        }
+                    }
+                }
+            }
+
+            return $this->sendResponse($tasks, 'Project tasks retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving project tasks: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Update a project
      */
     public function update(Request $request, $id)
