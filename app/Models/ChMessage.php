@@ -15,4 +15,9 @@ class ChMessage extends Model
         "sender_id",
         "message_text"
     ];
+
+    public function sender()
+    {
+        return $this->belongsTo(User::class, 'sender_id');
+    }
 }
