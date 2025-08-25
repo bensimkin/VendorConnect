@@ -103,6 +103,12 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       const response = await apiClient.get('/dashboard');
+      console.log('Dashboard API response:', response.data.data);
+      console.log('Recent tasks:', response.data.data.recent_tasks);
+      if (response.data.data.recent_tasks && response.data.data.recent_tasks.length > 0) {
+        console.log('First task:', response.data.data.recent_tasks[0]);
+        console.log('First task title:', response.data.data.recent_tasks[0].title);
+      }
       setData(response.data.data);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
