@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use App\Models\TaskMedia;
-use App\Models\TaskMessage;
+use App\Models\ChMessage;
 use App\Models\TaskBriefQuestion;
 use App\Models\TaskBriefChecklist;
 
@@ -513,7 +513,7 @@ class TaskController extends BaseController
     public function uploadMessage(Request $request, $id)
     {
         try {
-            $task = Task::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $task = Task::find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -530,9 +530,8 @@ class TaskController extends BaseController
             }
 
             $messageData = [
-                'message' => $request->message,
-                'message_type' => $request->get('message_type', 'text'),
-                'sent_by' => Auth::user()->id,
+                'message_text' => $request->message,
+                'sender_id' => Auth::user()->id,
             ];
 
             if ($request->hasFile('file')) {
@@ -555,14 +554,14 @@ class TaskController extends BaseController
     public function getMessages($id)
     {
         try {
-            $task = Task::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $task = Task::find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
             }
 
             $messages = $task->messages()
-                ->with('user')
+                ->with('sender')
                 ->orderBy('created_at', 'desc')
                 ->paginate(20);
 
@@ -578,16 +577,14 @@ class TaskController extends BaseController
     public function deleteMessage($messageId)
     {
         try {
-            $message = TaskMessage::whereHas('task', function ($query) {
-                $query->where('workspace_id', Auth::user()->workspace_id);
-            })->find($messageId);
+            $message = ChMessage::find($messageId);
 
             if (!$message) {
                 return $this->sendNotFound('Message not found');
             }
 
             // Only allow user to delete their own messages or admin
-            if ($message->sent_by !== Auth::user()->id && !Auth::user()->hasRole('admin')) {
+            if ($message->sender_id !== Auth::user()->id && !Auth::user()->hasRole('admin')) {
                 return $this->sendForbidden('You can only delete your own messages');
             }
 
