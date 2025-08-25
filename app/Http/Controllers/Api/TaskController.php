@@ -81,6 +81,20 @@ class TaskController extends BaseController
 
             $tasks = $query->paginate($request->get('per_page', 15));
 
+            // Apply role-based data protection to task users
+            if (!$user->hasRole(['admin', 'sub_admin'])) {
+                // Remove sensitive data from assigned users for requesters and taskers
+                $tasks->getCollection()->transform(function ($task) {
+                    if ($task->users) {
+                        foreach ($task->users as $taskUser) {
+                            unset($taskUser->email);
+                            unset($taskUser->phone);
+                        }
+                    }
+                    return $task;
+                });
+            }
+
             // Check for expired tasks with strict deadlines
             $rejectedStatus = Status::where('title', 'Rejected')->first();
             if ($rejectedStatus) {
@@ -229,6 +243,17 @@ class TaskController extends BaseController
                     if ($rejectedStatus && $task->status_id != $rejectedStatus->id) {
                         $task->update(['status_id' => $rejectedStatus->id]);
                         $task->load(['users', 'status', 'priority', 'taskType', 'project', 'clients']);
+                    }
+                }
+            }
+
+            // Apply role-based data protection to task users
+            if (!$user->hasRole(['admin', 'sub_admin'])) {
+                // Remove sensitive data from assigned users for requesters and taskers
+                if ($task->users) {
+                    foreach ($task->users as $taskUser) {
+                        unset($taskUser->email);
+                        unset($taskUser->phone);
                     }
                 }
             }
