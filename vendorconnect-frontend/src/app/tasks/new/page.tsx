@@ -93,10 +93,7 @@ export default function NewTaskPage() {
     start_date: '',
     end_date: '',
     close_deadline: false,
-    has_deliverable: false,
-    deliverable_title: '',
-    deliverable_description: '',
-    deliverable_type: 'other',
+
   });
 
   useEffect(() => {
@@ -276,10 +273,7 @@ export default function NewTaskPage() {
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
         close_deadline: formData.close_deadline,
-        has_deliverable: formData.has_deliverable,
-        deliverable_title: formData.has_deliverable ? formData.deliverable_title : null,
-        deliverable_description: formData.has_deliverable ? formData.deliverable_description : null,
-        deliverable_type: formData.has_deliverable ? formData.deliverable_type : null,
+
       };
 
       const response = await apiClient.post('/tasks', payload);
@@ -709,68 +703,7 @@ export default function NewTaskPage() {
             </CardContent>
           </Card>
 
-          {/* Deliverable */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Deliverables</CardTitle>
-              <CardDescription>Add deliverables for this task</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                              <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="has_deliverable"
-                    checked={formData.has_deliverable}
-                    onChange={(e) => setFormData(prev => ({ ...prev, has_deliverable: e.target.checked }))}
-                    className="rounded border-gray-300"
-                  />
-                  <Label htmlFor="has_deliverable">This task has deliverables</Label>
-                </div>
 
-              {formData.has_deliverable && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="deliverable_title">Deliverable Title *</Label>
-                    <Input
-                      id="deliverable_title"
-                      value={formData.deliverable_title}
-                      onChange={(e) => setFormData(prev => ({ ...prev, deliverable_title: e.target.value }))}
-                      placeholder="e.g., Website Design, Logo Design, Marketing Materials"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="deliverable_description">Deliverable Description</Label>
-                    <Textarea
-                      id="deliverable_description"
-                      value={formData.deliverable_description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, deliverable_description: e.target.value }))}
-                      placeholder="Describe what was delivered..."
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="deliverable_type">Deliverable Type *</Label>
-                    <Select
-                      value={formData.deliverable_type}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, deliverable_type: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select deliverable type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="design">Design</SelectItem>
-                        <SelectItem value="document">Document</SelectItem>
-                        <SelectItem value="presentation">Presentation</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
           {/* Actions */}
           <div className="flex justify-end gap-4">
