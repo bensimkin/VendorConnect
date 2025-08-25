@@ -18,18 +18,23 @@ class ClientController extends BaseController
     public function index(Request $request)
     {
         try {
+            $user = Auth::user();
             $query = Client::query();
             // Removed workspace filtering for single-tenant system
 
             // Apply filters
             if ($request->has('search')) {
                 $search = $request->search;
-                            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('company', 'like', "%{$search}%");
-            });
+                $query->where(function ($q) use ($search, $user) {
+                    $q->where('first_name', 'like', "%{$search}%")
+                      ->orWhere('last_name', 'like', "%{$search}%")
+                      ->orWhere('company', 'like', "%{$search}%");
+                    
+                    // Only admins and sub-admins can search by email
+                    if ($user->hasRole(['admin', 'sub_admin'])) {
+                        $q->orWhere('email', 'like', "%{$search}%");
+                    }
+                });
             }
 
             if ($request->has('status')) {
@@ -52,6 +57,22 @@ class ClientController extends BaseController
                     $query->where('status_id', 20); // Active status ID
                 }])
                 ->paginate($request->get('per_page', 15));
+
+            // Apply role-based data protection to the response
+            if (!$user->hasRole(['admin', 'sub_admin'])) {
+                // Remove sensitive data for requesters and taskers
+                $clients->getCollection()->transform(function ($client) {
+                    unset($client->email);
+                    unset($client->phone);
+                    unset($client->address);
+                    unset($client->city);
+                    unset($client->state);
+                    unset($client->country);
+                    unset($client->zip);
+                    unset($client->dob);
+                    return $client;
+                });
+            }
 
             return $this->sendPaginatedResponse($clients, 'Clients retrieved successfully');
         } catch (\Exception $e) {
@@ -156,6 +177,20 @@ class ClientController extends BaseController
             if (!$client) {
                 \Log::warning('Client not found with ID: ' . $id);
                 return $this->sendNotFound('Client not found');
+            }
+
+            // Apply role-based data protection
+            $currentUser = Auth::user();
+            if (!$currentUser->hasRole(['admin', 'sub_admin'])) {
+                // Remove sensitive data for requesters and taskers
+                unset($client->email);
+                unset($client->phone);
+                unset($client->address);
+                unset($client->city);
+                unset($client->state);
+                unset($client->country);
+                unset($client->zip);
+                unset($client->dob);
             }
 
             \Log::info('Client data: ' . json_encode($client->toArray()));

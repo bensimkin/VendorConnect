@@ -337,7 +337,9 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium">{user.first_name} {user.last_name}</p>
-                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                        {user.email && (
+                          <p className="text-xs text-muted-foreground">{user.email}</p>
+                        )}
                       </div>
                     </div>
                     <div className="text-sm text-muted-foreground">
