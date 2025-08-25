@@ -135,7 +135,16 @@ export default function NewTaskPage() {
       const nextWeek = new Date();
       nextWeek.setDate(nextWeek.getDate() + 7);
       const nextWeekStr = nextWeek.toISOString().split('T')[0];
-      setFormData(prev => ({ ...prev, start_date: today, end_date: nextWeekStr }));
+      
+      // Set default task type to first available one if any exist
+      const defaultTaskType = taskTypeRes.data.data?.length > 0 ? taskTypeRes.data.data[0].id.toString() : '';
+      
+      setFormData(prev => ({ 
+        ...prev, 
+        start_date: today, 
+        end_date: nextWeekStr,
+        task_type_id: defaultTaskType
+      }));
     } catch (error) {
       console.error('Failed to fetch form data:', error);
       toast.error('Failed to load form data');
