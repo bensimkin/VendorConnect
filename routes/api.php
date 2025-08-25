@@ -49,9 +49,15 @@ Route::prefix('v1')->group(function () {
         // User profile
         Route::get('/user', function (Request $request) {
             $user = $request->user();
-            $user->load(['roles' => function($query) {
-                $query->select('id', 'name');
-            }]);
+            \Log::info('User endpoint called, user:', ['id' => $user->id ?? 'null', 'email' => $user->email ?? 'null']);
+            
+            if ($user) {
+                $user->load(['roles' => function($query) {
+                    $query->select('id', 'name');
+                }]);
+                \Log::info('User roles loaded:', ['roles' => $user->roles->pluck('name')->toArray()]);
+            }
+            
             return $user;
         });
         Route::post('/auth/logout', [AuthController::class, 'logout']);
