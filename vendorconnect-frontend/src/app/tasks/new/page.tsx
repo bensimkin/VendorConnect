@@ -97,6 +97,10 @@ export default function NewTaskPage() {
     end_date: '',
     close_deadline: false,
     deliverable_quantity: 1,
+    is_repeating: false,
+    repeat_frequency: '',
+    repeat_interval: 1,
+    repeat_until: '',
   });
 
   useEffect(() => {
@@ -277,6 +281,10 @@ export default function NewTaskPage() {
         end_date: formData.end_date || null,
         close_deadline: formData.close_deadline,
         deliverable_quantity: formData.deliverable_quantity,
+        is_repeating: formData.is_repeating,
+        repeat_frequency: formData.repeat_frequency || null,
+        repeat_interval: formData.repeat_interval,
+        repeat_until: formData.repeat_until || null,
         template_id: selectedTemplate ? parseInt(selectedTemplate) : null,
       };
 
@@ -747,6 +755,87 @@ export default function NewTaskPage() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Task Repetition */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Task Repetition</CardTitle>
+              <CardDescription>Set up automatic task repetition (optional)</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  id="is_repeating"
+                  type="checkbox"
+                  checked={formData.is_repeating}
+                  onChange={(e) => setFormData({ ...formData, is_repeating: e.target.checked })}
+                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <Label htmlFor="is_repeating">Make this task repeat automatically</Label>
+              </div>
+
+              {formData.is_repeating && (
+                <div className="space-y-4 pl-6 border-l-2 border-gray-200">
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="repeat_frequency">Frequency</Label>
+                      <select
+                        id="repeat_frequency"
+                        value={formData.repeat_frequency}
+                        onChange={(e) => setFormData({ ...formData, repeat_frequency: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-md bg-background"
+                      >
+                        <option value="">Select frequency</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="repeat_interval">Every</Label>
+                      <Input
+                        id="repeat_interval"
+                        type="number"
+                        min="1"
+                        value={formData.repeat_interval}
+                        onChange={(e) => setFormData({ ...formData, repeat_interval: parseInt(e.target.value) || 1 })}
+                        placeholder="1"
+                        className="w-full"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {formData.repeat_frequency === 'daily' && 'days'}
+                        {formData.repeat_frequency === 'weekly' && 'weeks'}
+                        {formData.repeat_frequency === 'monthly' && 'months'}
+                        {formData.repeat_frequency === 'yearly' && 'years'}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="repeat_until">Until (Optional)</Label>
+                      <Input
+                        id="repeat_until"
+                        type="date"
+                        value={formData.repeat_until}
+                        onChange={(e) => setFormData({ ...formData, repeat_until: e.target.value })}
+                        min={formData.start_date}
+                        className="w-full"
+                      />
+                      <p className="text-xs text-muted-foreground">Leave empty to repeat indefinitely</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-sm text-blue-800">
+                      <strong>How it works:</strong> This task will automatically create new instances based on your schedule. 
+                      Each new task will inherit all the details, assignments, and settings from this original task.
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
