@@ -62,6 +62,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
     ];
 
+    protected $appends = ['role'];
+
     public function scopeFilter($query, array $filters)
     {
         if ($filters['search'] ?? false) {
@@ -217,6 +219,19 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getlink()
     {
         return str(route('users.show', [$this->id]));
+    }
+
+    /**
+     * Get the primary role name for display
+     */
+    public function getRoleAttribute()
+    {
+        $roles = $this->roles;
+        if ($roles->count() > 0) {
+            // Return the first role name, or join multiple roles with commas
+            return $roles->pluck('name')->implode(', ');
+        }
+        return 'User';
     }
     public function subscriptions()
     {
