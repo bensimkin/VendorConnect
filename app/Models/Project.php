@@ -60,6 +60,15 @@ class Project extends Model implements HasMedia
         return $this->belongsToMany(User::class);
     }
 
+    public function taskUsers()
+    {
+        return $this->hasManyThrough(User::class, Task::class, 'project_id', 'id', 'id', 'user_id')
+            ->join('task_user', 'users.id', '=', 'task_user.user_id')
+            ->join('tasks', 'task_user.task_id', '=', 'tasks.id')
+            ->where('tasks.project_id', $this->id)
+            ->distinct();
+    }
+
     public function clients()
     {
         return $this->belongsToMany(Client::class);
