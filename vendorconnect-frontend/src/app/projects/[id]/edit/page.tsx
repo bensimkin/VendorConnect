@@ -50,6 +50,7 @@ export default function EditProjectPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [statuses, setStatuses] = useState<Status[]>([]);
+  const [hasMultipleClients, setHasMultipleClients] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -74,6 +75,11 @@ export default function EditProjectPage() {
       const response = await apiClient.get(`/projects/${projectId}`);
       const projectData = response.data.data;
       setProject(projectData);
+      
+      // Check if project has multiple clients
+      const projectClients = projectData.clients || [];
+      const hasMultiple = projectClients.length > 1;
+      setHasMultipleClients(hasMultiple);
       
       // Pre-populate form data
       setFormData({
@@ -132,6 +138,19 @@ export default function EditProjectPage() {
           toast.error('Please select a client');
           return;
         }
+      }
+    }
+
+    // Show confirmation if multiple clients will be lost
+    if (!settings.allow_multiple_clients_per_project && hasMultipleClients) {
+      const confirmed = window.confirm(
+        `This project currently has ${project?.clients?.length || 0} clients. ` +
+        `Since multiple clients per project is now disabled, only the selected client will be kept. ` +
+        `All other clients will be removed. Do you want to continue?`
+      );
+      
+      if (!confirmed) {
+        return;
       }
     }
 
@@ -244,6 +263,17 @@ export default function EditProjectPage() {
                       </span>
                     )}
                   </Label>
+                  
+                  {/* Warning when multiple clients setting is disabled but project has multiple clients */}
+                  {!settings.allow_multiple_clients_per_project && hasMultipleClients && (
+                    <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-3">
+                      <div className="font-medium">⚠️ Multiple Clients Detected</div>
+                      <div className="text-xs mt-1">
+                        This project currently has {project?.clients?.length || 0} clients, but multiple clients per project is now disabled. 
+                        Only the first client will be kept. Other clients will be removed when you save.
+                      </div>
+                    </div>
+                  )}
                   {settings.allow_multiple_clients_per_project ? (
                     <MultiSelect
                       options={clients}
