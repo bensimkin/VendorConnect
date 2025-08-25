@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\PortfolioController;
+use App\Http\Controllers\Api\ClientCredentialController;
 
 /*
 |--------------------------------------------------------------------------
@@ -207,6 +208,16 @@ Route::prefix('priorities')->group(function () {
             Route::get('/{id}/tasks', [ClientController::class, 'tasks']);
             Route::get('/{id}/portfolio', [PortfolioController::class, 'clientPortfolio']);
             Route::get('/{id}/portfolio/stats', [PortfolioController::class, 'clientStats']);
+            
+            // Client Credentials
+            Route::prefix('{clientId}/credentials')->group(function () {
+                Route::get('/', [ClientCredentialController::class, 'index']);
+                Route::post('/', [ClientCredentialController::class, 'store']);
+                Route::get('/{credentialId}', [ClientCredentialController::class, 'show']);
+                Route::put('/{credentialId}', [ClientCredentialController::class, 'update']);
+                Route::delete('/{credentialId}', [ClientCredentialController::class, 'destroy']);
+                Route::get('/{credentialId}/password', [ClientCredentialController::class, 'getPassword']);
+            });
         });
         
         // Portfolios
