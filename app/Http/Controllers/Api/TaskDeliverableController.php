@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\TaskDeliverable;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class TaskDeliverableController extends Controller
 {
@@ -86,6 +88,10 @@ class TaskDeliverableController extends Controller
             }
 
             DB::commit();
+
+            // Send notifications for new deliverable
+            $notificationService = new NotificationService();
+            $notificationService->deliverableAdded($deliverable, Auth::user());
 
             $deliverable->load(['creator', 'media']);
             return $this->sendResponse($deliverable, 'Deliverable created successfully');
