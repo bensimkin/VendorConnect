@@ -30,7 +30,9 @@ import NotificationBell from '@/components/notifications/NotificationBell';
 
 // Navigation items with role restrictions
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: Home, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
+  { name: 'Dashboard', href: '/dashboard', icon: Home, roles: ['Admin', 'sub admin'] },
+  { name: 'My Dashboard', href: '/dashboard/tasker', icon: Home, roles: ['Tasker'] },
+  { name: 'My Dashboard', href: '/dashboard/requester', icon: Home, roles: ['Requester'] },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
   { name: 'Templates', href: '/templates', icon: FileText, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
   { name: 'Task Types', href: '/task-types', icon: Tag, roles: ['Admin', 'sub admin'] },
