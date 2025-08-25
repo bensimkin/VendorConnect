@@ -25,11 +25,6 @@ class Task extends Model implements HasMedia
         'created_by',
         'priority_id',
         'note',
-        'deliverable_title',
-        'deliverable_description',
-        'deliverable_type',
-        'has_deliverable',
-        'deliverable_completed_at'
     ];
 
     public function registerMediaCollections(): void
@@ -115,6 +110,11 @@ class Task extends Model implements HasMedia
     public function portfolio()
     {
         return $this->hasOne(Portfolio::class);
+    }
+
+    public function deliverables()
+    {
+        return $this->hasMany(TaskDeliverable::class);
     }
 
     public function tags()
