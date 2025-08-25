@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import apiClient from '@/lib/api-client';
 import { Activity, Users, CheckCircle2, Clock, TrendingUp, TrendingDown } from 'lucide-react';
 import {
