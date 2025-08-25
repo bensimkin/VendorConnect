@@ -402,11 +402,11 @@ export default function TaskDetailPage() {
               </Card>
             )}
 
-            {/* Template Questions */}
+            {/* Task Questions */}
             {templateQuestions.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Template Questions</CardTitle>
+                  <CardTitle>Task Questions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {templateQuestions.map((question) => {
