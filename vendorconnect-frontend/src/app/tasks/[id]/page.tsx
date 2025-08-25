@@ -114,6 +114,7 @@ export default function TaskDetailPage() {
   const [deliverableFiles, setDeliverableFiles] = useState<File[]>([]);
   const [submittingDeliverable, setSubmittingDeliverable] = useState(false);
   const [deliverables, setDeliverables] = useState<any[]>([]);
+  const [comments, setComments] = useState<any[]>([]);
 
   useEffect(() => {
     if (params.id) {
@@ -177,6 +178,11 @@ export default function TaskDetailPage() {
       // Load deliverables
       if (taskData.deliverables) {
         setDeliverables(taskData.deliverables);
+      }
+
+      // Load comments
+      if (taskData.messages) {
+        setComments(taskData.messages);
       }
     } catch (error) {
       console.error('Failed to fetch task details:', error);
@@ -257,7 +263,7 @@ export default function TaskDetailPage() {
     setSubmittingComment(true);
     try {
       await apiClient.post(`/tasks/${task.id}/messages`, {
-        message: comment
+        message_text: comment
       });
       toast.success('Comment added successfully');
       setComment('');
@@ -268,6 +274,19 @@ export default function TaskDetailPage() {
       toast.error('Failed to add comment');
     } finally {
       setSubmittingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (!task || !confirm('Are you sure you want to delete this comment?')) return;
+
+    try {
+      await apiClient.delete(`/tasks/${task.id}/messages/${commentId}`);
+      toast.success('Comment deleted successfully');
+      fetchTaskDetail(task.id.toString());
+    } catch (error) {
+      console.error('Failed to delete comment:', error);
+      toast.error('Failed to delete comment');
     }
   };
 
@@ -678,11 +697,50 @@ export default function TaskDetailPage() {
                     size="sm"
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />
-                    Add Comment
+                    {submittingComment ? 'Adding...' : 'Add Comment'}
                   </Button>
                 </div>
-                <div className="text-sm text-muted-foreground text-center py-4">
-                  Comments feature will be fully implemented with the messaging system
+                
+                {/* Comments List */}
+                <div className="space-y-4 mt-6">
+                  {comments.length > 0 ? (
+                    comments.map((comment) => (
+                      <div key={comment.id} className="border rounded-lg p-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-medium text-primary">
+                                {comment.sender?.first_name?.[0]}{comment.sender?.last_name?.[0]}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">
+                                {comment.sender?.first_name} {comment.sender?.last_name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(comment.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteComment(comment.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="text-sm text-gray-700 ml-10">
+                          {comment.message_text}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-muted-foreground">No comments yet</p>
+                      <p className="text-xs text-muted-foreground mt-1">Be the first to add a comment!</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
