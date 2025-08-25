@@ -55,7 +55,7 @@ export default function EditProjectPage() {
     title: '',
     description: '',
     client_id: '',
-    client_ids: [],
+    client_ids: [] as number[],
     start_date: '',
     end_date: '',
     budget: '',
