@@ -55,6 +55,9 @@ interface TaskDetail {
   template?: {
     id: number;
     template_name: string;
+    standard_brief?: string;
+    description?: string;
+    deliverable_quantity?: number;
   };
   question_answers?: Array<{
     id: number;
@@ -563,6 +566,50 @@ export default function TaskDetailPage() {
                 </p>
               </CardContent>
             </Card>
+
+            {/* Template Information */}
+            {task.template && (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    <CardTitle>Template Information</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Template Name</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {task.template.template_name}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Template ID</Label>
+                      <p className="text-sm text-muted-foreground">
+                        #{task.template.id}
+                      </p>
+                    </div>
+                  </div>
+                  {task.template.standard_brief && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Standard Brief</Label>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {task.template.standard_brief}
+                      </p>
+                    </div>
+                  )}
+                  {task.template.description && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Template Description</Label>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {task.template.description}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Notes */}
             {task.note && (

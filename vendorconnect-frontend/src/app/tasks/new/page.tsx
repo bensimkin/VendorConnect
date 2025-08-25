@@ -46,6 +46,9 @@ interface Template {
   id: number;
   template_name: string;
   task_type_id: number;
+  standard_brief?: string;
+  description?: string;
+  deliverable_quantity?: number;
 }
 
 interface TaskType {
@@ -214,6 +217,8 @@ export default function NewTaskPage() {
             ...prev,
             title: template.template_name,
             task_type_id: template.task_type_id?.toString() || '',
+            description: template.description || '',
+            deliverable_quantity: template.deliverable_quantity || 1,
           }));
         }
         
@@ -838,6 +843,51 @@ export default function NewTaskPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Template Information */}
+          {selectedTemplate && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  <CardTitle>Template Information</CardTitle>
+                </div>
+                <CardDescription>Template details that will be applied to this task</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Template Name</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {templates.find(t => t.id.toString() === selectedTemplate)?.template_name}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Task Type</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {taskTypes.find(t => t.id.toString() === formData.task_type_id)?.name}
+                    </p>
+                  </div>
+                </div>
+                {templates.find(t => t.id.toString() === selectedTemplate)?.standard_brief && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Standard Brief</Label>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {templates.find(t => t.id.toString() === selectedTemplate)?.standard_brief}
+                    </p>
+                  </div>
+                )}
+                {formData.description && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Template Description</Label>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {formData.description}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Template Questions */}
           {templateQuestions.length > 0 && (
