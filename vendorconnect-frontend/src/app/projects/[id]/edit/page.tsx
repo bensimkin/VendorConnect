@@ -10,8 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { ArrowLeft } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import { useProjectSettings } from '@/hooks/use-project-settings';
 
 interface Project {
   id: number;
@@ -41,6 +43,7 @@ export default function EditProjectPage() {
   const router = useRouter();
   const params = useParams();
   const projectId = params.id as string;
+  const { settings, loading: settingsLoading } = useProjectSettings();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -52,6 +55,7 @@ export default function EditProjectPage() {
     title: '',
     description: '',
     client_id: '',
+    client_ids: [],
     start_date: '',
     end_date: '',
     budget: '',
@@ -76,6 +80,7 @@ export default function EditProjectPage() {
         title: projectData.title || '',
         description: projectData.description || '',
         client_id: projectData.clients?.[0]?.id?.toString() || '',
+        client_ids: projectData.clients?.map(client => client.id) || [],
         start_date: projectData.start_date || '',
         end_date: projectData.end_date || '',
         budget: projectData.budget?.toString() || '',
@@ -116,9 +121,18 @@ export default function EditProjectPage() {
       return;
     }
 
-    if (!formData.client_id) {
-      toast.error('Please select a client');
-      return;
+    if (settings.require_project_client) {
+      if (settings.allow_multiple_clients_per_project) {
+        if (formData.client_ids.length === 0) {
+          toast.error('Please select at least one client');
+          return;
+        }
+      } else {
+        if (!formData.client_id) {
+          toast.error('Please select a client');
+          return;
+        }
+      }
     }
 
     setSaving(true);
@@ -126,7 +140,8 @@ export default function EditProjectPage() {
       const payload = {
         title: formData.title,
         description: formData.description,
-        client_id: parseInt(formData.client_id),
+        client_id: settings.allow_multiple_clients_per_project ? null : parseInt(formData.client_id),
+        client_ids: settings.allow_multiple_clients_per_project ? formData.client_ids : [],
         start_date: formData.start_date,
         end_date: formData.end_date || null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
@@ -221,22 +236,39 @@ export default function EditProjectPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="client_id">Client *</Label>
-                  <Select
-                    value={formData.client_id}
-                    onValueChange={(value) => setFormData({ ...formData, client_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a client" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id.toString()}>
-                          {client.name} {client.company && `(${client.company})`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="client_id">
+                    Client{settings.allow_multiple_clients_per_project ? 's' : ''} *
+                    {settings.allow_multiple_clients_per_project && (
+                      <span className="text-sm text-muted-foreground ml-2">
+                        (Max: {settings.max_clients_per_project})
+                      </span>
+                    )}
+                  </Label>
+                  {settings.allow_multiple_clients_per_project ? (
+                    <MultiSelect
+                      options={clients}
+                      selected={formData.client_ids}
+                      onSelectionChange={(selected) => setFormData({ ...formData, client_ids: selected })}
+                      placeholder="Select clients..."
+                      maxSelections={settings.max_clients_per_project}
+                    />
+                  ) : (
+                    <Select
+                      value={formData.client_id}
+                      onValueChange={(value) => setFormData({ ...formData, client_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a client" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id.toString()}>
+                            {client.name} {client.company && `(${client.company})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
 
                 <div className="space-y-2">
