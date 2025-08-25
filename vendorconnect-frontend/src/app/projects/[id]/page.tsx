@@ -118,7 +118,10 @@ export default function ProjectDetailPage() {
 
   const calculateProgress = () => {
     if (!project?.tasks || project.tasks.length === 0) return 0;
-    const completedTasks = project.tasks.filter(task => task.status?.name?.toLowerCase() === 'completed').length;
+    const completedTasks = project.tasks.filter(task => 
+      task.status?.title?.toLowerCase() === 'completed' || 
+      task.status?.name?.toLowerCase() === 'completed'
+    ).length;
     return Math.round((completedTasks / project.tasks.length) * 100);
   };
 
@@ -344,7 +347,10 @@ export default function ProjectDetailPage() {
                 </div>
                 <div className="text-center p-3 bg-secondary rounded-md">
                   <p className="text-2xl font-bold">
-                    {project.tasks?.filter(task => task.status?.name?.toLowerCase() === 'completed').length || 0}
+                    {project.tasks?.filter(task => 
+                      task.status?.title?.toLowerCase() === 'completed' || 
+                      task.status?.name?.toLowerCase() === 'completed'
+                    ).length || 0}
                   </p>
                   <p className="text-muted-foreground">Completed</p>
                 </div>
