@@ -105,6 +105,11 @@ class Client extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Portfolio::class);
     }
 
+    public function credentials()
+    {
+        return $this->hasMany(ClientCredential::class);
+    }
+
     public function status_projects($status_id)
     {
         return $this->belongsToMany(Project::class, 'client_project')
