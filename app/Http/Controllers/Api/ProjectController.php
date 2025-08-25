@@ -20,7 +20,7 @@ class ProjectController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = Project::with(['users', 'clients', 'tasks']);
+            $query = Project::with(['users', 'clients', 'tasks', 'status']);
             // Removed workspace filtering for single-tenant system
 
             // Apply filters
