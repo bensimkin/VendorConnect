@@ -24,7 +24,9 @@ export function useProjectSettings() {
     try {
       setLoading(true);
       setError(null);
+      console.log('Fetching project settings...');
       const response = await apiClient.get('/settings/project');
+      console.log('Project settings response:', response.data);
       setSettings(response.data.data);
     } catch (err: any) {
       console.error('Failed to fetch project settings:', err);
