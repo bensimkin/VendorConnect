@@ -23,8 +23,18 @@ class DashboardController extends BaseController
         try {
             $user = Auth::user();
 
-            // Get basic counts (removed workspace filtering for single-tenant)
-            $totalTasks = Task::count();
+            // Get basic counts with role-based filtering
+            $totalTasksQuery = Task::query();
+            
+            if ($user->hasRole('requester')) {
+                $totalTasksQuery->where('created_by', $user->id);
+            } elseif ($user->hasRole('tasker')) {
+                $totalTasksQuery->whereHas('users', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                });
+            }
+            
+            $totalTasks = $totalTasksQuery->count();
             $totalUsers = User::count();
             $totalClients = Client::count();
             $totalProjects = Project::count();
@@ -32,8 +42,22 @@ class DashboardController extends BaseController
             // Get task statistics
             $taskStats = $this->getTaskStatistics();
             
-            // Get recent tasks
-            $recentTasks = Task::with(['users', 'status', 'priority', 'taskType'])
+            // Get recent tasks with role-based filtering
+            $recentTasksQuery = Task::with(['users', 'status', 'priority', 'taskType']);
+            
+            // Apply role-based filtering for recent tasks
+            if ($user->hasRole('requester')) {
+                // Requesters only see tasks they created
+                $recentTasksQuery->where('created_by', $user->id);
+            } elseif ($user->hasRole('tasker')) {
+                // Taskers only see tasks they're assigned to
+                $recentTasksQuery->whereHas('users', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                });
+            }
+            // Admins and sub-admins see all tasks (no additional filtering)
+            
+            $recentTasks = $recentTasksQuery
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
                 ->get();
@@ -72,7 +96,23 @@ class DashboardController extends BaseController
      */
     private function getTaskStatistics()
     {
-        $stats = Task::select('status_id', DB::raw('count(*) as count'))
+        $user = Auth::user();
+        
+        // Apply role-based filtering to task statistics
+        $taskQuery = Task::query();
+        
+        if ($user->hasRole('requester')) {
+            // Requesters only see tasks they created
+            $taskQuery->where('created_by', $user->id);
+        } elseif ($user->hasRole('tasker')) {
+            // Taskers only see tasks they're assigned to
+            $taskQuery->whereHas('users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            });
+        }
+        // Admins and sub-admins see all tasks (no additional filtering)
+        
+        $stats = $taskQuery->select('status_id', DB::raw('count(*) as count'))
             ->groupBy('status_id')
             ->get();
 
@@ -85,14 +125,19 @@ class DashboardController extends BaseController
         $completedStatus = Status::where('title', 'Completed')->first();
         $completedStatusId = $completedStatus ? $completedStatus->id : null;
         
+        // Apply same filtering to completed and overdue counts
+        $completedThisWeek = $completedStatusId ? (clone $taskQuery)->where('status_id', $completedStatusId)
+            ->whereBetween('updated_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+            ->count() : 0;
+            
+        $overdue = (clone $taskQuery)->where('end_date', '<', Carbon::now())
+            ->where('status_id', '!=', $completedStatusId) // Not completed
+            ->count();
+        
         return [
             'by_status' => $statusCounts,
-            'completed_this_week' => $completedStatusId ? Task::where('status_id', $completedStatusId)
-                ->whereBetween('updated_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
-                ->count() : 0,
-            'overdue' => Task::where('end_date', '<', Carbon::now())
-                ->where('status_id', '!=', $completedStatusId) // Not completed
-                ->count(),
+            'completed_this_week' => $completedThisWeek,
+            'overdue' => $overdue,
         ];
     }
 
