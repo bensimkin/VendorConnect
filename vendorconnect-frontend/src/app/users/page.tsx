@@ -19,6 +19,7 @@ interface User {
   email: string;
   phone?: string;
   role?: string;
+  roles?: Array<{ id: number; name: string }>;
   status?: number;
   created_at: string;
   updated_at: string;
@@ -155,7 +156,11 @@ export default function UsersPage() {
                       <CardTitle className="text-xl">
                         {user.first_name} {user.last_name}
                       </CardTitle>
-                      <CardDescription>{user.role || 'User'}</CardDescription>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {user.role || 'User'}
+                        </Badge>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant={user.status === 1 ? "default" : "secondary"}>
