@@ -58,7 +58,12 @@ class ProjectController extends BaseController
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
-            $projects = $query->paginate($request->get('per_page', 15));
+            $projects = $query->withCount(['tasks as tasks_count'])
+                ->withCount(['tasks as completed_tasks' => function($query) {
+                    $query->where('status_id', 17); // Completed status ID
+                }])
+                ->withCount(['users as team_members_count'])
+                ->paginate($request->get('per_page', 15));
 
             return $this->sendPaginatedResponse($projects, 'Projects retrieved successfully');
         } catch (\Exception $e) {

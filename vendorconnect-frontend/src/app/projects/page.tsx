@@ -22,7 +22,7 @@ interface Project {
   start_date?: string;
   end_date?: string;
   budget?: number;
-  team_members?: Array<{
+  users?: Array<{
     id: number;
     first_name: string;
     last_name: string;
@@ -30,6 +30,7 @@ interface Project {
   progress?: number;
   tasks_count?: number;
   completed_tasks?: number;
+  team_members_count?: number;
 }
 
 export default function ProjectsPage() {
@@ -98,6 +99,15 @@ export default function ProjectsPage() {
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       case 'on hold':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+    }
+  };
+
+  const calculateProgress = (completedTasks: number, totalTasks: number) => {
+    if (totalTasks === 0) return 0;
+    return Math.round((completedTasks / totalTasks) * 100);
+  };
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
@@ -198,12 +208,12 @@ export default function ProjectsPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Progress</span>
-                      <span className="font-medium">{project.progress || 0}%</span>
+                      <span className="font-medium">{calculateProgress(project.completed_tasks || 0, project.tasks_count || 0)}%</span>
                     </div>
                     <div className="w-full bg-secondary rounded-full h-2">
                       <div
                         className="bg-primary rounded-full h-2 transition-all"
-                        style={{ width: `${project.progress || 0}%` }}
+                        style={{ width: `${calculateProgress(project.completed_tasks || 0, project.tasks_count || 0)}%` }}
                       />
                     </div>
                   </div>
@@ -227,7 +237,7 @@ export default function ProjectsPage() {
                     <div className="flex items-center space-x-4 text-sm">
                       <div className="flex items-center">
                         <Users className="mr-1 h-4 w-4 text-muted-foreground" />
-                        <span>{project.team_members?.length || 0}</span>
+                        <span>{project.team_members_count || project.users?.length || 0}</span>
                       </div>
                       <div className="flex items-center">
                         <CheckCircle className="mr-1 h-4 w-4 text-muted-foreground" />
