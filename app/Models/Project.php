@@ -53,7 +53,7 @@ class Project extends Model implements HasMedia
     }
     public function tasks()
     {
-        return $this->hasMany(Task::class)->where('tasks.workspace_id', session()->get('workspace_id'));
+        return $this->hasMany(Task::class);
     }
     public function users()
     {
