@@ -203,6 +203,11 @@ export default function NewTaskPage() {
       return;
     }
 
+    if (!formData.project_id) {
+      toast.error('Please select a project');
+      return;
+    }
+
     setLoading(true);
     try {
       const payload = {
@@ -365,14 +370,15 @@ export default function NewTaskPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="project">Project</Label>
+                  <Label htmlFor="project">Project *</Label>
                   <select
                     id="project"
                     value={formData.project_id}
                     onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
                     className="w-full px-3 py-2 border rounded-md bg-background"
+                    required
                   >
-                    <option value="">Select Project (Optional)</option>
+                    <option value="">Select Project</option>
                     {projects.map((project) => (
                       <option key={project.id} value={project.id}>
                         {project.title}
