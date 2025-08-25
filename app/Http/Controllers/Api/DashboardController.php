@@ -62,14 +62,21 @@ class DashboardController extends BaseController
                 ->limit(10)
                 ->get();
 
-            // Debug: Log the first task to see what's being returned
+            // Temporary debug: Log the structure of the first task
             if ($recentTasks->count() > 0) {
-                \Log::info('First task debug:', [
-                    'id' => $recentTasks->first()->id,
-                    'title' => $recentTasks->first()->title,
-                    'title_type' => gettype($recentTasks->first()->title),
-                    'attributes' => $recentTasks->first()->getAttributes(),
-                    'to_array' => $recentTasks->first()->toArray()
+                $firstTask = $recentTasks->first();
+                \Log::info('Task debug:', [
+                    'id' => $firstTask->id,
+                    'title' => $firstTask->title,
+                    'status_id' => $firstTask->status_id,
+                    'status_loaded' => $firstTask->relationLoaded('status'),
+                    'status_data' => $firstTask->status ? [
+                        'id' => $firstTask->status->id,
+                        'title' => $firstTask->status->title,
+                        'name' => $firstTask->status->name,
+                        'to_array' => $firstTask->status->toArray()
+                    ] : null,
+                    'task_to_array' => $firstTask->toArray()
                 ]);
             }
 
