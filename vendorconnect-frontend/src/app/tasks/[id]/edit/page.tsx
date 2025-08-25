@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Save, Trash2, Plus, X } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Plus, X, FileText } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 
 interface Task {
@@ -74,6 +74,9 @@ interface TaskType {
 interface Template {
   id: number;
   template_name: string;
+  standard_brief?: string;
+  description?: string;
+  deliverable_quantity?: number;
 }
 
 interface Status {
@@ -520,6 +523,58 @@ export default function EditTaskPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Template Information */}
+          {task?.template && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  <CardTitle>Template Information</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Template Name</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {task.template.template_name}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Template ID</Label>
+                    <p className="text-sm text-muted-foreground">
+                      #{task.template.id}
+                    </p>
+                  </div>
+                </div>
+                {task.template.standard_brief && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Standard Brief</Label>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {task.template.standard_brief}
+                    </p>
+                  </div>
+                )}
+                {task.template.description && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Template Description</Label>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {task.template.description}
+                    </p>
+                  </div>
+                )}
+                {task.template.deliverable_quantity && task.template.deliverable_quantity > 1 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Default Quantity</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {task.template.deliverable_quantity}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Template Questions */}
           {templateQuestions.length > 0 && (
