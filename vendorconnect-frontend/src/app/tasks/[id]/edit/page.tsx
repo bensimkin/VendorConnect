@@ -110,6 +110,7 @@ export default function EditTaskPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [task, setTask] = useState<Task | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -153,25 +154,26 @@ export default function EditTaskPage() {
         throw new Error('Invalid API response');
       }
       
-      const task: Task = taskRes.data.data;
-      console.log('Task object:', task);
+      const taskData: Task = taskRes.data.data;
+      console.log('Task object:', taskData);
       
-      if (!task) {
+      if (!taskData) {
         throw new Error('Task not found');
       }
 
-              setFormData({
-          title: task?.title || '',
-          description: task?.description || '',
-          status_id: task?.status?.id || 0,
-          priority_id: task?.priority?.id || 0,
-          user_ids: task?.assigned_to?.id ? [task.assigned_to.id] : [],
-          client_ids: task?.client?.id ? [task.client.id] : [],
-          project_id: task?.project?.id || 0,
-          end_date: task?.due_date ? task.due_date.split('T')[0] : '',
-          task_type_id: task?.task_type?.id || 0,
-          close_deadline: task?.close_deadline || false,
-        });
+      setTask(taskData);
+            setFormData({
+        title: taskData?.title || '',
+        description: taskData?.description || '',
+        status_id: taskData?.status?.id || 0,
+        priority_id: taskData?.priority?.id || 0,
+        user_ids: taskData?.assigned_to?.id ? [taskData.assigned_to.id] : [],
+        client_ids: taskData?.client?.id ? [taskData.client.id] : [],
+        project_id: taskData?.project?.id || 0,
+        end_date: taskData?.due_date ? taskData.due_date.split('T')[0] : '',
+        task_type_id: taskData?.task_type?.id || 0,
+        close_deadline: taskData?.close_deadline || false,
+      });
 
       // Fetch dropdown data
       const [usersRes, clientsRes, projectsRes, taskTypesRes, templatesRes, statusesRes, prioritiesRes] = await Promise.all([
