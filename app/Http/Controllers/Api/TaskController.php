@@ -649,7 +649,7 @@ class TaskController extends BaseController
     public function submitQuestionAnswer(Request $request, $id)
     {
         try {
-            $task = Task::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $task = Task::find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -686,7 +686,7 @@ class TaskController extends BaseController
     public function submitChecklistAnswer(Request $request, $id)
     {
         try {
-            $task = Task::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $task = Task::find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
