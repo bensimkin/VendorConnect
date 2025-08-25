@@ -25,6 +25,7 @@ class Task extends Model implements HasMedia
         'created_by',
         'priority_id',
         'note',
+        'deliverable_quantity',
     ];
 
     public function registerMediaCollections(): void

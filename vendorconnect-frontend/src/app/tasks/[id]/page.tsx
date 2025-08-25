@@ -51,6 +51,7 @@ interface TaskDetail {
   updated_at: string;
   tags?: Array<{ id: number; name: string }>;
   note?: string;
+  deliverable_quantity?: number;
   template?: {
     id: number;
     template_name: string;
@@ -974,6 +975,13 @@ export default function TaskDetailPage() {
                   <div>
                     <p className="text-sm font-medium mb-2">Project</p>
                     <p className="text-sm">{task.project.name}</p>
+                  </div>
+                )}
+
+                {task.deliverable_quantity && task.deliverable_quantity > 1 && (
+                  <div>
+                    <p className="text-sm font-medium mb-2">Quantity</p>
+                    <p className="text-sm">{task.deliverable_quantity}x deliverables required</p>
                   </div>
                 )}
               </CardContent>
