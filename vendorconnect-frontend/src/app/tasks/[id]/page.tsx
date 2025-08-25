@@ -105,11 +105,15 @@ export default function TaskDetailPage() {
   const [checklistCompleted, setChecklistCompleted] = useState<Record<number, boolean>>({});
   const [showDeliverableForm, setShowDeliverableForm] = useState(false);
   const [deliverableForm, setDeliverableForm] = useState({
-    deliverable_title: '',
-    deliverable_description: '',
-    deliverable_type: 'other',
+    title: '',
+    description: '',
+    type: 'other',
+    google_link: '',
+    external_link: '',
   });
+  const [deliverableFiles, setDeliverableFiles] = useState<File[]>([]);
   const [submittingDeliverable, setSubmittingDeliverable] = useState(false);
+  const [deliverables, setDeliverables] = useState<any[]>([]);
 
   useEffect(() => {
     if (params.id) {
@@ -168,6 +172,11 @@ export default function TaskDetailPage() {
         
         setChecklistItems(checklistItems);
         setChecklistCompleted(completedMap);
+      }
+
+      // Load deliverables
+      if (taskData.deliverables) {
+        setDeliverables(taskData.deliverables);
       }
     } catch (error) {
       console.error('Failed to fetch task details:', error);
@@ -263,18 +272,42 @@ export default function TaskDetailPage() {
   };
 
   const handleAddDeliverable = async () => {
-    if (!deliverableForm.deliverable_title.trim() || !task) return;
+    if (!deliverableForm.title.trim() || !task) return;
 
     setSubmittingDeliverable(true);
     try {
-      await apiClient.post(`/tasks/${task.id}/deliverable`, deliverableForm);
+      const formData = new FormData();
+      formData.append('title', deliverableForm.title);
+      formData.append('description', deliverableForm.description);
+      formData.append('type', deliverableForm.type);
+      if (deliverableForm.google_link) {
+        formData.append('google_link', deliverableForm.google_link);
+      }
+      if (deliverableForm.external_link) {
+        formData.append('external_link', deliverableForm.external_link);
+      }
+      
+      // Add files
+      deliverableFiles.forEach((file, index) => {
+        formData.append(`files[${index}]`, file);
+      });
+
+      await apiClient.post(`/tasks/${task.id}/deliverables`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
       toast.success('Deliverable added successfully');
       setShowDeliverableForm(false);
       setDeliverableForm({
-        deliverable_title: '',
-        deliverable_description: '',
-        deliverable_type: 'other',
+        title: '',
+        description: '',
+        type: 'other',
+        google_link: '',
+        external_link: '',
       });
+      setDeliverableFiles([]);
       // Refresh task to get updated deliverable info
       fetchTaskDetail(task.id.toString());
     } catch (error) {
@@ -282,6 +315,25 @@ export default function TaskDetailPage() {
       toast.error('Failed to add deliverable');
     } finally {
       setSubmittingDeliverable(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setDeliverableFiles(Array.from(e.target.files));
+    }
+  };
+
+  const handleDeleteDeliverable = async (deliverableId: number) => {
+    if (!task || !confirm('Are you sure you want to delete this deliverable?')) return;
+
+    try {
+      await apiClient.delete(`/tasks/${task.id}/deliverables/${deliverableId}`);
+      toast.success('Deliverable deleted successfully');
+      fetchTaskDetail(task.id.toString());
+    } catch (error) {
+      console.error('Failed to delete deliverable:', error);
+      toast.error('Failed to delete deliverable');
     }
   };
 
@@ -505,35 +557,92 @@ export default function TaskDetailPage() {
               </Card>
             )}
 
-            {/* Deliverable */}
+            {/* Deliverables */}
             <Card>
               <CardHeader>
                 <CardTitle>Deliverables</CardTitle>
                 <CardDescription>Add deliverables for this task</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {task.has_deliverable ? (
+                {deliverables.length > 0 ? (
                   <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-medium">Deliverable Title</Label>
-                      <p className="text-sm text-muted-foreground">{task.deliverable_title}</p>
-                    </div>
-                    {task.deliverable_description && (
-                      <div>
-                        <Label className="text-sm font-medium">Description</Label>
-                        <p className="text-sm text-muted-foreground">{task.deliverable_description}</p>
+                    {deliverables.map((deliverable) => (
+                      <div key={deliverable.id} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <h4 className="font-medium">{deliverable.title}</h4>
+                            <Badge variant="secondary">
+                              {deliverable.type}
+                            </Badge>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteDeliverable(deliverable.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        {deliverable.description && (
+                          <p className="text-sm text-muted-foreground">
+                            {deliverable.description}
+                          </p>
+                        )}
+
+                        {/* Links */}
+                        {(deliverable.google_link || deliverable.external_link) && (
+                          <div className="space-y-2">
+                            {deliverable.google_link && (
+                              <a
+                                href={deliverable.google_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 text-sm flex items-center space-x-1"
+                              >
+                                <span>🔗 Google Drive Link</span>
+                              </a>
+                            )}
+                            {deliverable.external_link && (
+                              <a
+                                href={deliverable.external_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 text-sm flex items-center space-x-1"
+                              >
+                                <span>🔗 External Link</span>
+                              </a>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Files */}
+                        {deliverable.media && deliverable.media.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium">Files:</p>
+                            <div className="space-y-1">
+                              {deliverable.media.map((file: any) => (
+                                <a
+                                  key={file.id}
+                                  href={file.original_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 text-sm flex items-center space-x-1"
+                                >
+                                  <span>📎 {file.file_name}</span>
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {deliverable.completed_at && (
+                          <p className="text-xs text-green-600">
+                            Completed: {new Date(deliverable.completed_at).toLocaleDateString()}
+                          </p>
+                        )}
                       </div>
-                    )}
-                    <div>
-                      <Label className="text-sm font-medium">Type</Label>
-                      <p className="text-sm text-muted-foreground capitalize">{task.deliverable_type}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium">Status</Label>
-                      <Badge variant="outline" className="capitalize">
-                        {task.deliverable_completed_at ? 'Completed' : 'In Progress'}
-                      </Badge>
-                    </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="text-center py-8">
@@ -699,15 +808,15 @@ export default function TaskDetailPage() {
       {/* Deliverable Form Modal */}
       {showDeliverableForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Add Deliverable</h3>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="modal_deliverable_title">Deliverable Title *</Label>
+                <Label htmlFor="modal_deliverable_title">Title *</Label>
                 <Input
                   id="modal_deliverable_title"
-                  value={deliverableForm.deliverable_title}
-                  onChange={(e) => setDeliverableForm(prev => ({ ...prev, deliverable_title: e.target.value }))}
+                  value={deliverableForm.title}
+                  onChange={(e) => setDeliverableForm(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="e.g., Website Design, Logo Design"
                 />
               </div>
@@ -716,42 +825,99 @@ export default function TaskDetailPage() {
                 <Label htmlFor="modal_deliverable_description">Description</Label>
                 <Textarea
                   id="modal_deliverable_description"
-                  value={deliverableForm.deliverable_description}
-                  onChange={(e) => setDeliverableForm(prev => ({ ...prev, deliverable_description: e.target.value }))}
-                  placeholder="Describe what was delivered..."
+                  value={deliverableForm.description}
+                  onChange={(e) => setDeliverableForm(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Describe the deliverable..."
                   rows={3}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="modal_deliverable_type">Deliverable Type *</Label>
+                <Label htmlFor="modal_deliverable_type">Type *</Label>
                 <Select
-                  value={deliverableForm.deliverable_type}
-                  onValueChange={(value) => setDeliverableForm(prev => ({ ...prev, deliverable_type: value }))}
+                  value={deliverableForm.type}
+                  onValueChange={(value) => setDeliverableForm(prev => ({ ...prev, type: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select deliverable type" />
+                    <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="design">Design</SelectItem>
                     <SelectItem value="document">Document</SelectItem>
                     <SelectItem value="presentation">Presentation</SelectItem>
+                    <SelectItem value="file">File</SelectItem>
+                    <SelectItem value="link">Link</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="google_link">Google Drive Link</Label>
+                <Input
+                  id="google_link"
+                  type="url"
+                  value={deliverableForm.google_link}
+                  onChange={(e) => setDeliverableForm(prev => ({ ...prev, google_link: e.target.value }))}
+                  placeholder="https://drive.google.com/..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="external_link">External Link</Label>
+                <Input
+                  id="external_link"
+                  type="url"
+                  value={deliverableForm.external_link}
+                  onChange={(e) => setDeliverableForm(prev => ({ ...prev, external_link: e.target.value }))}
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="deliverable_files">Files</Label>
+                <Input
+                  id="deliverable_files"
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.txt"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Max 10MB per file. Supported: PDF, DOC, XLS, PPT, Images, TXT
+                </p>
+                {deliverableFiles.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {deliverableFiles.map((file, index) => (
+                      <div key={index} className="text-sm text-muted-foreground">
+                        📎 {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end gap-2 pt-4">
                 <Button
                   variant="outline"
-                  onClick={() => setShowDeliverableForm(false)}
+                  onClick={() => {
+                    setShowDeliverableForm(false);
+                    setDeliverableForm({
+                      title: '',
+                      description: '',
+                      type: 'other',
+                      google_link: '',
+                      external_link: '',
+                    });
+                    setDeliverableFiles([]);
+                  }}
                   disabled={submittingDeliverable}
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleAddDeliverable}
-                  disabled={!deliverableForm.deliverable_title.trim() || submittingDeliverable}
+                  disabled={!deliverableForm.title.trim() || submittingDeliverable}
                 >
                   {submittingDeliverable ? 'Adding...' : 'Add Deliverable'}
                 </Button>
