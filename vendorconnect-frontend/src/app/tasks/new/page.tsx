@@ -274,8 +274,42 @@ export default function NewTaskPage() {
       };
 
       const response = await apiClient.post('/tasks', payload);
+      const taskId = response.data.data.id;
+      
+      // Save template questions and answers if template was used
+      if (selectedTemplate && templateQuestions.length > 0) {
+        try {
+          for (const question of templateQuestions) {
+            const answer = questionAnswers[question.id];
+            if (answer && answer.trim()) {
+              await apiClient.post(`/tasks/${taskId}/question-answer`, {
+                question_id: question.id,
+                answer: answer,
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Failed to save question answers:', error);
+        }
+      }
+      
+      // Save template checklist if template was used
+      if (selectedTemplate && templateChecklist.length > 0) {
+        try {
+          for (let i = 0; i < templateChecklist.length; i++) {
+            await apiClient.post(`/tasks/${taskId}/checklist-answer`, {
+              checklist_id: 1, // Assuming single checklist per template
+              completed: false,
+              notes: templateChecklist[i],
+            });
+          }
+        } catch (error) {
+          console.error('Failed to save checklist:', error);
+        }
+      }
+      
       toast.success('Task created successfully');
-      router.push(`/tasks/${response.data.data.id}`);
+      router.push(`/tasks/${taskId}`);
     } catch (error: any) {
       console.error('Failed to create task:', error);
       toast.error(error.response?.data?.message || 'Failed to create task');
