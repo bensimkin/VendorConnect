@@ -226,12 +226,22 @@ class ProjectController extends BaseController
             }
 
             // Handle client assignment - support both single client_id and client_ids array
-            if ($request->has('client_id')) {
-                // Single client assignment
-                $project->clients()->sync([$request->client_id]);
-            } elseif ($request->has('client_ids')) {
-                // Multiple clients assignment
-                $project->clients()->sync($request->client_ids);
+            if ($allowMultipleClients) {
+                // Multiple clients mode
+                if ($request->has('client_ids')) {
+                    $project->clients()->sync($request->client_ids);
+                } elseif ($request->has('client_id')) {
+                    // Fallback to single client if only client_id is provided
+                    $project->clients()->sync([$request->client_id]);
+                }
+            } else {
+                // Single client mode - always sync with single client
+                if ($request->has('client_id')) {
+                    $project->clients()->sync([$request->client_id]);
+                } else {
+                    // If no client is provided in single client mode, remove all clients
+                    $project->clients()->detach();
+                }
             }
 
             DB::commit();
