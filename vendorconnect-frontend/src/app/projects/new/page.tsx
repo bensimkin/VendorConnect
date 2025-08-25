@@ -9,8 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { ArrowLeft, Save } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import { useProjectSettings } from '@/hooks/use-project-settings';
 
 interface Client {
   id: number;
@@ -22,6 +25,7 @@ function NewProjectPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const clientId = searchParams.get('client_id');
+  const { settings, loading: settingsLoading } = useProjectSettings();
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -31,6 +35,7 @@ function NewProjectPageContent() {
     title: '',
     description: '',
     client_id: clientId || '',
+    client_ids: clientId ? [parseInt(clientId)] : [],
     start_date: new Date().toISOString().split('T')[0], // Default to today
     end_date: '',
     budget: '',
@@ -59,16 +64,26 @@ function NewProjectPageContent() {
       return;
     }
 
-    if (!formData.client_id) {
-      toast.error('Please select a client');
-      return;
+    if (settings.require_project_client) {
+      if (settings.allow_multiple_clients_per_project) {
+        if (formData.client_ids.length === 0) {
+          toast.error('Please select at least one client');
+          return;
+        }
+      } else {
+        if (!formData.client_id) {
+          toast.error('Please select a client');
+          return;
+        }
+      }
     }
 
     setSaving(true);
     try {
       const payload = {
         ...formData,
-        client_id: parseInt(formData.client_id),
+        client_id: settings.allow_multiple_clients_per_project ? null : parseInt(formData.client_id),
+        client_ids: settings.allow_multiple_clients_per_project ? formData.client_ids : [],
         budget: formData.budget ? parseFloat(formData.budget) : null,
         end_date: formData.end_date || null, // Set to null if empty
       };
@@ -131,21 +146,39 @@ function NewProjectPageContent() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="client_id">Client *</Label>
-                <select
-                  id="client_id"
-                  value={formData.client_id}
-                  onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
-                  className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                  required
-                >
-                  <option value="">Select a client</option>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.name} {client.company ? `(${client.company})` : ''}
-                    </option>
-                  ))}
-                </select>
+                <Label htmlFor="client_id">
+                  Client{settings.allow_multiple_clients_per_project ? 's' : ''} *
+                  {settings.allow_multiple_clients_per_project && (
+                    <span className="text-sm text-muted-foreground ml-2">
+                      (Max: {settings.max_clients_per_project})
+                    </span>
+                  )}
+                </Label>
+                {settings.allow_multiple_clients_per_project ? (
+                  <MultiSelect
+                    options={clients}
+                    selected={formData.client_ids}
+                    onSelectionChange={(selected) => setFormData({ ...formData, client_ids: selected })}
+                    placeholder="Select clients..."
+                    maxSelections={settings.max_clients_per_project}
+                  />
+                ) : (
+                  <Select
+                    value={formData.client_id}
+                    onValueChange={(value) => setFormData({ ...formData, client_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clients.map((client) => (
+                        <SelectItem key={client.id} value={client.id.toString()}>
+                          {client.name} {client.company && `(${client.company})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
