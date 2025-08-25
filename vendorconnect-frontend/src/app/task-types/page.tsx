@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import apiClient from '@/lib/api-client';
 import { Plus, Search, Tag, Edit, Trash2, Save, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import RoleGuard from '@/components/auth/role-guard';
 
 interface TaskType {
   id: number;
@@ -134,8 +135,9 @@ export default function TaskTypesPage() {
   }
 
   return (
-    <MainLayout>
-      <div className="max-w-4xl mx-auto space-y-8">
+    <RoleGuard allowedRoles={['Admin', 'sub admin']}>
+      <MainLayout>
+        <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Task Types</h1>
@@ -300,6 +302,7 @@ export default function TaskTypesPage() {
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+      </MainLayout>
+    </RoleGuard>
   );
 }

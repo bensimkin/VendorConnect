@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import RoleGuard from '@/components/auth/role-guard';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -110,8 +111,9 @@ export default function ClientsPage() {
   }
 
   return (
-    <MainLayout>
-      <div className="space-y-8">
+    <RoleGuard allowedRoles={['Admin']}>
+      <MainLayout>
+        <div className="space-y-8">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Clients</h1>
@@ -253,6 +255,7 @@ export default function ClientsPage() {
           </div>
         )}
       </div>
-    </MainLayout>
+      </MainLayout>
+    </RoleGuard>
   );
 }
