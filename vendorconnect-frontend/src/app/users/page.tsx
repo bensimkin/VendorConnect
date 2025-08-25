@@ -11,6 +11,7 @@ import apiClient from '@/lib/api-client';
 import { Plus, Search, Mail, Phone, Calendar, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
+import RoleGuard from '@/components/auth/role-guard';
 
 interface User {
   id: number;
@@ -117,8 +118,9 @@ export default function UsersPage() {
   }
 
   return (
-    <MainLayout>
-      <div className="space-y-8">
+    <RoleGuard allowedRoles={['Admin']}>
+      <MainLayout>
+        <div className="space-y-8">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Users</h1>
@@ -236,6 +238,7 @@ export default function UsersPage() {
           </Card>
         )}
       </div>
-    </MainLayout>
+      </MainLayout>
+    </RoleGuard>
   );
 }
