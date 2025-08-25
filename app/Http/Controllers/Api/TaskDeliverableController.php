@@ -41,6 +41,16 @@ class TaskDeliverableController extends Controller
                 return $this->sendNotFound('Task not found');
             }
 
+            // Check if task is past due with strict deadline
+            if ($task->end_date && $task->close_deadline == 1) {
+                $deadline = \Carbon\Carbon::parse($task->end_date);
+                $current_time = now();
+                
+                if ($current_time > $deadline) {
+                    return $this->sendError('Cannot add deliverables to a task that is past its strict deadline', [], 403);
+                }
+            }
+
             $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
@@ -114,6 +124,17 @@ class TaskDeliverableController extends Controller
             $deliverable = TaskDeliverable::where('task_id', $taskId)->find($deliverableId);
             if (!$deliverable) {
                 return $this->sendNotFound('Deliverable not found');
+            }
+
+            // Check if task is past due with strict deadline
+            $task = Task::find($taskId);
+            if ($task && $task->end_date && $task->close_deadline == 1) {
+                $deadline = \Carbon\Carbon::parse($task->end_date);
+                $current_time = now();
+                
+                if ($current_time > $deadline) {
+                    return $this->sendError('Cannot update deliverables for a task that is past its strict deadline', [], 403);
+                }
             }
 
             $validator = Validator::make($request->all(), [
