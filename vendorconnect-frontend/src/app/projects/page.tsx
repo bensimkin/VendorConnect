@@ -116,7 +116,7 @@ export default function ProjectsPage() {
   const filteredProjects = projects.filter(project => {
     const matchesStatus = 
       statusFilter === 'all' || 
-      (project.status?.toLowerCase() || '') === statusFilter.toLowerCase();
+      (project.status?.title?.toLowerCase() || '') === statusFilter.toLowerCase();
     
     return matchesStatus;
   });
