@@ -30,6 +30,17 @@ interface User {
   email: string;
 }
 
+interface Project {
+  id: number;
+  title: string;
+}
+
+interface Client {
+  id: number;
+  name: string;
+  company?: string;
+}
+
 interface Template {
   id: number;
   template_name: string;
@@ -59,6 +70,8 @@ export default function NewTaskPage() {
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [priorities, setPriorities] = useState<Priority[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
@@ -72,6 +85,8 @@ export default function NewTaskPage() {
     status_id: '',
     priority_id: '',
     task_type_id: '',
+    project_id: '',
+    client_ids: [] as number[],
     user_ids: [] as number[],
     start_date: '',
     end_date: '',
@@ -84,10 +99,12 @@ export default function NewTaskPage() {
 
   const fetchFormData = async () => {
     try {
-      const [statusRes, priorityRes, userRes, taskTypeRes, templateRes] = await Promise.all([
+      const [statusRes, priorityRes, userRes, projectRes, clientRes, taskTypeRes, templateRes] = await Promise.all([
         apiClient.get('/statuses'),
         apiClient.get('/priorities'),
         apiClient.get('/users'),
+        apiClient.get('/projects'),
+        apiClient.get('/clients'),
         apiClient.get('/task-types?per_page=all'),
         apiClient.get('/task-brief-templates'),
       ]);
@@ -95,6 +112,8 @@ export default function NewTaskPage() {
       setStatuses(statusRes.data.data || []);
       setPriorities(priorityRes.data.data || []);
       setUsers(userRes.data.data?.data || userRes.data.data || []);
+      setProjects(projectRes.data.data?.data || projectRes.data.data || []);
+      setClients(clientRes.data.data?.data || clientRes.data.data || []);
       setTaskTypes(taskTypeRes.data.data || []);
       setTemplates(templateRes.data.data?.data || templateRes.data.data || []);
 
@@ -192,6 +211,8 @@ export default function NewTaskPage() {
         status_id: parseInt(formData.status_id),
         priority_id: parseInt(formData.priority_id),
         task_type_id: formData.task_type_id ? parseInt(formData.task_type_id) : null,
+        project_id: formData.project_id ? parseInt(formData.project_id) : null,
+        client_ids: formData.client_ids,
         user_ids: formData.user_ids,
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
@@ -341,6 +362,46 @@ export default function NewTaskPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="project">Project</Label>
+                  <select
+                    id="project"
+                    value={formData.project_id}
+                    onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-md bg-background"
+                  >
+                    <option value="">Select Project (Optional)</option>
+                    {projects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="clients">Clients</Label>
+                  <select
+                    id="clients"
+                    multiple
+                    value={formData.client_ids.map(id => id.toString())}
+                    onChange={(e) => {
+                      const selectedOptions = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+                      setFormData({ ...formData, client_ids: selectedOptions });
+                    }}
+                    className="w-full px-3 py-2 border rounded-md bg-background min-h-[100px]"
+                  >
+                    {clients.map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.name} {client.company && `(${client.company})`}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    Hold Ctrl/Cmd to select multiple clients
+                  </p>
                 </div>
               </div>
             </CardContent>
