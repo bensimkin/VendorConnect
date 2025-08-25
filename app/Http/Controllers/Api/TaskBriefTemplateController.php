@@ -48,6 +48,7 @@ class TaskBriefTemplateController extends BaseController
                 'template_name' => 'required|string|max:255',
                 'standard_brief' => 'nullable|string',
                 'description' => 'nullable|string',
+                'deliverable_quantity' => 'nullable|integer|min:1',
                 'task_type_id' => 'required|exists:task_types,id',
             ]);
 
@@ -59,6 +60,7 @@ class TaskBriefTemplateController extends BaseController
                 'template_name' => $request->template_name,
                 'standard_brief' => $request->standard_brief,
                 'description' => $request->description,
+                'deliverable_quantity' => $request->get('deliverable_quantity', 1),
                 'task_type_id' => $request->task_type_id,
             ]);
 
@@ -102,6 +104,7 @@ class TaskBriefTemplateController extends BaseController
                 'template_name' => 'sometimes|required|string|max:255',
                 'standard_brief' => 'nullable|string',
                 'description' => 'nullable|string',
+                'deliverable_quantity' => 'nullable|integer|min:1',
                 'task_type_id' => 'sometimes|required|exists:task_types,id',
             ]);
 
@@ -109,7 +112,7 @@ class TaskBriefTemplateController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $template->update($request->only(['template_name', 'standard_brief', 'description', 'task_type_id']));
+            $template->update($request->only(['template_name', 'standard_brief', 'description', 'deliverable_quantity', 'task_type_id']));
 
             return $this->sendResponse($template, 'Task brief template updated successfully');
         } catch (\Exception $e) {
