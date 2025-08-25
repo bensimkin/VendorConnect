@@ -67,6 +67,8 @@ Route::prefix('v1')->group(function () {
         
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index']);
+        Route::get('/dashboard/tasker', [DashboardController::class, 'taskerDashboard']);
+        Route::get('/dashboard/requester', [DashboardController::class, 'requesterDashboard']);
         
         // Profile management
         Route::prefix('profile')->group(function () {
