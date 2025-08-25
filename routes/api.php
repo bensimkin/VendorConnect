@@ -134,6 +134,19 @@ Route::delete('/{taskId}/deliverables/{deliverableId}/files/{mediaId}', [TaskDel
             Route::get('/{id}/statistics', [ProjectController::class, 'getStatistics']);
             Route::get('/{id}/tasks', [ProjectController::class, 'getTasks']);
         });
+
+        // Notifications
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', [NotificationController::class, 'index']);
+            Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+            Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
+            Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+            Route::post('/{id}/unread', [NotificationController::class, 'markAsUnread']);
+            Route::delete('/{id}', [NotificationController::class, 'destroy']);
+            Route::delete('/read', [NotificationController::class, 'deleteRead']);
+            Route::get('/types', [NotificationController::class, 'types']);
+            Route::get('/priorities', [NotificationController::class, 'priorities']);
+        });
         
         // Task Types
         Route::prefix('task-types')->group(function () {

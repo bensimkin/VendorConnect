@@ -21,6 +21,7 @@ use App\Models\ChMessage;
 use App\Models\TaskBriefQuestion;
 use App\Models\TaskBriefChecklist;
 use App\Models\Portfolio;
+use App\Services\NotificationService;
 
 class TaskController extends BaseController
 {
@@ -193,6 +194,17 @@ class TaskController extends BaseController
 
 
             DB::commit();
+
+            // Send notifications for task assignment
+            if ($request->has('user_ids') && !empty($request->user_ids)) {
+                $notificationService = new NotificationService();
+                foreach ($request->user_ids as $userId) {
+                    $assignedUser = User::find($userId);
+                    if ($assignedUser) {
+                        $notificationService->taskAssigned($task, $assignedUser);
+                    }
+                }
+            }
 
             $task->load(['users', 'status', 'priority', 'taskType']);
 
@@ -414,7 +426,16 @@ class TaskController extends BaseController
                 return $this->sendNotFound('Task not found');
             }
 
+            $oldStatus = $task->status;
             $task->update(['status_id' => $request->status_id]);
+            $task->load('status');
+
+            // Check if task was completed
+            $completedStatus = Status::where('title', 'Completed')->first();
+            if ($completedStatus && $request->status_id == $completedStatus->id && $oldStatus->id != $completedStatus->id) {
+                $notificationService = new NotificationService();
+                $notificationService->taskCompleted($task, Auth::user());
+            }
 
             return $this->sendResponse($task, 'Task status updated successfully');
         } catch (\Exception $e) {
