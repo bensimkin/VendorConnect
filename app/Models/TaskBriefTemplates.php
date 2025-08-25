@@ -10,6 +10,8 @@ class TaskBriefTemplates extends Model
     use HasFactory;
     protected $fillable =[
         "template_name",
+        "standard_brief",
+        "description",
         "task_type_id",
         "created_at",
         "updated_at"

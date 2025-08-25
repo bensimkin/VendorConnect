@@ -273,6 +273,7 @@ export default function NewTaskPage() {
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
         close_deadline: formData.close_deadline,
+        template_id: selectedTemplate ? parseInt(selectedTemplate) : null,
 
       };
 

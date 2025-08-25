@@ -120,16 +120,22 @@ class TaskController extends BaseController
 
             DB::beginTransaction();
 
+            // Get template data if template_id is provided
+            $template = null;
+            if ($request->has('template_id') && $request->template_id) {
+                $template = \App\Models\TaskBriefTemplates::find($request->template_id);
+            }
+
             $task = Task::create([
                 'title' => $request->title,
-                'description' => $request->description,
+                'description' => $template ? ($template->description ?: $request->description) : $request->description,
                 'status_id' => $request->status_id,
                 'priority_id' => $request->priority_id,
                 'task_type_id' => $request->task_type_id,
                 'project_id' => $request->project_id,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
-                'note' => $request->note,
+                'note' => $template ? ($template->standard_brief ?: $request->note) : $request->note,
                 'close_deadline' => $request->get('close_deadline', 0),
 
                 'created_by' => $request->user()->id,
