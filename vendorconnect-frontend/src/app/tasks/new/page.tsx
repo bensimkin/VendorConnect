@@ -72,6 +72,7 @@ export default function NewTaskPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [allClients, setAllClients] = useState<Client[]>([]);
   const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
@@ -113,7 +114,8 @@ export default function NewTaskPage() {
       setPriorities(priorityRes.data.data || []);
       setUsers(userRes.data.data?.data || userRes.data.data || []);
       setProjects(projectRes.data.data?.data || projectRes.data.data || []);
-      setClients(clientRes.data.data?.data || clientRes.data.data || []);
+      setAllClients(clientRes.data.data?.data || clientRes.data.data || []);
+      setClients(clientRes.data.data?.data || clientRes.data.data || []); // Initially show all clients
       setTaskTypes(taskTypeRes.data.data || []);
       setTemplates(templateRes.data.data?.data || templateRes.data.data || []);
 
@@ -134,6 +136,41 @@ export default function NewTaskPage() {
     } catch (error) {
       console.error('Failed to fetch form data:', error);
       toast.error('Failed to load form data');
+    }
+  };
+
+  const handleProjectChange = async (projectId: string) => {
+    setFormData({ ...formData, project_id: projectId, client_ids: [] }); // Clear client selection when project changes
+    
+    if (projectId) {
+      try {
+        // Fetch project details to get associated clients
+        const projectRes = await apiClient.get(`/projects/${projectId}`);
+        const projectClients = projectRes.data.data.clients || [];
+        
+        if (projectClients.length > 0) {
+          // Filter clients to only show those associated with the selected project
+          setClients(projectClients);
+          // Auto-select the first client if only one is associated
+          if (projectClients.length === 1) {
+            setFormData(prev => ({ 
+              ...prev, 
+              project_id: projectId, 
+              client_ids: [projectClients[0].id] 
+            }));
+          }
+        } else {
+          // If no clients associated with project, show all clients
+          setClients(allClients);
+        }
+      } catch (error) {
+        console.error('Failed to fetch project details:', error);
+        // Fallback to showing all clients
+        setClients(allClients);
+      }
+    } else {
+      // If no project selected, show all clients
+      setClients(allClients);
     }
   };
 
@@ -374,7 +411,7 @@ export default function NewTaskPage() {
                   <select
                     id="project"
                     value={formData.project_id}
-                    onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
+                    onChange={(e) => handleProjectChange(e.target.value)}
                     className="w-full px-3 py-2 border rounded-md bg-background"
                     required
                   >
@@ -401,13 +438,23 @@ export default function NewTaskPage() {
                     }}
                     className="w-full px-3 py-2 border rounded-md bg-background"
                   >
-                    <option value="">Select Client (Optional)</option>
+                    <option value="">
+                      {formData.project_id 
+                        ? `Select Client for ${projects.find(p => p.id.toString() === formData.project_id)?.title || 'Project'} (Optional)`
+                        : 'Select Client (Optional)'
+                      }
+                    </option>
                     {clients.map((client) => (
                       <option key={client.id} value={client.id}>
                         {client.name} {client.company && `(${client.company})`}
                       </option>
                     ))}
                   </select>
+                  {formData.project_id && clients.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      No clients associated with this project
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>
