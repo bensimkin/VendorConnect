@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import apiClient from '@/lib/api-client';
-import { ArrowLeft, Edit, Trash2, Calendar, User, Tag, MessageSquare, Paperclip, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Calendar, User, Tag, MessageSquare, Paperclip, Clock, CheckCircle, AlertCircle, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 
@@ -71,6 +71,11 @@ interface TaskDetail {
     completed: boolean;
     notes: string;
   }>;
+  has_deliverable?: boolean;
+  deliverable_title?: string;
+  deliverable_description?: string;
+  deliverable_type?: string;
+  deliverable_completed_at?: string;
 }
 
 interface TemplateQuestion {
@@ -98,6 +103,13 @@ export default function TaskDetailPage() {
   const [questionAnswers, setQuestionAnswers] = useState<QuestionAnswer[]>([]);
   const [checklistItems, setChecklistItems] = useState<string[]>([]);
   const [checklistCompleted, setChecklistCompleted] = useState<Record<number, boolean>>({});
+  const [showDeliverableForm, setShowDeliverableForm] = useState(false);
+  const [deliverableForm, setDeliverableForm] = useState({
+    deliverable_title: '',
+    deliverable_description: '',
+    deliverable_type: 'other',
+  });
+  const [submittingDeliverable, setSubmittingDeliverable] = useState(false);
 
   useEffect(() => {
     if (params.id) {
@@ -247,6 +259,29 @@ export default function TaskDetailPage() {
       toast.error('Failed to add comment');
     } finally {
       setSubmittingComment(false);
+    }
+  };
+
+  const handleAddDeliverable = async () => {
+    if (!deliverableForm.deliverable_title.trim() || !task) return;
+
+    setSubmittingDeliverable(true);
+    try {
+      await apiClient.post(`/tasks/${task.id}/deliverable`, deliverableForm);
+      toast.success('Deliverable added successfully');
+      setShowDeliverableForm(false);
+      setDeliverableForm({
+        deliverable_title: '',
+        deliverable_description: '',
+        deliverable_type: 'other',
+      });
+      // Refresh task to get updated deliverable info
+      fetchTaskDetail(task.id.toString());
+    } catch (error) {
+      console.error('Failed to add deliverable:', error);
+      toast.error('Failed to add deliverable');
+    } finally {
+      setSubmittingDeliverable(false);
     }
   };
 
@@ -470,6 +505,51 @@ export default function TaskDetailPage() {
               </Card>
             )}
 
+            {/* Deliverable */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Deliverable</CardTitle>
+                <CardDescription>Add a deliverable that will automatically be added to the client's portfolio</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {task.has_deliverable ? (
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium">Deliverable Title</Label>
+                      <p className="text-sm text-muted-foreground">{task.deliverable_title}</p>
+                    </div>
+                    {task.deliverable_description && (
+                      <div>
+                        <Label className="text-sm font-medium">Description</Label>
+                        <p className="text-sm text-muted-foreground">{task.deliverable_description}</p>
+                      </div>
+                    )}
+                    <div>
+                      <Label className="text-sm font-medium">Type</Label>
+                      <p className="text-sm text-muted-foreground capitalize">{task.deliverable_type}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Status</Label>
+                      <Badge variant="outline" className="capitalize">
+                        {task.deliverable_completed_at ? 'Completed' : 'In Progress'}
+                      </Badge>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-muted-foreground mb-4">No deliverable added yet</p>
+                    <Button
+                      onClick={() => setShowDeliverableForm(true)}
+                      size="sm"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Deliverable
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Comments */}
             <Card>
               <CardHeader>
@@ -615,6 +695,71 @@ export default function TaskDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Deliverable Form Modal */}
+      {showDeliverableForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Add Deliverable</h3>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="modal_deliverable_title">Deliverable Title *</Label>
+                <Input
+                  id="modal_deliverable_title"
+                  value={deliverableForm.deliverable_title}
+                  onChange={(e) => setDeliverableForm(prev => ({ ...prev, deliverable_title: e.target.value }))}
+                  placeholder="e.g., Website Design, Logo Design"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="modal_deliverable_description">Description</Label>
+                <Textarea
+                  id="modal_deliverable_description"
+                  value={deliverableForm.deliverable_description}
+                  onChange={(e) => setDeliverableForm(prev => ({ ...prev, deliverable_description: e.target.value }))}
+                  placeholder="Describe what was delivered..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="modal_deliverable_type">Deliverable Type *</Label>
+                <Select
+                  value={deliverableForm.deliverable_type}
+                  onValueChange={(value) => setDeliverableForm(prev => ({ ...prev, deliverable_type: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select deliverable type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="design">Design</SelectItem>
+                    <SelectItem value="document">Document</SelectItem>
+                    <SelectItem value="presentation">Presentation</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeliverableForm(false)}
+                  disabled={submittingDeliverable}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddDeliverable}
+                  disabled={!deliverableForm.deliverable_title.trim() || submittingDeliverable}
+                >
+                  {submittingDeliverable ? 'Adding...' : 'Add Deliverable'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }
