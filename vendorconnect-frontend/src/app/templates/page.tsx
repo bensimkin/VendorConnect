@@ -19,6 +19,9 @@ interface Template {
   id: number;
   template_name: string;
   task_type_id: number;
+  standard_brief?: string;
+  description?: string;
+  deliverable_quantity?: number;
   task_type?: TaskType;
   created_at: string;
   updated_at: string;
@@ -141,7 +144,30 @@ export default function TemplatesPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-3">
+                  {/* Template Details */}
+                  <div className="space-y-2">
+                    {template.description && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Description:</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{template.description}</p>
+                      </div>
+                    )}
+                    {template.standard_brief && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Standard Brief:</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{template.standard_brief}</p>
+                      </div>
+                    )}
+                    {template.deliverable_quantity && template.deliverable_quantity > 1 && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Default Quantity:</p>
+                        <p className="text-sm text-muted-foreground">{template.deliverable_quantity}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Actions */}
                   <div className="flex items-center gap-2">
                     <Button
                       size="sm"
@@ -169,7 +195,7 @@ export default function TemplatesPage() {
                       Delete
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-3">
+                  <p className="text-xs text-muted-foreground">
                     Created: {new Date(template.created_at).toLocaleDateString()}
                   </p>
                 </CardContent>
