@@ -7,6 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import apiClient from '@/lib/api-client';
 import { ArrowLeft, Edit, Trash2, Calendar, User, Tag, MessageSquare, Paperclip, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
@@ -141,6 +145,58 @@ export default function TaskDetailPage() {
       toast.error('Failed to load task details');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleQuestionAnswerUpdate = async (questionId: number, answer: string) => {
+    if (!task) return;
+    
+    try {
+      await apiClient.post(`/tasks/${task.id}/question-answer`, {
+        question_id: questionId,
+        answer: answer,
+      });
+      
+      // Update local state
+      setQuestionAnswers(prev => 
+        prev.map(qa => 
+          qa.question_id === questionId 
+            ? { ...qa, question_answer: answer }
+            : qa
+        )
+      );
+      
+      toast.success('Answer updated successfully');
+    } catch (error) {
+      console.error('Failed to update answer:', error);
+      toast.error('Failed to update answer');
+    }
+  };
+
+  const handleChecklistToggle = async (index: number, completed: boolean) => {
+    if (!task) return;
+    
+    try {
+      // Find the checklist answer ID for this item
+      const checklistAnswer = task.checklist_answers?.[index];
+      if (!checklistAnswer) return;
+      
+      await apiClient.post(`/tasks/${task.id}/checklist-answer`, {
+        checklist_id: checklistAnswer.checklist_id || 1,
+        completed: completed,
+        notes: checklistItems[index],
+      });
+      
+      // Update local state
+      setChecklistCompleted(prev => ({
+        ...prev,
+        [index]: completed
+      }));
+      
+      toast.success('Checklist updated successfully');
+    } catch (error) {
+      console.error('Failed to update checklist:', error);
+      toast.error('Failed to update checklist');
     }
   };
 
@@ -303,14 +359,67 @@ export default function TaskDetailPage() {
                 <CardContent className="space-y-4">
                   {templateQuestions.map((question) => {
                     const answer = questionAnswers.find(a => a.question_id === question.id);
+                    const currentAnswer = answer?.question_answer || '';
+                    
                     return (
                       <div key={question.id} className="space-y-2">
                         <p className="font-medium text-sm">{question.question_text}</p>
-                        <div className="text-sm text-muted-foreground">
-                          {answer ? (
-                            <span>{answer.question_answer}</span>
+                        <div className="space-y-2">
+                          {question.question_type === 'select' && question.options ? (
+                            <Select
+                              value={currentAnswer}
+                              onValueChange={(value) => handleQuestionAnswerUpdate(question.id, value)}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select an option" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {question.options.filter(option => option).map((option, index) => (
+                                  <SelectItem key={index} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : question.question_type === 'checkbox' ? (
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={currentAnswer === 'true' || currentAnswer === '1'}
+                                onCheckedChange={(checked) => 
+                                  handleQuestionAnswerUpdate(question.id, checked ? 'true' : 'false')
+                                }
+                              />
+                              <Label>Yes</Label>
+                            </div>
+                          ) : question.question_type === 'radio' && question.options ? (
+                            <div className="space-y-2">
+                              {question.options.filter(option => option).map((option, index) => (
+                                <div key={index} className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    id={`${question.id}-${index}`}
+                                    name={`question-${question.id}`}
+                                    value={option}
+                                    checked={currentAnswer === option}
+                                    onChange={(e) => handleQuestionAnswerUpdate(question.id, e.target.value)}
+                                  />
+                                  <Label htmlFor={`${question.id}-${index}`}>{option}</Label>
+                                </div>
+                              ))}
+                            </div>
+                          ) : question.question_type === 'textarea' ? (
+                            <Textarea
+                              placeholder="Enter your answer..."
+                              value={currentAnswer}
+                              onChange={(e) => handleQuestionAnswerUpdate(question.id, e.target.value)}
+                              rows={3}
+                            />
                           ) : (
-                            <span className="italic">No answer provided</span>
+                            <Input
+                              placeholder="Enter your answer..."
+                              value={currentAnswer}
+                              onChange={(e) => handleQuestionAnswerUpdate(question.id, e.target.value)}
+                            />
                           )}
                         </div>
                       </div>
@@ -329,11 +438,11 @@ export default function TaskDetailPage() {
                 <CardContent className="space-y-4">
                   {checklistItems.map((item, index) => (
                     <div key={index} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={checklistCompleted[index] || false}
-                        disabled
-                        className="mr-2"
+                        onCheckedChange={(checked) => 
+                          handleChecklistToggle(index, checked as boolean)
+                        }
                       />
                       <span className={checklistCompleted[index] ? 'line-through text-muted-foreground' : ''}>
                         {item}
