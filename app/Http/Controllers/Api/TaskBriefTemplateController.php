@@ -46,6 +46,8 @@ class TaskBriefTemplateController extends BaseController
         try {
             $validator = Validator::make($request->all(), [
                 'template_name' => 'required|string|max:255',
+                'standard_brief' => 'nullable|string',
+                'description' => 'nullable|string',
                 'task_type_id' => 'required|exists:task_types,id',
             ]);
 
@@ -55,6 +57,8 @@ class TaskBriefTemplateController extends BaseController
 
             $template = TaskBriefTemplates::create([
                 'template_name' => $request->template_name,
+                'standard_brief' => $request->standard_brief,
+                'description' => $request->description,
                 'task_type_id' => $request->task_type_id,
             ]);
 
@@ -95,17 +99,17 @@ class TaskBriefTemplateController extends BaseController
             }
 
             $validator = Validator::make($request->all(), [
-                'name' => 'sometimes|required|string|max:255',
+                'template_name' => 'sometimes|required|string|max:255',
+                'standard_brief' => 'nullable|string',
                 'description' => 'nullable|string',
-                'template_data' => 'sometimes|required|json',
-                'status' => 'sometimes|boolean',
+                'task_type_id' => 'sometimes|required|exists:task_types,id',
             ]);
 
             if ($validator->fails()) {
                 return $this->sendValidationError($validator->errors());
             }
 
-            $template->update($request->only(['name', 'description', 'template_data', 'status']));
+            $template->update($request->only(['template_name', 'standard_brief', 'description', 'task_type_id']));
 
             return $this->sendResponse($template, 'Task brief template updated successfully');
         } catch (\Exception $e) {
