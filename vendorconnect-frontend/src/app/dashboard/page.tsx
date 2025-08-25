@@ -49,6 +49,10 @@ interface DashboardData {
     date: string;
     completed_tasks: number;
   }>;
+  statuses?: Array<{
+    id: number;
+    title: string;
+  }>;
 }
 
 export default function DashboardPage() {
@@ -92,11 +96,17 @@ export default function DashboardPage() {
     if (!data) return { completed: 0, pending: 0, inProgress: 0 };
     
     const byStatus = data.task_statistics.by_status;
-    // Assuming status IDs: 1=pending, 2=in progress, 3=completed
+    const statuses = data.statuses || [];
+    
+    // Find status IDs by title
+    const completedStatus = statuses.find(s => s.title === 'Completed');
+    const pendingStatus = statuses.find(s => s.title === 'Pending');
+    const inProgressStatus = statuses.find(s => s.title === 'In Progress');
+    
     return {
-      completed: byStatus['3'] || 0,
-      pending: byStatus['1'] || 0,
-      inProgress: byStatus['2'] || 0,
+      completed: completedStatus ? (byStatus[completedStatus.id.toString()] || 0) : 0,
+      pending: pendingStatus ? (byStatus[pendingStatus.id.toString()] || 0) : 0,
+      inProgress: inProgressStatus ? (byStatus[inProgressStatus.id.toString()] || 0) : 0,
     };
   };
 
