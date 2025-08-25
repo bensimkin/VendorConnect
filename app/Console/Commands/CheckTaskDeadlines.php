@@ -3,49 +3,72 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Mail;
-use App\Models\Task; // Assuming you have a Task model
+use App\Models\Task;
+use App\Services\NotificationService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class CheckTaskDeadlines extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'tasks:check-deadlines';
-    protected $description = 'Check tasks and send alerts when approaching deadlines';
+    protected $description = 'Check task deadlines and create notifications';
 
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
-       // Get current time
-       $now = Carbon::now();
-       // Find tasks that have a deadline within 48 hours and 28 hours
-       $tasks = Task::where('end_date', '>', $now)
-           ->where(function($query) use ($now) {
-               $query->whereBetween('end_date', [$now->addHours(28)->subHour(), $now->addHours(28)])
-                     ->orWhereBetween('end_date', [$now->addHours(20), $now->addHours(48)]);
-           })
-           ->get();
+        $this->info('Checking task deadlines...');
 
-       foreach ($tasks as $task) {
-           // Send email alert to both parties
-           $this->sendAlertEmail($task);
-       }
+        $notificationService = new NotificationService();
+        $processedCount = 0;
 
-       return 0;
-   }
-   private function sendAlertEmail($task)
-   {
-       // Assuming your Task model has a relation with User
-       $users = $task->taskUsers;
+        // Check for tasks due soon (24 hours before due date)
+        $tasksDueSoon = Task::where('end_date', '>', Carbon::now())
+            ->where('end_date', '<=', Carbon::now()->addHours(24))
+            ->whereDoesntHave('notifications', function ($query) {
+                $query->where('type', 'task_due_soon')
+                      ->where('created_at', '>=', Carbon::now()->subHours(1));
+            })
+            ->with(['users', 'status'])
+            ->get();
 
-       foreach ($users as $user) {
-           Mail::to($user->email)->send(new \App\Mail\TaskDeadlineAlert($task, $user->first_name));
-       }
-   }
+        foreach ($tasksDueSoon as $task) {
+            // Skip completed tasks
+            if ($task->status && strtolower($task->status->name) === 'completed') {
+                continue;
+            }
+
+            try {
+                $notificationService->taskDueSoon($task);
+                $processedCount++;
+                $this->info("Created due soon notification for task: {$task->title}");
+            } catch (\Exception $e) {
+                $this->error("Failed to create due soon notification for task {$task->id}: {$e->getMessage()}");
+            }
+        }
+
+        // Check for overdue tasks
+        $overdueTasks = Task::where('end_date', '<', Carbon::now())
+            ->whereDoesntHave('notifications', function ($query) {
+                $query->where('type', 'task_overdue')
+                      ->where('created_at', '>=', Carbon::now()->subHours(24));
+            })
+            ->with(['users', 'status'])
+            ->get();
+
+        foreach ($overdueTasks as $task) {
+            // Skip completed tasks
+            if ($task->status && strtolower($task->status->name) === 'completed') {
+                continue;
+            }
+
+            try {
+                $notificationService->taskOverdue($task);
+                $processedCount++;
+                $this->info("Created overdue notification for task: {$task->title}");
+            } catch (\Exception $e) {
+                $this->error("Failed to create overdue notification for task {$task->id}: {$e->getMessage()}");
+            }
+        }
+
+        $this->info("Processed {$processedCount} task deadline notifications.");
+    }
 }

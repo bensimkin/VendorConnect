@@ -4,6 +4,7 @@ import '@/styles/globals.css'
 import { Toaster } from 'react-hot-toast'
 import { ThemeProvider } from '@/components/theme-provider'
 import { AuthProvider } from '@/components/providers/auth-provider'
+import { NotificationProvider } from '@/contexts/NotificationContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -27,7 +28,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            {children}
+            <NotificationProvider>
+              {children}
+            </NotificationProvider>
           </AuthProvider>
           <Toaster position="top-right" />
         </ThemeProvider>
