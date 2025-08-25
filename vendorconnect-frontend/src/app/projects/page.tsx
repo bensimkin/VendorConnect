@@ -108,10 +108,6 @@ export default function ProjectsPage() {
     if (totalTasks === 0) return 0;
     return Math.round((completedTasks / totalTasks) * 100);
   };
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-    }
-  };
 
   // Use projects directly since search is now server-side
   const filteredProjects = projects.filter(project => {
