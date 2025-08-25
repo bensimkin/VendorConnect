@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/lib/auth-store';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -77,8 +78,23 @@ interface DashboardData {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Redirect to role-specific dashboard
+  useEffect(() => {
+    if (user) {
+      if (user.roles?.some(role => role.name === 'Tasker')) {
+        router.replace('/dashboard/tasker');
+        return;
+      }
+      if (user.roles?.some(role => role.name === 'Requester')) {
+        router.replace('/dashboard/requester');
+        return;
+      }
+    }
+  }, [user, router]);
 
   useEffect(() => {
     fetchDashboardData();
