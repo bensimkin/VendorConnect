@@ -130,9 +130,12 @@ export default function NewTaskPage() {
         setFormData(prev => ({ ...prev, priority_id: mediumPriority.id.toString() }));
       }
       
-      // Set start date to today
+      // Set start date to today and end date to 7 days from today
       const today = new Date().toISOString().split('T')[0];
-      setFormData(prev => ({ ...prev, start_date: today }));
+      const nextWeek = new Date();
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      const nextWeekStr = nextWeek.toISOString().split('T')[0];
+      setFormData(prev => ({ ...prev, start_date: today, end_date: nextWeekStr }));
     } catch (error) {
       console.error('Failed to fetch form data:', error);
       toast.error('Failed to load form data');
