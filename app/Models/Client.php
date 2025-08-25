@@ -66,7 +66,7 @@ class Client extends Authenticatable implements MustVerifyEmail
 
     public function projects()
     {
-        return $this->belongsToMany(Project::class)->where('projects.workspace_id', session()->get('workspace_id'));
+        return $this->belongsToMany(Project::class, 'client_project');
     }
 
     public function meetings()
