@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import apiClient from '@/lib/api-client';
 import { toast } from 'react-hot-toast';
-import { ArrowLeft, Save, Calendar, FileText, HelpCircle, CheckSquare } from 'lucide-react';
+import { ArrowLeft, Save, Calendar, FileText, HelpCircle, CheckSquare, Upload, Link, X, Paperclip } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Status {
@@ -80,6 +80,9 @@ export default function NewTaskPage() {
   const [templateQuestions, setTemplateQuestions] = useState<TemplateQuestion[]>([]);
   const [templateChecklist, setTemplateChecklist] = useState<string[]>([]);
   const [questionAnswers, setQuestionAnswers] = useState<Record<number, string>>({});
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [googleLinks, setGoogleLinks] = useState<string[]>(['']);
+  const [showLinkInput, setShowLinkInput] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -280,6 +283,40 @@ export default function NewTaskPage() {
       const response = await apiClient.post('/tasks', payload);
       const taskId = response.data.data.id;
       
+      // Upload files if any
+      if (uploadedFiles.length > 0) {
+        try {
+          const formData = new FormData();
+          uploadedFiles.forEach((file) => {
+            formData.append('files[]', file);
+          });
+          
+          await apiClient.post(`/tasks/${taskId}/media`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+        } catch (error) {
+          console.error('Failed to upload files:', error);
+          toast.error('Task created but failed to upload some files');
+        }
+      }
+
+      // Add Google links as comments if any
+      const validLinks = googleLinks.filter(link => link.trim() !== '');
+      if (validLinks.length > 0) {
+        try {
+          for (const link of validLinks) {
+            await apiClient.post(`/tasks/${taskId}/messages`, {
+              message_text: `📎 Reference Link: ${link}`,
+            });
+          }
+        } catch (error) {
+          console.error('Failed to add links:', error);
+          toast.error('Task created but failed to add some links');
+        }
+      }
+      
       // Save template questions and checklists to task if template was used
       if (selectedTemplate) {
         try {
@@ -326,6 +363,38 @@ export default function NewTaskPage() {
         ? prev.user_ids.filter(id => id !== userId)
         : [...prev.user_ids, userId]
     }));
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setUploadedFiles(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addGoogleLink = () => {
+    setGoogleLinks(prev => [...prev, '']);
+    setShowLinkInput(true);
+  };
+
+  const updateGoogleLink = (index: number, value: string) => {
+    setGoogleLinks(prev => prev.map((link, i) => i === index ? value : link));
+  };
+
+  const removeGoogleLink = (index: number) => {
+    setGoogleLinks(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
@@ -516,6 +585,111 @@ export default function NewTaskPage() {
                       No clients associated with this project
                     </p>
                   )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Attachments & Links */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Attachments & Reference Links</CardTitle>
+              <CardDescription>Upload files and add Google links to brief the tasker</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* File Upload */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Paperclip className="h-4 w-4 text-muted-foreground" />
+                  <Label>Upload Files</Label>
+                </div>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="file-upload"
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.mp4,.mov,.zip,.rar"
+                  />
+                  <label htmlFor="file-upload" className="cursor-pointer">
+                    <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Click to upload files or drag and drop
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      PDF, DOC, Images, Videos, Archives (Max 10MB each)
+                    </p>
+                  </label>
+                </div>
+                
+                {/* Uploaded Files List */}
+                {uploadedFiles.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Uploaded Files:</p>
+                    {uploadedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                        <div className="flex items-center gap-2">
+                          <Paperclip className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{file.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            ({formatFileSize(file.size)})
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Google Links */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Link className="h-4 w-4 text-muted-foreground" />
+                  <Label>Reference Links</Label>
+                </div>
+                <div className="space-y-2">
+                  {googleLinks.map((link, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        type="url"
+                        value={link}
+                        onChange={(e) => updateGoogleLink(index, e.target.value)}
+                        placeholder="https://docs.google.com/... or any reference link"
+                        className="flex-1"
+                      />
+                      {googleLinks.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeGoogleLink(index)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addGoogleLink}
+                    className="w-full"
+                  >
+                    <Link className="h-4 w-4 mr-2" />
+                    Add Another Link
+                  </Button>
                 </div>
               </div>
             </CardContent>
