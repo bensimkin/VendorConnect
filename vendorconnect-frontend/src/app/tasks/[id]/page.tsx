@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import apiClient from '@/lib/api-client';
-import { ArrowLeft, Edit, Trash2, Calendar, User, Tag, MessageSquare, Paperclip, Clock, CheckCircle, AlertCircle, Plus, Edit3 } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Calendar, User, Tag, MessageSquare, Paperclip, Clock, CheckCircle, AlertCircle, Plus, Edit3, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 
@@ -275,8 +275,24 @@ export default function TaskDetailPage() {
     }
   };
 
+  // Helper function to check if task is past due with strict deadline
+  const isTaskPastDue = () => {
+    if (!task) return false;
+    if (!task.end_date || !task.close_deadline) return false;
+    
+    const deadline = new Date(task.end_date);
+    const now = new Date();
+    return now > deadline;
+  };
+
   const handleAddComment = async () => {
     if (!comment.trim() || !task) return;
+
+    // Check if task is past due
+    if (isTaskPastDue()) {
+      toast.error('Cannot add comments to a task that is past its strict deadline');
+      return;
+    }
 
     setSubmittingComment(true);
     try {
@@ -287,9 +303,13 @@ export default function TaskDetailPage() {
       setComment('');
       // Refresh task to get new comments
       fetchTaskDetail(task.id.toString());
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add comment:', error);
-      toast.error('Failed to add comment');
+      if (error.response?.status === 403) {
+        toast.error('Cannot add comments to a task that is past its strict deadline');
+      } else {
+        toast.error('Failed to add comment');
+      }
     } finally {
       setSubmittingComment(false);
     }
@@ -349,6 +369,12 @@ export default function TaskDetailPage() {
   const handleAddDeliverable = async () => {
     if (!deliverableForm.title.trim() || !task) return;
 
+    // Check if task is past due
+    if (isTaskPastDue()) {
+      toast.error('Cannot add deliverables to a task that is past its strict deadline');
+      return;
+    }
+
     setSubmittingDeliverable(true);
     try {
       const formData = new FormData();
@@ -385,9 +411,13 @@ export default function TaskDetailPage() {
       setDeliverableFiles([]);
       // Refresh task to get updated deliverable info
       fetchTaskDetail(task.id.toString());
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add deliverable:', error);
-      toast.error('Failed to add deliverable');
+      if (error.response?.status === 403) {
+        toast.error('Cannot add deliverables to a task that is past its strict deadline');
+      } else {
+        toast.error('Failed to add deliverable');
+      }
     } finally {
       setSubmittingDeliverable(false);
     }
@@ -499,6 +529,23 @@ export default function TaskDetailPage() {
             </Button>
           </div>
         </div>
+
+        {/* Past Due Warning */}
+        {isTaskPastDue() && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertTriangle className="h-5 w-5" />
+                <div>
+                  <p className="font-medium">Task Past Due</p>
+                  <p className="text-sm">
+                    This task has passed its strict deadline. Comments and deliverables cannot be added.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Main Content */}
@@ -725,9 +772,10 @@ export default function TaskDetailPage() {
                     <Button
                       onClick={() => setShowDeliverableForm(true)}
                       size="sm"
+                      disabled={isTaskPastDue()}
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      Add Deliverable
+                      {isTaskPastDue() ? 'Deliverables Disabled' : 'Add Deliverable'}
                     </Button>
                   </div>
                 )}
@@ -742,18 +790,19 @@ export default function TaskDetailPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Textarea
-                    placeholder="Add a comment..."
+                    placeholder={isTaskPastDue() ? "Cannot add comments to a task past its deadline" : "Add a comment..."}
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     rows={3}
+                    disabled={isTaskPastDue()}
                   />
                   <Button
                     onClick={handleAddComment}
-                    disabled={!comment.trim() || submittingComment}
+                    disabled={!comment.trim() || submittingComment || isTaskPastDue()}
                     size="sm"
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />
-                    {submittingComment ? 'Adding...' : 'Add Comment'}
+                    {submittingComment ? 'Adding...' : isTaskPastDue() ? 'Comments Disabled' : 'Add Comment'}
                   </Button>
                 </div>
                 
