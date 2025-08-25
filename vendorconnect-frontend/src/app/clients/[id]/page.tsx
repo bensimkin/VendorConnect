@@ -7,7 +7,7 @@ import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Edit, Trash2, Building, Mail, Phone, MapPin, Globe, Calendar, Briefcase, Users, Plus } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Building, Mail, Phone, MapPin, Globe, Calendar, Briefcase, Users, Plus, Key } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
 
@@ -409,6 +409,41 @@ export default function ClientDetailPage() {
                     No tasks found for this client
                   </p>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Credentials */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Key className="h-5 w-5" />
+                    Credentials
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push(`/clients/${clientId}/credentials`)}
+                  >
+                    Manage
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-6">
+                  <Key className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Store and manage client login credentials securely
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push(`/clients/${clientId}/credentials`)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Credentials
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
