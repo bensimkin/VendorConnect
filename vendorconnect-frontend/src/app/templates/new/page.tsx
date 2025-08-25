@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import apiClient from '@/lib/api-client';
 import { toast } from 'react-hot-toast';
 import { ArrowLeft, Save, FileText } from 'lucide-react';
@@ -22,6 +23,8 @@ export default function NewTemplatePage() {
   const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
   const [formData, setFormData] = useState({
     template_name: '',
+    standard_brief: '',
+    description: '',
     task_type_id: '',
   });
 
@@ -62,6 +65,8 @@ export default function NewTemplatePage() {
     try {
       const payload = {
         template_name: formData.template_name.trim(),
+        standard_brief: formData.standard_brief.trim() || null,
+        description: formData.description.trim() || null,
         task_type_id: parseInt(formData.task_type_id),
       };
 
@@ -116,6 +121,34 @@ export default function NewTemplatePage() {
                 />
                 <p className="text-sm text-muted-foreground">
                   Give your template a descriptive name
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="standard_brief">Standard Brief</Label>
+                <Textarea
+                  id="standard_brief"
+                  value={formData.standard_brief}
+                  onChange={(e) => setFormData({ ...formData, standard_brief: e.target.value })}
+                  placeholder="Enter the standard brief that will be automatically added to tasks using this template..."
+                  rows={4}
+                />
+                <p className="text-sm text-muted-foreground">
+                  This brief will be automatically added to the task notes when using this template
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Enter a description that will be automatically added to tasks using this template..."
+                  rows={4}
+                />
+                <p className="text-sm text-muted-foreground">
+                  This description will be automatically added to the task description when using this template
                 </p>
               </div>
 
