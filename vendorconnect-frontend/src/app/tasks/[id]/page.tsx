@@ -54,6 +54,23 @@ interface TaskDetail {
     id: number;
     template_name: string;
   };
+  question_answers?: Array<{
+    id: number;
+    question_id: number;
+    question_answer: string;
+    brief_questions: {
+      id: number;
+      question_text: string;
+      question_type: string;
+      options?: string[];
+    };
+  }>;
+  checklist_answers?: Array<{
+    id: number;
+    checklist_id: number;
+    completed: boolean;
+    notes: string;
+  }>;
 }
 
 interface TemplateQuestion {
