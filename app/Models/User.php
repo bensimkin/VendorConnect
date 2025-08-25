@@ -78,11 +78,10 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Project::class)->where('projects.workspace_id', session()->get('workspace_id'));
     }
 
-    // public function tasks()
-    // {
-    //     return $this->belongsToMany(Task::class, 'task_user')
-    //         ->where('tasks.workspace_id', session()->get('workspace_id'));
-    // }
+    public function tasks()
+    {
+        return $this->belongsToMany(Task::class, 'task_user');
+    }
 
     public function userTask()
     {
