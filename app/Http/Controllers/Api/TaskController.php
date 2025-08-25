@@ -410,29 +410,63 @@ class TaskController extends BaseController
                 return $this->sendNotFound('Task not found');
             }
 
-            $validator = Validator::make($request->all(), [
-                'media' => 'required|file|mimes:jpeg,png,jpg,gif,pdf,doc,docx,xls,xlsx,ppt,pptx,txt|max:10240',
-                'description' => 'nullable|string',
-            ]);
+            // Handle both single file and multiple files
+            if ($request->hasFile('media')) {
+                // Single file upload (existing functionality)
+                $validator = Validator::make($request->all(), [
+                    'media' => 'required|file|mimes:jpeg,png,jpg,gif,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar,mp4,mov|max:10240',
+                    'description' => 'nullable|string',
+                ]);
 
-            if ($validator->fails()) {
-                return $this->sendValidationError($validator->errors());
+                if ($validator->fails()) {
+                    return $this->sendValidationError($validator->errors());
+                }
+
+                // Store the media file
+                $mediaPath = $request->file('media')->store('task-media', 'public');
+                
+                // Create media record
+                $media = $task->media()->create([
+                    'file_path' => $mediaPath,
+                    'file_name' => $request->file('media')->getClientOriginalName(),
+                    'file_size' => $request->file('media')->getSize(),
+                    'mime_type' => $request->file('media')->getMimeType(),
+                    'description' => $request->description,
+                    'uploaded_by' => Auth::user()->id,
+                ]);
+
+                return $this->sendResponse($media, 'Media uploaded successfully');
+            } elseif ($request->hasFile('files')) {
+                // Multiple files upload (new functionality)
+                $validator = Validator::make($request->all(), [
+                    'files.*' => 'required|file|mimes:jpeg,png,jpg,gif,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar,mp4,mov|max:10240',
+                ]);
+
+                if ($validator->fails()) {
+                    return $this->sendValidationError($validator->errors());
+                }
+
+                $uploadedFiles = [];
+                foreach ($request->file('files') as $file) {
+                    // Store the media file
+                    $mediaPath = $file->store('task-media', 'public');
+                    
+                    // Create media record
+                    $media = $task->media()->create([
+                        'file_path' => $mediaPath,
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                        'uploaded_by' => Auth::user()->id,
+                    ]);
+
+                    $uploadedFiles[] = $media;
+                }
+
+                return $this->sendResponse($uploadedFiles, 'Files uploaded successfully');
+            } else {
+                return $this->sendValidationError(['files' => 'No files provided']);
             }
-
-            // Store the media file
-            $mediaPath = $request->file('media')->store('task-media', 'public');
-            
-            // Create media record (assuming you have a TaskMedia model)
-            $media = $task->media()->create([
-                'file_path' => $mediaPath,
-                'file_name' => $request->file('media')->getClientOriginalName(),
-                'file_size' => $request->file('media')->getSize(),
-                'mime_type' => $request->file('media')->getMimeType(),
-                'description' => $request->description,
-                'uploaded_by' => Auth::user()->id,
-            ]);
-
-            return $this->sendResponse($media, 'Media uploaded successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error uploading media: ' . $e->getMessage());
         }
