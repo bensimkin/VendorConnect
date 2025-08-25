@@ -978,6 +978,20 @@ export default function TaskDetailPage() {
                   </div>
                 )}
 
+                {task.clients && task.clients.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium mb-2">Clients</p>
+                    <div className="space-y-1">
+                      {task.clients.map((client) => (
+                        <div key={client.id} className="flex items-center gap-2">
+                          <User className="h-3 w-3 text-muted-foreground" />
+                          <p className="text-sm text-green-600">{client.name}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {task.deliverable_quantity && task.deliverable_quantity > 1 && (
                   <div>
                     <p className="text-sm font-medium mb-2">Quantity</p>

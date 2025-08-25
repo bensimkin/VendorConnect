@@ -30,8 +30,20 @@ class TaskController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = Task::with(['users', 'status', 'priority', 'taskType', 'project']);
-            // Removed workspace filtering for single-tenant system
+            $user = Auth::user();
+            $query = Task::with(['users', 'status', 'priority', 'taskType', 'project', 'clients']);
+            
+            // Role-based filtering
+            if ($user->hasRole('requester')) {
+                // Requesters only see tasks they created
+                $query->where('created_by', $user->id);
+            } elseif ($user->hasRole('tasker')) {
+                // Taskers only see tasks they're assigned to
+                $query->whereHas('users', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                });
+            }
+            // Admins and sub-admins see all tasks (no additional filtering)
 
             // Apply filters
             if ($request->has('status_id')) {
@@ -183,12 +195,28 @@ class TaskController extends BaseController
     public function show($id)
     {
         try {
+            $user = Auth::user();
             $task = Task::with(['users', 'status', 'priority', 'taskType', 'project', 'clients', 'questionAnswers.briefQuestions', 'checklistAnswers', 'deliverables.creator', 'deliverables.media', 'messages.sender'])
                 ->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
             }
+
+            // Role-based access control
+            if ($user->hasRole('requester')) {
+                // Requesters can only access tasks they created
+                if ($task->created_by !== $user->id) {
+                    return $this->sendError('Access denied', [], 403);
+                }
+            } elseif ($user->hasRole('tasker')) {
+                // Taskers can only access tasks they're assigned to
+                $isAssigned = $task->users()->where('users.id', $user->id)->exists();
+                if (!$isAssigned) {
+                    return $this->sendError('Access denied', [], 403);
+                }
+            }
+            // Admins and sub-admins can access all tasks
 
             // Check if task is expired and has strict deadline
             if ($task->end_date && $task->close_deadline == 1) {
@@ -217,11 +245,27 @@ class TaskController extends BaseController
     public function update(Request $request, $id)
     {
         try {
+            $user = Auth::user();
             $task = Task::find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
             }
+
+            // Role-based access control
+            if ($user->hasRole('requester')) {
+                // Requesters can only update tasks they created
+                if ($task->created_by !== $user->id) {
+                    return $this->sendError('Access denied', [], 403);
+                }
+            } elseif ($user->hasRole('tasker')) {
+                // Taskers can only update tasks they're assigned to
+                $isAssigned = $task->users()->where('users.id', $user->id)->exists();
+                if (!$isAssigned) {
+                    return $this->sendError('Access denied', [], 403);
+                }
+            }
+            // Admins and sub-admins can update all tasks
 
             $validator = Validator::make($request->all(), [
                 'title' => 'sometimes|required|string|max:255',
