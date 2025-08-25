@@ -657,7 +657,7 @@ class TaskController extends BaseController
 
             $validator = Validator::make($request->all(), [
                 'question_id' => 'required|exists:task_brief_questions,id',
-                'answer' => 'required|string',
+                'answer' => 'nullable|string',
             ]);
 
             if ($validator->fails()) {
