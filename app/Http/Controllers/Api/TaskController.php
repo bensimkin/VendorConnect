@@ -169,7 +169,7 @@ class TaskController extends BaseController
     public function show($id)
     {
         try {
-            $task = Task::with(['users', 'status', 'priority', 'taskType', 'project', 'clients', 'questionAnswers.briefQuestions', 'checklistAnswers', 'deliverables.creator', 'deliverables.media'])
+            $task = Task::with(['users', 'status', 'priority', 'taskType', 'project', 'clients', 'questionAnswers.briefQuestions', 'checklistAnswers', 'deliverables.creator', 'deliverables.media', 'messages.sender'])
                 ->find($id);
 
             if (!$task) {
