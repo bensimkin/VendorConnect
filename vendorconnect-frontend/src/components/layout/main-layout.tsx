@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 // Navigation items with role restrictions
 const navigation = [
@@ -253,9 +254,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   <Moon className="h-5 w-5" />
                 )}
               </Button>
-              <Button variant="ghost" size="icon">
-                <Bell className="h-5 w-5" />
-              </Button>
+              <NotificationBell />
               <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-border" />
               <div className="flex items-center gap-x-2">
                 <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">

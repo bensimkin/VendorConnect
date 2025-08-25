@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\ChMessage as Message;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ChFavorite as Favorite;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Response;
 use Chatify\Facades\ChatifyMessenger as Chatify;
 use Illuminate\Support\Facades\Request as FacadesRequest;
@@ -176,6 +177,16 @@ class MessagesController extends Controller
                 ]) : null,
             ]);
             $messageData = Chatify::parseMessage($message);
+            
+            // Send notification for new comment if this is a task message
+            if ($request->has('task_id') && $request->task_id) {
+                $task = Task::find($request->task_id);
+                if ($task) {
+                    $notificationService = new NotificationService();
+                    $notificationService->commentAdded($message, Auth::user());
+                }
+            }
+            
             if (Auth::user()->id != $request['id']) {
                 Chatify::push("private-chatify." . $request['id'], 'messaging', [
                     'from_id' => Auth::user()->id,
