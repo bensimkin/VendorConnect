@@ -49,6 +49,23 @@ interface DashboardData {
     date: string;
     completed_tasks: number;
   }>;
+  project_management?: Array<{
+    id: number;
+    title: string;
+    status?: {
+      id: number;
+      title: string;
+    };
+    clients?: Array<{
+      id: number;
+      name: string;
+    }>;
+    total_tasks?: number;
+    active_tasks?: number;
+    overdue_tasks?: number;
+    completed_this_week_tasks?: number;
+    updated_at: string;
+  }>;
   statuses?: Array<{
     id: number;
     title: string;
@@ -282,6 +299,56 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Project Management Overview */}
+        {data?.project_management && data.project_management.length > 0 && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Project Management</CardTitle>
+                  <CardDescription>Overview of active projects and their status</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => router.push('/project-management')}>
+                  View All Projects
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {data.project_management.slice(0, 5).map((project: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-medium text-sm">{project.title}</h4>
+                        {project.status && (
+                          <Badge variant="secondary" className="text-xs">
+                            {project.status.title}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span>{project.total_tasks || 0} total tasks</span>
+                        <span>{project.active_tasks || 0} active</span>
+                        <span>{project.overdue_tasks || 0} overdue</span>
+                        {project.clients && project.clients.length > 0 && (
+                          <span>{project.clients.map((c: any) => c.name).join(', ')}</span>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => router.push(`/projects/${project.id}`)}
+                    >
+                      View
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Recent Tasks */}
         <Card>

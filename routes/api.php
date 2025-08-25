@@ -132,6 +132,7 @@ Route::delete('/{taskId}/deliverables/{deliverableId}/files/{mediaId}', [TaskDel
             Route::put('/{id}', [ProjectController::class, 'update']);
             Route::delete('/{id}', [ProjectController::class, 'destroy']);
             Route::get('/{id}/statistics', [ProjectController::class, 'getStatistics']);
+            Route::get('/{id}/tasks', [ProjectController::class, 'getTasks']);
         });
         
         // Task Types

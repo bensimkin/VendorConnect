@@ -68,6 +68,9 @@ class DashboardController extends BaseController
             // Get task completion trend
             $taskTrend = $this->getTaskCompletionTrend();
 
+            // Get project management data
+            $projectManagement = $this->getProjectManagementData($user);
+
             // Get all statuses for frontend mapping
             $statuses = Status::select('id', 'title')->get();
 
@@ -82,6 +85,7 @@ class DashboardController extends BaseController
                 'recent_tasks' => $recentTasks,
                 'user_activity' => $userActivity,
                 'task_trend' => $taskTrend,
+                'project_management' => $projectManagement,
                 'statuses' => $statuses,
             ];
 
@@ -187,5 +191,56 @@ class DashboardController extends BaseController
         }
 
         return $trend;
+    }
+
+    /**
+     * Get project management data
+     */
+    private function getProjectManagementData($user)
+    {
+        // Get completed status ID
+        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatusId = $completedStatus ? $completedStatus->id : null;
+
+        $projectQuery = Project::with(['status', 'clients'])
+            ->withCount(['tasks as total_tasks'])
+            ->withCount(['tasks as active_tasks' => function ($query) use ($completedStatusId) {
+                if ($completedStatusId) {
+                    $query->where('status_id', '!=', $completedStatusId);
+                }
+            }])
+            ->withCount(['tasks as overdue_tasks' => function ($query) use ($completedStatusId) {
+                $query->where('end_date', '<', Carbon::now());
+                if ($completedStatusId) {
+                    $query->where('status_id', '!=', $completedStatusId);
+                }
+            }])
+            ->withCount(['tasks as completed_this_week_tasks' => function ($query) use ($completedStatusId) {
+                if ($completedStatusId) {
+                    $query->where('status_id', $completedStatusId)
+                        ->whereBetween('updated_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                }
+            }]);
+
+        // Apply role-based filtering
+        if ($user->hasRole('requester')) {
+            // Requesters only see projects they created or are involved with
+            $projectQuery->where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhereHas('tasks', function ($taskQuery) use ($user) {
+                      $taskQuery->where('created_by', $user->id);
+                  });
+            });
+        } elseif ($user->hasRole('tasker')) {
+            // Taskers only see projects they have tasks assigned to
+            $projectQuery->whereHas('tasks', function ($q) use ($user) {
+                $q->whereHas('users', function ($userQuery) use ($user) {
+                    $userQuery->where('users.id', $user->id);
+                });
+            });
+        }
+        // Admins and sub-admins see all projects
+
+        return $projectQuery->orderBy('updated_at', 'desc')->limit(10)->get();
     }
 }
