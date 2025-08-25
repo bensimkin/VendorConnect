@@ -93,7 +93,7 @@ export default function NewTaskPage() {
     start_date: '',
     end_date: '',
     close_deadline: false,
-
+    deliverable_quantity: 1,
   });
 
   useEffect(() => {
@@ -273,8 +273,8 @@ export default function NewTaskPage() {
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
         close_deadline: formData.close_deadline,
+        deliverable_quantity: formData.deliverable_quantity,
         template_id: selectedTemplate ? parseInt(selectedTemplate) : null,
-
       };
 
       const response = await apiClient.post('/tasks', payload);
@@ -403,7 +403,7 @@ export default function NewTaskPage() {
                 />
               </div>
 
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-4">
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <select
@@ -451,6 +451,20 @@ export default function NewTaskPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="deliverable_quantity">Quantity</Label>
+                  <Input
+                    id="deliverable_quantity"
+                    type="number"
+                    min="1"
+                    value={formData.deliverable_quantity}
+                    onChange={(e) => setFormData({ ...formData, deliverable_quantity: parseInt(e.target.value) || 1 })}
+                    placeholder="e.g., 6"
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground">Number of deliverables needed</p>
                 </div>
 
                 <div className="space-y-2">
