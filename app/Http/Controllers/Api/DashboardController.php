@@ -62,6 +62,17 @@ class DashboardController extends BaseController
                 ->limit(10)
                 ->get();
 
+            // Debug: Log the first task to see what's being returned
+            if ($recentTasks->count() > 0) {
+                \Log::info('First task debug:', [
+                    'id' => $recentTasks->first()->id,
+                    'title' => $recentTasks->first()->title,
+                    'title_type' => gettype($recentTasks->first()->title),
+                    'attributes' => $recentTasks->first()->getAttributes(),
+                    'to_array' => $recentTasks->first()->toArray()
+                ]);
+            }
+
             // Get user activity
             $userActivity = $this->getUserActivity();
 
