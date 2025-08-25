@@ -111,10 +111,7 @@ class TaskController extends BaseController
                 'tag_ids.*' => 'exists:tags,id',
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date|after_or_equal:start_date',
-                'deliverable_title' => 'nullable|string|max:255',
-                'deliverable_description' => 'nullable|string',
-                'deliverable_type' => 'nullable|in:design,document,presentation,other',
-                'has_deliverable' => 'nullable|boolean',
+
             ]);
 
             if ($validator->fails()) {
@@ -134,10 +131,7 @@ class TaskController extends BaseController
                 'end_date' => $request->end_date,
                 'note' => $request->note,
                 'close_deadline' => $request->get('close_deadline', 0),
-                'deliverable_title' => $request->deliverable_title,
-                'deliverable_description' => $request->deliverable_description,
-                'deliverable_type' => $request->deliverable_type,
-                'has_deliverable' => $request->get('has_deliverable', false),
+
                 'created_by' => $request->user()->id,
             ]);
 
@@ -156,22 +150,7 @@ class TaskController extends BaseController
                 $task->tags()->attach($request->tag_ids);
             }
 
-            // Create portfolio item if task has deliverable
-            if ($request->get('has_deliverable', false) && $request->deliverable_title && $request->has('client_ids')) {
-                foreach ($request->client_ids as $clientId) {
-                    Portfolio::create([
-                        'client_id' => $clientId,
-                        'task_id' => $task->id,
-                        'project_id' => $request->project_id,
-                        'title' => $request->deliverable_title,
-                        'description' => $request->deliverable_description,
-                        'deliverable_type' => $request->deliverable_type ?? 'other',
-                        'status' => 'completed',
-                        'created_by' => $request->user()->id,
-                        'completed_at' => now(),
-                    ]);
-                }
-            }
+
 
             DB::commit();
 
@@ -411,74 +390,7 @@ class TaskController extends BaseController
         }
     }
 
-    /**
-     * Add or update deliverable for a task
-     */
-    public function addDeliverable(Request $request, $id)
-    {
-        try {
-            $task = Task::find($id);
 
-            if (!$task) {
-                return $this->sendNotFound('Task not found');
-            }
-
-            $validator = Validator::make($request->all(), [
-                'deliverable_title' => 'required|string|max:255',
-                'deliverable_description' => 'nullable|string',
-                'deliverable_type' => 'required|in:design,document,presentation,other',
-            ]);
-
-            if ($validator->fails()) {
-                return $this->sendValidationError($validator->errors());
-            }
-
-            DB::beginTransaction();
-
-            // Update task with deliverable info
-            $task->update([
-                'deliverable_title' => $request->deliverable_title,
-                'deliverable_description' => $request->deliverable_description,
-                'deliverable_type' => $request->deliverable_type,
-                'has_deliverable' => true,
-                'deliverable_completed_at' => now(),
-            ]);
-
-            // Get task clients
-            $taskClients = $task->clients;
-            
-            // Create portfolio items for each client
-            foreach ($taskClients as $client) {
-                // Check if portfolio item already exists for this task and client
-                $existingPortfolio = Portfolio::where('task_id', $task->id)
-                    ->where('client_id', $client->id)
-                    ->first();
-
-                if (!$existingPortfolio) {
-                    Portfolio::create([
-                        'client_id' => $client->id,
-                        'task_id' => $task->id,
-                        'project_id' => $task->project_id,
-                        'title' => $request->deliverable_title,
-                        'description' => $request->deliverable_description,
-                        'deliverable_type' => $request->deliverable_type,
-                        'status' => 'completed',
-                        'created_by' => Auth::user()->id,
-                        'completed_at' => now(),
-                    ]);
-                }
-            }
-
-            DB::commit();
-
-            $task->load(['users', 'status', 'priority', 'taskType', 'project', 'clients']);
-
-            return $this->sendResponse($task, 'Deliverable added successfully');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return $this->sendServerError('Error adding deliverable: ' . $e->getMessage());
-        }
-    }
 
     /**
      * Upload media for a task
