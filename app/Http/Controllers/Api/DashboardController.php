@@ -7,6 +7,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\Client;
 use App\Models\Project;
+use App\Models\Status;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -43,6 +44,9 @@ class DashboardController extends BaseController
             // Get task completion trend
             $taskTrend = $this->getTaskCompletionTrend();
 
+            // Get all statuses for frontend mapping
+            $statuses = Status::select('id', 'title')->get();
+
             $dashboardData = [
                 'overview' => [
                     'total_tasks' => $totalTasks,
@@ -54,6 +58,7 @@ class DashboardController extends BaseController
                 'recent_tasks' => $recentTasks,
                 'user_activity' => $userActivity,
                 'task_trend' => $taskTrend,
+                'statuses' => $statuses,
             ];
 
             return $this->sendResponse($dashboardData, 'Dashboard data retrieved successfully');
@@ -76,13 +81,17 @@ class DashboardController extends BaseController
             $statusCounts[$stat->status_id] = $stat->count;
         }
 
+        // Get status IDs dynamically
+        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatusId = $completedStatus ? $completedStatus->id : null;
+        
         return [
             'by_status' => $statusCounts,
-            'completed_this_week' => Task::where('status_id', 3) // Assuming 3 is completed status
+            'completed_this_week' => $completedStatusId ? Task::where('status_id', $completedStatusId)
                 ->whereBetween('updated_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
-                ->count(),
+                ->count() : 0,
             'overdue' => Task::where('end_date', '<', Carbon::now())
-                ->where('status_id', '!=', 3) // Not completed
+                ->where('status_id', '!=', $completedStatusId) // Not completed
                 ->count(),
         ];
     }
@@ -105,12 +114,16 @@ class DashboardController extends BaseController
      */
     private function getTaskCompletionTrend()
     {
+        // Get status IDs dynamically
+        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatusId = $completedStatus ? $completedStatus->id : null;
+        
         $trend = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
-            $count = Task::where('status_id', 3) // Completed status
+            $count = $completedStatusId ? Task::where('status_id', $completedStatusId)
                 ->whereDate('updated_at', $date)
-                ->count();
+                ->count() : 0;
             
             $trend[] = [
                 'date' => $date->format('Y-m-d'),
