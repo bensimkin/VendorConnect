@@ -279,18 +279,22 @@ class PortfolioController extends BaseController
             }
 
             $validator = Validator::make($request->all(), [
-                'media' => 'required|file|mimes:jpeg,png,jpg,gif,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar|max:10240',
-                'description' => 'nullable|string',
+                'files' => 'required|array',
+                'files.*' => 'file|mimes:jpeg,png,jpg,gif,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar|max:10240',
             ]);
 
             if ($validator->fails()) {
                 return $this->sendValidationError($validator->errors());
             }
 
-            $media = $portfolio->addMedia($request->file('media'))
-                ->toMediaCollection('portfolio-media');
+            $uploadedMedia = [];
+            foreach ($request->file('files') as $file) {
+                $media = $portfolio->addMedia($file)
+                    ->toMediaCollection('portfolio-media');
+                $uploadedMedia[] = $media;
+            }
 
-            return $this->sendResponse($media, 'Media uploaded successfully');
+            return $this->sendResponse($uploadedMedia, 'Media uploaded successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error uploading media: ' . $e->getMessage());
         }
