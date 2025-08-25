@@ -111,7 +111,10 @@ class TaskController extends BaseController
                 'tag_ids.*' => 'exists:tags,id',
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date|after_or_equal:start_date',
-
+                'is_repeating' => 'boolean',
+                'repeat_frequency' => 'nullable|in:daily,weekly,monthly,yearly',
+                'repeat_interval' => 'nullable|integer|min:1',
+                'repeat_until' => 'nullable|date|after:start_date',
             ]);
 
             if ($validator->fails()) {
@@ -138,6 +141,11 @@ class TaskController extends BaseController
                 'note' => $template ? ($template->standard_brief ?: $request->note) : $request->note,
                 'deliverable_quantity' => $template ? ($template->deliverable_quantity ?: $request->get('deliverable_quantity', 1)) : $request->get('deliverable_quantity', 1),
                 'close_deadline' => $request->get('close_deadline', 0),
+                'is_repeating' => $request->get('is_repeating', false),
+                'repeat_frequency' => $request->get('repeat_frequency'),
+                'repeat_interval' => $request->get('repeat_interval', 1),
+                'repeat_until' => $request->get('repeat_until'),
+                'repeat_active' => $request->get('is_repeating', false),
                 'created_by' => $request->user()->id,
             ]);
 
@@ -792,6 +800,97 @@ class TaskController extends BaseController
             return $this->sendResponse($answer, 'Checklist answer submitted successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error submitting checklist answer: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Stop task repetition
+     */
+    public function stopRepetition($id)
+    {
+        try {
+            $task = Task::find($id);
+
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+
+            if (!$task->is_repeating) {
+                return $this->sendError('This task is not a repeating task', [], 400);
+            }
+
+            // Check if user has permission to stop repetition
+            $user = Auth::user();
+            $canStop = $user->hasRole(['admin', 'requester']) || $task->created_by == $user->id;
+
+            if (!$canStop) {
+                return $this->sendError('You do not have permission to stop task repetition', [], 403);
+            }
+
+            $task->update(['repeat_active' => false]);
+
+            return $this->sendResponse($task, 'Task repetition stopped successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error stopping task repetition: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Resume task repetition
+     */
+    public function resumeRepetition($id)
+    {
+        try {
+            $task = Task::find($id);
+
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+
+            if (!$task->is_repeating) {
+                return $this->sendError('This task is not a repeating task', [], 400);
+            }
+
+            // Check if user has permission to resume repetition
+            $user = Auth::user();
+            $canResume = $user->hasRole(['admin', 'requester']) || $task->created_by == $user->id;
+
+            if (!$canResume) {
+                return $this->sendError('You do not have permission to resume task repetition', [], 403);
+            }
+
+            $task->update(['repeat_active' => true]);
+
+            return $this->sendResponse($task, 'Task repetition resumed successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error resuming task repetition: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get repeating task history
+     */
+    public function getRepeatingHistory($id)
+    {
+        try {
+            $task = Task::find($id);
+
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+
+            if (!$task->is_repeating) {
+                return $this->sendError('This task is not a repeating task', [], 400);
+            }
+
+            $childTasks = Task::where('parent_task_id', $id)
+                ->with(['status', 'users'])
+                ->orderBy('start_date', 'desc')
+                ->get();
+
+            return $this->sendResponse($childTasks, 'Repeating task history retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving repeating task history: ' . $e->getMessage());
         }
     }
 }
