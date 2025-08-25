@@ -276,35 +276,32 @@ export default function NewTaskPage() {
       const response = await apiClient.post('/tasks', payload);
       const taskId = response.data.data.id;
       
-      // Save template questions and answers if template was used
-      if (selectedTemplate && templateQuestions.length > 0) {
+      // Save template questions and checklists to task if template was used
+      if (selectedTemplate) {
         try {
-          for (const question of templateQuestions) {
-            const answer = questionAnswers[question.id];
-            if (answer && answer.trim()) {
+          // Save template questions (even without answers)
+          if (templateQuestions.length > 0) {
+            for (const question of templateQuestions) {
+              const answer = questionAnswers[question.id] || '';
               await apiClient.post(`/tasks/${taskId}/question-answer`, {
                 question_id: question.id,
                 answer: answer,
               });
             }
           }
-        } catch (error) {
-          console.error('Failed to save question answers:', error);
-        }
-      }
-      
-      // Save template checklist if template was used
-      if (selectedTemplate && templateChecklist.length > 0) {
-        try {
-          for (let i = 0; i < templateChecklist.length; i++) {
-            await apiClient.post(`/tasks/${taskId}/checklist-answer`, {
-              checklist_id: 1, // Assuming single checklist per template
-              completed: false,
-              notes: templateChecklist[i],
-            });
+          
+          // Save template checklist items
+          if (templateChecklist.length > 0) {
+            for (let i = 0; i < templateChecklist.length; i++) {
+              await apiClient.post(`/tasks/${taskId}/checklist-answer`, {
+                checklist_id: 1, // Assuming single checklist per template
+                completed: false,
+                notes: templateChecklist[i],
+              });
+            }
           }
         } catch (error) {
-          console.error('Failed to save checklist:', error);
+          console.error('Failed to save template data:', error);
         }
       }
       
