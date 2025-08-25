@@ -46,6 +46,9 @@ interface Task {
   template?: {
     id: number;
     template_name: string;
+    standard_brief?: string;
+    description?: string;
+    deliverable_quantity?: number;
   };
   close_deadline?: boolean;
 }
