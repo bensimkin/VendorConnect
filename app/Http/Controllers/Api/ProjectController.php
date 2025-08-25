@@ -63,9 +63,6 @@ class ProjectController extends BaseController
                     $query->where('status_id', 17); // Completed status ID
                 }])
                 ->withCount(['users as team_members_count'])
-                ->withCount(['tasks.users as task_users_count' => function($query) {
-                    $query->distinct();
-                }])
                 ->paginate($request->get('per_page', 15));
 
             return $this->sendPaginatedResponse($projects, 'Projects retrieved successfully');
