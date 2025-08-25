@@ -47,7 +47,11 @@ class ClientController extends BaseController
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
-            $clients = $query->paginate($request->get('per_page', 15));
+            $clients = $query->withCount(['projects as projects_count'])
+                ->withCount(['projects as active_projects' => function($query) {
+                    $query->where('status_id', 20); // Active status ID
+                }])
+                ->paginate($request->get('per_page', 15));
 
             return $this->sendPaginatedResponse($clients, 'Clients retrieved successfully');
         } catch (\Exception $e) {
