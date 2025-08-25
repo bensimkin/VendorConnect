@@ -162,7 +162,7 @@ class ProjectController extends BaseController
     public function show($id)
     {
         try {
-            $project = Project::with(['users', 'clients', 'tasks', 'status'])
+            $project = Project::with(['users', 'clients', 'tasks.status', 'status'])
                 ->find($id);
 
             if (!$project) {
