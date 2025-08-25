@@ -712,20 +712,20 @@ export default function NewTaskPage() {
           {/* Deliverable */}
           <Card>
             <CardHeader>
-              <CardTitle>Deliverable</CardTitle>
-              <CardDescription>Add a deliverable that will automatically be added to the client's portfolio</CardDescription>
+              <CardTitle>Deliverables</CardTitle>
+              <CardDescription>Add deliverables for this task</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="has_deliverable"
-                  checked={formData.has_deliverable}
-                  onChange={(e) => setFormData(prev => ({ ...prev, has_deliverable: e.target.checked }))}
-                  className="rounded border-gray-300"
-                />
-                <Label htmlFor="has_deliverable">This task has a deliverable</Label>
-              </div>
+                              <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="has_deliverable"
+                    checked={formData.has_deliverable}
+                    onChange={(e) => setFormData(prev => ({ ...prev, has_deliverable: e.target.checked }))}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="has_deliverable">This task has deliverables</Label>
+                </div>
 
               {formData.has_deliverable && (
                 <div className="space-y-4">
