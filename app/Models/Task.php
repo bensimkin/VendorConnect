@@ -44,6 +44,11 @@ class Task extends Model implements HasMedia
         return $this->hasMany(QuestionAnswered::class);
     }
 
+    public function checklistAnswers()
+    {
+        return $this->hasMany(ChecklistAnswered::class);
+    }
+
     public function messages()
     {
         return $this->hasMany(ChMessage::class);
