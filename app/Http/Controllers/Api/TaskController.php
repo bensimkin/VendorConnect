@@ -667,10 +667,10 @@ class TaskController extends BaseController
             $answer = $task->questionAnswers()->updateOrCreate(
                 [
                     'question_id' => $request->question_id,
-                    'answered_by' => Auth::user()->id,
+                    'answer_by' => Auth::user()->id,
                 ],
                 [
-                    'answer' => $request->answer,
+                    'question_answer' => $request->answer,
                 ]
             );
 
@@ -705,11 +705,13 @@ class TaskController extends BaseController
             $answer = $task->checklistAnswers()->updateOrCreate(
                 [
                     'checklist_id' => $request->checklist_id,
-                    'completed_by' => Auth::user()->id,
+                    'answer_by' => Auth::user()->id,
                 ],
                 [
-                    'completed' => $request->completed,
-                    'notes' => $request->notes,
+                    'checklist_answer' => [
+                        'completed' => $request->completed,
+                        'notes' => $request->notes,
+                    ],
                 ]
             );
 
