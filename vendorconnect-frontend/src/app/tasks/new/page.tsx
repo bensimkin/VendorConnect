@@ -285,7 +285,7 @@ export default function NewTaskPage() {
               const answer = questionAnswers[question.id] || '';
               await apiClient.post(`/tasks/${taskId}/question-answer`, {
                 question_id: question.id,
-                answer: answer,
+                answer: answer || '', // Ensure answer is always a string
               });
             }
           }
