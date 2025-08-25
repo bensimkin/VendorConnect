@@ -24,7 +24,7 @@ interface Project {
   status?: { id: number; title: string };
   clients?: Array<{ id: number; name: string; company?: string }>;
   users?: Array<{ id: number; first_name: string; last_name: string; email: string }>;
-  tasks?: Array<{ id: number; title: string; status: { name: string } }>;
+  tasks?: Array<{ id: number; title: string; status: { name: string; title: string } }>;
 }
 
 export default function ProjectDetailPage() {
