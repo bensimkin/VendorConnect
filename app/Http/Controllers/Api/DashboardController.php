@@ -146,12 +146,22 @@ class DashboardController extends BaseController
      */
     private function getUserActivity()
     {
-        return User::withCount(['userTask as recent_tasks' => function ($query) {
+        $user = Auth::user();
+        
+        $userQuery = User::withCount(['userTask as recent_tasks' => function ($query) {
                 $query->where('created_at', '>=', Carbon::now()->subDays(7));
             }])
             ->orderBy('recent_tasks', 'desc')
-            ->limit(5)
-            ->get(['id', 'first_name', 'last_name', 'email']);
+            ->limit(5);
+        
+        // Role-based data protection
+        if ($user->hasRole(['admin', 'sub_admin'])) {
+            // Admins and sub-admins can see all user data including emails
+            return $userQuery->get(['id', 'first_name', 'last_name', 'email']);
+        } else {
+            // Requesters and taskers cannot see email addresses
+            return $userQuery->get(['id', 'first_name', 'last_name']);
+        }
     }
 
     /**

@@ -18,6 +18,7 @@ class UserController extends BaseController
     public function index(Request $request)
     {
         try {
+            $user = Auth::user();
             $query = User::with(['roles', 'permissions']);
             // Removed workspace filtering for single-tenant system
 
@@ -26,8 +27,12 @@ class UserController extends BaseController
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                      ->orWhere('last_name', 'like', "%{$search}%");
+                    
+                    // Only admins and sub-admins can search by email
+                    if ($user->hasRole(['admin', 'sub_admin'])) {
+                        $q->orWhere('email', 'like', "%{$search}%");
+                    }
                 });
             }
 
@@ -47,6 +52,16 @@ class UserController extends BaseController
             $query->orderBy($sortBy, $sortOrder);
 
             $users = $query->paginate($request->get('per_page', 15));
+
+            // Apply role-based data protection to the response
+            if (!$user->hasRole(['admin', 'sub_admin'])) {
+                // Remove sensitive data for requesters and taskers
+                $users->getCollection()->transform(function ($user) {
+                    unset($user->email);
+                    unset($user->phone);
+                    return $user;
+                });
+            }
 
             return $this->sendPaginatedResponse($users, 'Users retrieved successfully');
         } catch (\Exception $e) {
@@ -108,11 +123,19 @@ class UserController extends BaseController
     public function show($id)
     {
         try {
+            $currentUser = Auth::user();
             $user = User::with(['roles', 'permissions'])
                 ->find($id);
 
             if (!$user) {
                 return $this->sendNotFound('User not found');
+            }
+
+            // Apply role-based data protection
+            if (!$currentUser->hasRole(['admin', 'sub_admin'])) {
+                // Remove sensitive data for requesters and taskers
+                unset($user->email);
+                unset($user->phone);
             }
 
             return $this->sendResponse($user, 'User retrieved successfully');
