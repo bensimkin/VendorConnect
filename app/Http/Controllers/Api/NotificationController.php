@@ -21,7 +21,7 @@ class NotificationController extends BaseController
             $priority = $request->get('priority');
             $read = $request->get('read'); // 'true', 'false', or null for all
 
-            $query = Notification::where('user_id', $user->id);
+            $query = Notification::where('from_id', $user->id);
 
             // Filter by type
             if ($type) {
@@ -56,7 +56,7 @@ class NotificationController extends BaseController
     {
         try {
             $user = Auth::user();
-            $count = Notification::where('user_id', $user->id)
+            $count = Notification::where('from_id', $user->id)
                 ->unread()
                 ->count();
 
@@ -73,7 +73,7 @@ class NotificationController extends BaseController
     {
         try {
             $user = Auth::user();
-            $notification = Notification::where('user_id', $user->id)
+            $notification = Notification::where('from_id', $user->id)
                 ->find($id);
 
             if (!$notification) {
@@ -95,7 +95,7 @@ class NotificationController extends BaseController
     {
         try {
             $user = Auth::user();
-            $updated = Notification::where('user_id', $user->id)
+            $updated = Notification::where('from_id', $user->id)
                 ->unread()
                 ->update(['read_at' => now()]);
 
@@ -112,7 +112,7 @@ class NotificationController extends BaseController
     {
         try {
             $user = Auth::user();
-            $notification = Notification::where('user_id', $user->id)
+            $notification = Notification::where('from_id', $user->id)
                 ->find($id);
 
             if (!$notification) {
@@ -134,7 +134,7 @@ class NotificationController extends BaseController
     {
         try {
             $user = Auth::user();
-            $notification = Notification::where('user_id', $user->id)
+            $notification = Notification::where('from_id', $user->id)
                 ->find($id);
 
             if (!$notification) {
@@ -156,7 +156,7 @@ class NotificationController extends BaseController
     {
         try {
             $user = Auth::user();
-            $deleted = Notification::where('user_id', $user->id)
+            $deleted = Notification::where('from_id', $user->id)
                 ->read()
                 ->delete();
 
