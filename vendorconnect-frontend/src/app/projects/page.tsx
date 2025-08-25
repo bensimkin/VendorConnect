@@ -236,7 +236,7 @@ export default function ProjectsPage() {
                     <div className="flex items-center space-x-4 text-sm">
                       <div className="flex items-center">
                         <Users className="mr-1 h-4 w-4 text-muted-foreground" />
-                        <span>{project.team_members_count || project.users?.length || 0}</span>
+                        <span>{project.team_members_count || 0}</span>
                       </div>
                       <div className="flex items-center">
                         <CheckCircle className="mr-1 h-4 w-4 text-muted-foreground" />
