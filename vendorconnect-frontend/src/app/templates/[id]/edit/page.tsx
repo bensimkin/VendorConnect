@@ -21,6 +21,9 @@ interface Template {
   id: number;
   template_name: string;
   task_type_id: number;
+  standard_brief?: string;
+  description?: string;
+  deliverable_quantity?: number;
   task_type?: TaskType;
 }
 
@@ -52,6 +55,9 @@ export default function EditTemplatePage() {
   const [formData, setFormData] = useState({
     template_name: '',
     task_type_id: '',
+    standard_brief: '',
+    description: '',
+    deliverable_quantity: 1,
   });
   
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -77,6 +83,9 @@ export default function EditTemplatePage() {
       setFormData({
         template_name: templateData.template_name || '',
         task_type_id: templateData.task_type_id?.toString() || '',
+        standard_brief: templateData.standard_brief || '',
+        description: templateData.description || '',
+        deliverable_quantity: templateData.deliverable_quantity || 1,
       });
 
       const types = taskTypesRes.data.data || [];
@@ -130,6 +139,9 @@ export default function EditTemplatePage() {
       const payload = {
         template_name: formData.template_name.trim(),
         task_type_id: parseInt(formData.task_type_id),
+        standard_brief: formData.standard_brief.trim() || null,
+        description: formData.description.trim() || null,
+        deliverable_quantity: formData.deliverable_quantity,
       };
 
       await apiClient.put(`/task-brief-templates/${templateId}`, payload);
@@ -324,6 +336,49 @@ export default function EditTemplatePage() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="standard_brief">Standard Brief</Label>
+                <Textarea
+                  id="standard_brief"
+                  value={formData.standard_brief}
+                  onChange={(e) => setFormData({ ...formData, standard_brief: e.target.value })}
+                  placeholder="Enter the standard brief that will be automatically added to tasks using this template..."
+                  rows={4}
+                />
+                <p className="text-sm text-muted-foreground">
+                  This brief will be automatically added to the task notes when using this template
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Enter a description that will be automatically added to tasks using this template..."
+                  rows={4}
+                />
+                <p className="text-sm text-muted-foreground">
+                  This description will be automatically added to the task description when using this template
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="deliverable_quantity">Default Quantity</Label>
+                <Input
+                  id="deliverable_quantity"
+                  type="number"
+                  min="1"
+                  value={formData.deliverable_quantity}
+                  onChange={(e) => setFormData({ ...formData, deliverable_quantity: parseInt(e.target.value) || 1 })}
+                  placeholder="e.g., 6"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Default number of deliverables when using this template (e.g., 6x Facebook ads)
+                </p>
               </div>
 
               <Button type="submit" disabled={saving}>
