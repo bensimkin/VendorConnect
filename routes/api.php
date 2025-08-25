@@ -117,6 +117,11 @@ Route::delete('/{taskId}/deliverables/{deliverableId}/files/{mediaId}', [TaskDel
             
             // Task information
             Route::get('/{id}/information', [TaskController::class, 'getInformation']);
+            
+            // Task repetition
+            Route::post('/{id}/stop-repetition', [TaskController::class, 'stopRepetition']);
+            Route::post('/{id}/resume-repetition', [TaskController::class, 'resumeRepetition']);
+            Route::get('/{id}/repeating-history', [TaskController::class, 'getRepeatingHistory']);
         });
         
         // Projects
