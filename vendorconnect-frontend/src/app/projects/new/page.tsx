@@ -31,6 +31,9 @@ function NewProjectPageContent() {
   const [saving, setSaving] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   
+  console.log('Project settings:', settings);
+  console.log('Settings loading:', settingsLoading);
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -154,6 +157,10 @@ function NewProjectPageContent() {
                     </span>
                   )}
                 </Label>
+                {/* Debug info */}
+                <div className="text-xs text-red-500">
+                  Debug: allow_multiple_clients_per_project = {settings.allow_multiple_clients_per_project ? 'true' : 'false'}
+                </div>
                 {settings.allow_multiple_clients_per_project ? (
                   <MultiSelect
                     options={clients}
