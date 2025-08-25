@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\TaskController;
+use App\Http\Controllers\Api\TaskDeliverableController;
 use App\Http\Controllers\Api\TaskTypeController;
 use App\Http\Controllers\Api\StatusController;
 use App\Http\Controllers\Api\PriorityController;
@@ -92,7 +93,14 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/checklist-answer', [TaskController::class, 'submitChecklistAnswer']);
             
             // Task deliverables
-            Route::post('/{id}/deliverable', [TaskController::class, 'addDeliverable']);
+            // Task Deliverables
+Route::get('/{taskId}/deliverables', [TaskDeliverableController::class, 'index']);
+Route::post('/{taskId}/deliverables', [TaskDeliverableController::class, 'store']);
+Route::get('/{taskId}/deliverables/{deliverableId}', [TaskDeliverableController::class, 'show']);
+Route::put('/{taskId}/deliverables/{deliverableId}', [TaskDeliverableController::class, 'update']);
+Route::delete('/{taskId}/deliverables/{deliverableId}', [TaskDeliverableController::class, 'destroy']);
+Route::post('/{taskId}/deliverables/{deliverableId}/complete', [TaskDeliverableController::class, 'complete']);
+Route::delete('/{taskId}/deliverables/{deliverableId}/files/{mediaId}', [TaskDeliverableController::class, 'deleteFile']);
             
             // Task media
             Route::post('/{id}/media', [TaskController::class, 'uploadMedia']);
