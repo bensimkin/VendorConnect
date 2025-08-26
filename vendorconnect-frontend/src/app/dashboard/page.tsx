@@ -47,7 +47,24 @@ interface DashboardData {
     completed_this_week: number;
     overdue: number;
   };
-  recent_tasks: any[];
+  recent_tasks: Array<{
+    id: number;
+    title: string;
+    description?: string;
+    note?: string;
+    deliverable_quantity?: number;
+    status?: { name: string; color?: string };
+    priority?: { name: string; color?: string };
+    project?: { title: string };
+    template?: {
+      id: number;
+      template_name: string;
+      standard_brief?: string;
+      description?: string;
+      deliverable_quantity?: number;
+    };
+    created_at: string;
+  }>;
   user_activity: any[];
   task_trend: Array<{
     date: string;
@@ -385,7 +402,7 @@ export default function DashboardPage() {
           <CardContent>
             <div className="space-y-4">
               {data?.recent_tasks && data.recent_tasks.length > 0 ? (
-                data.recent_tasks.slice(0, 5).map((task: any, index: number) => (
+                data.recent_tasks.slice(0, 5).map((task, index: number) => (
                   <div key={index} className="flex items-center space-x-4">
                     <div className="w-2 h-2 bg-primary rounded-full" />
                     <div className="flex-1 space-y-1">
@@ -396,11 +413,26 @@ export default function DashboardPage() {
                             {task.priority.name}
                           </span>
                         )}
+                        {task.template && (
+                          <span className="ml-2 text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                            {task.template.template_name}
+                          </span>
+                        )}
+                        {task.deliverable_quantity && task.deliverable_quantity > 1 && (
+                          <span className="ml-2 text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
+                            Qty: {task.deliverable_quantity}
+                          </span>
+                        )}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {task.status ? `Status: ${task.status.name}` : 'No status'} •{' '}
                         {new Date(task.created_at).toLocaleDateString()}
                       </p>
+                      {task.note && (
+                        <p className="text-xs text-muted-foreground line-clamp-1">
+                          <span className="font-medium">Notes:</span> {task.note}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))
