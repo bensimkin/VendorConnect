@@ -40,7 +40,7 @@ export default function TemplatesPage() {
   const fetchTemplates = async () => {
     try {
       const response = await apiClient.get('/task-brief-templates');
-      const templateData = response.data.data?.data || response.data.data || [];
+      const templateData = response.data.data || [];
       setTemplates(Array.isArray(templateData) ? templateData : []);
     } catch (error) {
       console.error('Failed to fetch templates:', error);
