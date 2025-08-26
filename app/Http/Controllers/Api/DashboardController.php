@@ -155,6 +155,7 @@ class DashboardController extends BaseController
         $userQuery = User::withCount(['userTask as recent_tasks' => function ($query) {
                 $query->where('created_at', '>=', Carbon::now()->subDays(7));
             }])
+            ->having('recent_tasks', '>', 0) // Only show users with recent activity
             ->orderBy('recent_tasks', 'desc')
             ->limit(5);
         
