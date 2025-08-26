@@ -58,7 +58,7 @@ interface DashboardData {
     project?: { title: string };
     template?: {
       id: number;
-      template_name: string;
+      title: string;
       standard_brief?: string;
       description?: string;
       deliverable_quantity?: number;
@@ -415,7 +415,7 @@ export default function DashboardPage() {
                         )}
                         {task.template && (
                           <span className="ml-2 text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
-                            {task.template.template_name}
+                            {task.template.title}
                           </span>
                         )}
                         {task.deliverable_quantity && task.deliverable_quantity > 1 && (

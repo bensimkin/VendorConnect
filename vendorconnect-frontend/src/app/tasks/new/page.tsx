@@ -451,7 +451,7 @@ export default function NewTaskPage() {
                     <option value="">None - Start from scratch</option>
                     {templates.map((template) => (
                       <option key={template.id} value={template.id}>
-                        {template.template_name}
+                        {template.title}
                       </option>
                     ))}
                   </select>
@@ -874,7 +874,7 @@ export default function NewTaskPage() {
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Template Name</Label>
                     <p className="text-sm text-muted-foreground">
-                      {templates.find(t => t.id.toString() === selectedTemplate)?.template_name}
+                                               {templates.find(t => t.id.toString() === selectedTemplate)?.title}
                     </p>
                   </div>
                   <div className="space-y-2">

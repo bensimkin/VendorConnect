@@ -41,7 +41,7 @@ interface Task {
   };
   template?: {
     id: number;
-    template_name: string;
+    title: string;
     standard_brief?: string;
     description?: string;
     deliverable_quantity?: number;
@@ -246,7 +246,7 @@ export default function TasksPage() {
                     {task.template && (
                       <div className="flex items-center gap-2 text-sm">
                         <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                          Template: {task.template.template_name}
+                          Template: {task.template.title}
                         </span>
                       </div>
                     )}
