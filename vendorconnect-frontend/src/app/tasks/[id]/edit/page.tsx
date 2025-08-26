@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { toast } from 'react-hot-toast';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -257,46 +256,7 @@ export default function EditTaskPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.title.trim()) {
-      toast.error('Task title is required');
-      return;
-    }
 
-    setSaving(true);
-    try {
-      // Update task details
-      await apiClient.put(`/tasks/${taskId}`, formData);
-
-      // Save question answers
-      for (const [questionId, answer] of Object.entries(questionAnswers)) {
-        if (answer.trim()) {
-          await apiClient.post(`/tasks/${taskId}/question-answers`, {
-            question_id: parseInt(questionId),
-            question_answer: answer,
-          });
-        }
-      }
-
-      // Save checklist completion status
-      for (const [index, completed] of Object.entries(checklistCompleted)) {
-        await apiClient.post(`/tasks/${taskId}/checklist-status`, {
-          item_index: parseInt(index),
-          completed: completed,
-        });
-      }
-
-      toast.success('Task updated successfully');
-      router.push(`/tasks/${taskId}`);
-    } catch (error: any) {
-      console.error('Failed to update task:', error);
-      toast.error('Failed to update task');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
