@@ -218,8 +218,8 @@ export default function NewTaskPage() {
             ...prev,
             title: template.template_name,
             task_type_id: template.task_type_id?.toString() || '',
-            description: template.description || '',
-            note: template.standard_brief || '',
+            description: template.standard_brief || '',
+            note: template.description || '',
             deliverable_quantity: template.deliverable_quantity || 1,
           }));
         }
