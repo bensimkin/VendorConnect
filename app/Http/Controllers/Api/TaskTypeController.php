@@ -137,6 +137,11 @@ class TaskTypeController extends BaseController
                 return $this->sendError('Cannot delete task type that is being used by tasks');
             }
 
+            // Check if task type is being used by task brief templates
+            if ($taskType->briefTemplate()->count() > 0) {
+                return $this->sendError('Cannot delete task type that is being used by task brief templates');
+            }
+
             $taskType->delete();
 
             return $this->sendResponse(null, 'Task type deleted successfully');
