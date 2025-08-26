@@ -118,7 +118,7 @@ export default function UserDetailPage() {
   }
 
   return (
-    <RoleGuard allowedRoles={['Admin']}>
+    <RoleGuard allowedRoles={['admin']}>
       <MainLayout>
         <div className="space-y-6">
         {/* Header */}
