@@ -149,14 +149,7 @@ export default function TemplatesPage() {
                   <div className="space-y-2">
                     {template.description && (
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">Description:</p>
-                        <p className="text-sm text-muted-foreground line-clamp-2">{template.description}</p>
-                      </div>
-                    )}
-                    {template.standard_brief && (
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Standard Brief:</p>
-                        <p className="text-sm text-muted-foreground line-clamp-2">{template.standard_brief}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-3">{template.description}</p>
                       </div>
                     )}
                     {template.deliverable_quantity && template.deliverable_quantity > 1 && (
