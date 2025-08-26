@@ -20,10 +20,20 @@ interface TaskerDashboardData {
   recent_tasks: Array<{
     id: number;
     title: string;
+    description?: string;
+    note?: string;
+    deliverable_quantity?: number;
     status?: { name: string; color?: string };
     priority?: { name: string; color?: string };
     end_date?: string;
     project?: { title: string };
+    template?: {
+      id: number;
+      template_name: string;
+      standard_brief?: string;
+      description?: string;
+      deliverable_quantity?: number;
+    };
     created_at: string;
   }>;
   upcoming_deadlines: Array<{
@@ -249,7 +259,26 @@ export default function TaskerDashboardPage() {
                               Due {formatDate(task.end_date)}
                             </span>
                           )}
+                          {task.template && (
+                            <span className="flex items-center gap-1 text-blue-600">
+                              <span className="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded">
+                                {task.template.template_name}
+                              </span>
+                            </span>
+                          )}
                         </div>
+                        {task.note && (
+                          <div className="text-xs text-muted-foreground line-clamp-1 mt-1">
+                            <span className="font-medium">Notes:</span> {task.note}
+                          </div>
+                        )}
+                        {task.deliverable_quantity && task.deliverable_quantity > 1 && (
+                          <div className="text-xs text-green-600 mt-1">
+                            <span className="bg-green-100 text-green-800 px-1 py-0.5 rounded">
+                              Qty: {task.deliverable_quantity}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       {task.priority && (
                         <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority.name)}`} />

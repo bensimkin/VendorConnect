@@ -14,6 +14,8 @@ interface Task {
   id: number;
   title: string;
   description?: string;
+  note?: string;
+  deliverable_quantity?: number;
   status?: {
     id: number;
     name: string;
@@ -36,6 +38,13 @@ interface Task {
   project?: {
     id: number;
     name: string;
+  };
+  template?: {
+    id: number;
+    template_name: string;
+    standard_brief?: string;
+    description?: string;
+    deliverable_quantity?: number;
   };
   start_date?: string;
   end_date?: string;
@@ -230,6 +239,31 @@ export default function TasksPage() {
                       <div className="flex items-center gap-2 text-sm">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span>Due {formatDate(task.end_date)}</span>
+                      </div>
+                    )}
+
+                    {/* Template Information */}
+                    {task.template && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          Template: {task.template.template_name}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Notes */}
+                    {task.note && (
+                      <div className="text-sm text-muted-foreground line-clamp-2">
+                        <span className="font-medium">Notes:</span> {task.note}
+                      </div>
+                    )}
+
+                    {/* Quantity */}
+                    {task.deliverable_quantity && task.deliverable_quantity > 1 && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                          Qty: {task.deliverable_quantity}
+                        </span>
                       </div>
                     )}
                     
