@@ -199,7 +199,7 @@ export default function EditTaskPage() {
       setClients(clientsRes.data.data?.data || clientsRes.data.data || []);
       setProjects(projectsRes.data.data?.data || projectsRes.data.data || []);
       setTaskTypes(taskTypesRes.data.data?.data || taskTypesRes.data.data || []);
-      setTemplates(templatesRes.data.data?.data || templatesRes.data.data || []);
+      setTemplates(templatesRes.data.data || []);
       setStatuses(statusesRes.data.data?.data || statusesRes.data.data || []);
       setPriorities(prioritiesRes.data.data?.data || prioritiesRes.data.data || []);
 

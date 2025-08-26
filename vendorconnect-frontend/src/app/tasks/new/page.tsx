@@ -130,7 +130,7 @@ export default function NewTaskPage() {
       setAllClients(clientRes.data.data?.data || clientRes.data.data || []);
       setClients(clientRes.data.data?.data || clientRes.data.data || []); // Initially show all clients
       setTaskTypes(taskTypeRes.data.data || []);
-      setTemplates(templateRes.data.data?.data || templateRes.data.data || []);
+      setTemplates(templateRes.data.data || []);
 
       // Set default values
       const pendingStatus = statusRes.data.data?.find((s: Status) => s.name === 'Pending');
