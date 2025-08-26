@@ -90,6 +90,7 @@ export default function NewTaskPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    note: '',
     status_id: '',
     priority_id: '',
     task_type_id: '',
@@ -218,6 +219,7 @@ export default function NewTaskPage() {
             title: template.template_name,
             task_type_id: template.task_type_id?.toString() || '',
             description: template.description || '',
+            note: template.standard_brief || '',
             deliverable_quantity: template.deliverable_quantity || 1,
           }));
         }
@@ -276,6 +278,7 @@ export default function NewTaskPage() {
       const payload = {
         title: formData.title,
         description: formData.description || null,
+        note: formData.note || null,
         status_id: parseInt(formData.status_id),
         priority_id: parseInt(formData.priority_id),
         task_type_id: formData.task_type_id ? parseInt(formData.task_type_id) : null,
@@ -483,6 +486,18 @@ export default function NewTaskPage() {
                   placeholder="Enter task description"
                   rows={4}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="note">Notes</Label>
+                <Textarea
+                  id="note"
+                  value={formData.note || ''}
+                  onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                  placeholder="Enter task notes, brief, or additional instructions"
+                  rows={4}
+                />
+                <p className="text-xs text-muted-foreground">Additional instructions, brief, or notes for the task</p>
               </div>
 
               <div className="grid gap-4 md:grid-cols-4">
