@@ -19,7 +19,7 @@ interface TaskType {
 
 interface Template {
   id: number;
-  template_name: string;
+  title: string;
   task_type_id: number;
   standard_brief?: string;
   description?: string;
@@ -53,7 +53,7 @@ export default function EditTemplatePage() {
   const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
   const [template, setTemplate] = useState<Template | null>(null);
   const [formData, setFormData] = useState({
-    template_name: '',
+    title: '',
     task_type_id: '',
     standard_brief: '',
     description: '',
@@ -81,7 +81,7 @@ export default function EditTemplatePage() {
       const templateData = templateRes.data.data;
       setTemplate(templateData);
       setFormData({
-        template_name: templateData.template_name || '',
+        title: templateData.title || '',
         task_type_id: templateData.task_type_id?.toString() || '',
         standard_brief: templateData.standard_brief || '',
         description: templateData.description || '',
@@ -124,7 +124,7 @@ export default function EditTemplatePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.template_name.trim()) {
+    if (!formData.title.trim()) {
       toast.error('Template name is required');
       return;
     }
@@ -137,7 +137,7 @@ export default function EditTemplatePage() {
     setSaving(true);
     try {
       const payload = {
-        template_name: formData.template_name.trim(),
+        title: formData.title.trim(),
         task_type_id: parseInt(formData.task_type_id),
         standard_brief: formData.standard_brief.trim() || null,
         description: formData.description.trim() || null,
@@ -310,11 +310,11 @@ export default function EditTemplatePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="template_name">Template Name *</Label>
+                <Label htmlFor="title">Template Name *</Label>
                 <Input
-                  id="template_name"
-                  value={formData.template_name}
-                  onChange={(e) => setFormData({ ...formData, template_name: e.target.value })}
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g., Website Development, Bug Fix, Feature Request"
                   required
                 />
