@@ -20,7 +20,7 @@ class TaskBriefTemplates extends Model
 
 
     public function taskType(){
-        return $this->hasOne(TaskType::class);
+        return $this->belongsTo(TaskType::class);
     }
 
     public function briefQuestions()
