@@ -44,7 +44,7 @@ interface Client {
 
 interface Template {
   id: number;
-  template_name: string;
+  title: string;
   task_type_id: number;
   standard_brief?: string;
   description?: string;
@@ -213,10 +213,10 @@ export default function NewTaskPage() {
         const template = templateRes.data.data;
         
         // Pre-fill form with template data
-        if (template.template_name) {
+        if (template.title) {
           setFormData(prev => ({
             ...prev,
-            title: template.template_name,
+            title: template.title,
             task_type_id: template.task_type_id?.toString() || '',
             description: template.standard_brief || '',
             note: template.description || '',
