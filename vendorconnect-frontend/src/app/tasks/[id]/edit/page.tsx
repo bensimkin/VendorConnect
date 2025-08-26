@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Save, Trash2, Plus, X, FileText } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import { toast } from 'react-hot-toast';
 
 interface Task {
   id: number;
@@ -129,6 +130,7 @@ export default function EditTaskPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    note: '',
     status_id: 0,
     priority_id: 0,
     user_ids: [] as number[],
@@ -137,6 +139,7 @@ export default function EditTaskPage() {
     end_date: '',
     task_type_id: 0,
     close_deadline: false,
+    deliverable_quantity: 1,
   });
 
   useEffect(() => {
@@ -165,18 +168,20 @@ export default function EditTaskPage() {
       }
 
       setTask(taskData);
-            setFormData({
-        title: taskData?.title || '',
-        description: taskData?.description || '',
-        status_id: taskData?.status?.id || 0,
-        priority_id: taskData?.priority?.id || 0,
-        user_ids: taskData?.assigned_to?.id ? [taskData.assigned_to.id] : [],
-        client_ids: taskData?.client?.id ? [taskData.client.id] : [],
-        project_id: taskData?.project?.id || 0,
-        end_date: taskData?.due_date ? taskData.due_date.split('T')[0] : '',
-        task_type_id: taskData?.task_type?.id || 0,
-        close_deadline: taskData?.close_deadline || false,
-      });
+                     setFormData({
+           title: taskData?.title || '',
+           description: taskData?.description || '',
+           note: taskData?.note || '',
+           status_id: taskData?.status?.id || 0,
+           priority_id: taskData?.priority?.id || 0,
+           user_ids: taskData?.assigned_to?.id ? [taskData.assigned_to.id] : [],
+           client_ids: taskData?.client?.id ? [taskData.client.id] : [],
+           project_id: taskData?.project?.id || 0,
+           end_date: taskData?.due_date ? taskData.due_date.split('T')[0] : '',
+           task_type_id: taskData?.task_type?.id || 0,
+           close_deadline: taskData?.close_deadline || false,
+           deliverable_quantity: taskData?.deliverable_quantity || 1,
+         });
 
       // Fetch dropdown data
       const [usersRes, clientsRes, projectsRes, taskTypesRes, templatesRes, statusesRes, prioritiesRes] = await Promise.all([
@@ -288,6 +293,42 @@ export default function EditTaskPage() {
     } catch (error: any) {
       console.error('Failed to update task:', error);
       toast.error('Failed to update task');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.title.trim()) {
+      toast.error('Task title is required');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        note: formData.note,
+        status_id: formData.status_id,
+        priority_id: formData.priority_id,
+        user_ids: formData.user_ids,
+        client_ids: formData.client_ids,
+        project_id: formData.project_id,
+        end_date: formData.end_date,
+        task_type_id: formData.task_type_id,
+        close_deadline: formData.close_deadline,
+        deliverable_quantity: formData.deliverable_quantity,
+      };
+
+      await apiClient.put(`/tasks/${taskId}`, payload);
+      toast.success('Task updated successfully');
+      router.push(`/tasks/${taskId}`);
+    } catch (error: any) {
+      console.error('Failed to update task:', error);
+      toast.error(error.response?.data?.message || 'Failed to update task');
     } finally {
       setSaving(false);
     }
@@ -514,6 +555,20 @@ export default function EditTaskPage() {
                   </select>
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="deliverable_quantity">Quantity</Label>
+                  <Input
+                    id="deliverable_quantity"
+                    type="number"
+                    min="1"
+                    value={formData.deliverable_quantity}
+                    onChange={(e) => setFormData({ ...formData, deliverable_quantity: parseInt(e.target.value) || 1 })}
+                    placeholder="e.g., 6"
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground">Number of deliverables needed</p>
+                </div>
+
 
               </div>
 
@@ -525,6 +580,18 @@ export default function EditTaskPage() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={4}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="note">Notes</Label>
+                <Textarea
+                  id="note"
+                  value={formData.note}
+                  onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                  placeholder="Enter task notes, brief, or additional instructions"
+                  rows={4}
+                />
+                <p className="text-xs text-muted-foreground">Additional instructions, brief, or notes for the task</p>
               </div>
             </CardContent>
           </Card>
