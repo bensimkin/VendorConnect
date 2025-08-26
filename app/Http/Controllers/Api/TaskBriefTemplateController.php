@@ -22,7 +22,7 @@ class TaskBriefTemplateController extends BaseController
             // Apply filters
             if ($request->has('search')) {
                 $search = $request->search;
-                $query->where('template_name', 'like', "%{$search}%");
+                $query->where('title', 'like', "%{$search}%");
             }
 
             // Apply sorting
@@ -30,7 +30,7 @@ class TaskBriefTemplateController extends BaseController
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
-            $templates = $query->paginate($request->get('per_page', 15));
+            $templates = $query->with('taskType')->paginate($request->get('per_page', 15));
 
             return $this->sendPaginatedResponse($templates, 'Task brief templates retrieved successfully');
         } catch (\Exception $e) {
