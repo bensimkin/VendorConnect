@@ -17,7 +17,7 @@ interface TaskType {
 
 interface Template {
   id: number;
-  template_name: string;
+  title: string;
   task_type_id: number;
   standard_brief?: string;
   description?: string;
@@ -67,7 +67,7 @@ export default function TemplatesPage() {
   const handleDuplicate = async (template: Template) => {
     try {
       await apiClient.post('/task-brief-templates', {
-        template_name: `${template.template_name} (Copy)`,
+        title: `${template.title} (Copy)`,
         task_type_id: template.task_type_id,
       });
       toast.success('Template duplicated successfully');
@@ -79,7 +79,7 @@ export default function TemplatesPage() {
   };
 
   const filteredTemplates = templates.filter(template =>
-    (template.template_name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+            (template.title?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -134,7 +134,7 @@ export default function TemplatesPage() {
                     <div className="space-y-1">
                       <CardTitle className="text-lg flex items-center gap-2">
                         <FileText className="h-5 w-5 text-muted-foreground" />
-                        {template.template_name}
+                        {template.title}
                       </CardTitle>
                       {template.task_type && (
                         <CardDescription>

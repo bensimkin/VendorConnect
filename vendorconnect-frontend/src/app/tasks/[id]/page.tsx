@@ -54,7 +54,7 @@ interface TaskDetail {
   deliverable_quantity?: number;
   template?: {
     id: number;
-    template_name: string;
+    title: string;
     standard_brief?: string;
     description?: string;
     deliverable_quantity?: number;
@@ -581,7 +581,7 @@ export default function TaskDetailPage() {
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Template Name</Label>
                       <p className="text-sm text-muted-foreground">
-                        {task.template.template_name}
+                        {task.template.title}
                       </p>
                     </div>
                     <div className="space-y-2">

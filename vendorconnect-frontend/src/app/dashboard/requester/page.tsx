@@ -31,7 +31,7 @@ interface RequesterDashboardData {
     users?: Array<{ first_name: string; last_name: string }>;
     template?: {
       id: number;
-      template_name: string;
+      title: string;
       standard_brief?: string;
       description?: string;
       deliverable_quantity?: number;
@@ -295,7 +295,7 @@ export default function RequesterDashboardPage() {
                           {task.template && (
                             <span className="flex items-center gap-1 text-blue-600">
                               <span className="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded">
-                                {task.template.template_name}
+                                {task.template.title}
                               </span>
                             </span>
                           )}
