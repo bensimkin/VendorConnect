@@ -22,7 +22,7 @@ export default function NewTemplatePage() {
   const [loading, setLoading] = useState(false);
   const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
   const [formData, setFormData] = useState({
-    template_name: '',
+    title: '',
     standard_brief: '',
     description: '',
     deliverable_quantity: 1,
@@ -52,7 +52,7 @@ export default function NewTemplatePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.template_name.trim()) {
+    if (!formData.title.trim()) {
       toast.error('Template name is required');
       return;
     }
@@ -65,7 +65,7 @@ export default function NewTemplatePage() {
     setLoading(true);
     try {
       const payload = {
-        template_name: formData.template_name.trim(),
+        title: formData.title.trim(),
         standard_brief: formData.standard_brief.trim() || null,
         description: formData.description.trim() || null,
         deliverable_quantity: formData.deliverable_quantity,
@@ -113,11 +113,11 @@ export default function NewTemplatePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="template_name">Template Name *</Label>
+                <Label htmlFor="title">Template Name *</Label>
                 <Input
-                  id="template_name"
-                  value={formData.template_name}
-                  onChange={(e) => setFormData({ ...formData, template_name: e.target.value })}
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g., Website Development, Bug Fix, Feature Request"
                   required
                 />
