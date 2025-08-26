@@ -17,6 +17,8 @@ interface Task {
   id: number;
   title: string;
   description?: string;
+  note?: string;
+  deliverable_quantity?: number;
   status?: {
     id: number;
     name: string;
