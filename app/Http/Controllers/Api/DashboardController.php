@@ -43,7 +43,7 @@ class DashboardController extends BaseController
             $taskStats = $this->getTaskStatistics();
             
             // Get recent tasks with role-based filtering
-            $recentTasksQuery = Task::with(['users', 'status', 'priority', 'taskType']);
+            $recentTasksQuery = Task::with(['users', 'status', 'priority', 'taskType', 'template']);
             
             // Apply role-based filtering for recent tasks
             if ($user->hasRole('requester')) {
@@ -279,7 +279,7 @@ class DashboardController extends BaseController
               ->where('status_id', '!=', $completedStatusId)->count();
 
             // Recent tasks
-            $recentTasks = Task::with(['status', 'priority', 'project'])
+            $recentTasks = Task::with(['status', 'priority', 'project', 'template'])
                 ->whereHas('users', function ($q) use ($user) {
                     $q->where('users.id', $user->id);
                 })
@@ -366,7 +366,7 @@ class DashboardController extends BaseController
             $totalProjects = Project::where('created_by', $user->id)->count();
 
             // Recent tasks
-            $recentTasks = Task::with(['status', 'priority', 'project', 'users'])
+            $recentTasks = Task::with(['status', 'priority', 'project', 'users', 'template'])
                 ->where('created_by', $user->id)
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
