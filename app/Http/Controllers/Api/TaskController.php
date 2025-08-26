@@ -32,7 +32,7 @@ class TaskController extends BaseController
     {
         try {
             $user = Auth::user();
-            $query = Task::with(['users', 'status', 'priority', 'taskType', 'project', 'clients']);
+            $query = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'clients']);
             
             // Role-based filtering
             if ($user->hasRole('requester')) {
@@ -162,6 +162,7 @@ class TaskController extends BaseController
                 'status_id' => $request->status_id,
                 'priority_id' => $request->priority_id,
                 'task_type_id' => $request->task_type_id,
+                'template_id' => $template ? $template->id : null,
                 'project_id' => $request->project_id,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
@@ -222,7 +223,7 @@ class TaskController extends BaseController
     {
         try {
             $user = Auth::user();
-            $task = Task::with(['users', 'status', 'priority', 'taskType', 'project', 'clients', 'questionAnswers.briefQuestions', 'checklistAnswers', 'deliverables.creator', 'deliverables.media', 'messages.sender'])
+            $task = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'clients', 'questionAnswers.briefQuestions', 'checklistAnswers', 'deliverables.creator', 'deliverables.media', 'messages.sender'])
                 ->find($id);
 
             if (!$task) {

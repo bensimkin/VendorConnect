@@ -15,6 +15,7 @@ class Task extends Model implements HasMedia
         'title',
         'status_id',
         'task_type_id',
+        'template_id',
         'project_id',
         'start_date',
         'close_deadline',
@@ -101,6 +102,11 @@ class Task extends Model implements HasMedia
     public function taskType()
     {
         return $this->belongsTo(TaskType::class);
+    }
+
+    public function template()
+    {
+        return $this->belongsTo(TaskBriefTemplates::class, 'template_id');
     }
 
     public function getresult()
