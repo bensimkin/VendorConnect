@@ -45,7 +45,7 @@ class TaskBriefTemplateController extends BaseController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'template_name' => 'required|string|max:255',
+                'title' => 'required|string|max:255',
                 'standard_brief' => 'nullable|string',
                 'description' => 'nullable|string',
                 'deliverable_quantity' => 'nullable|integer|min:1',
@@ -57,7 +57,7 @@ class TaskBriefTemplateController extends BaseController
             }
 
             $template = TaskBriefTemplates::create([
-                'template_name' => $request->template_name,
+                'title' => $request->title,
                 'standard_brief' => $request->standard_brief,
                 'description' => $request->description,
                 'deliverable_quantity' => $request->get('deliverable_quantity', 1),

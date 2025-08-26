@@ -157,7 +157,7 @@ class TaskController extends BaseController
             }
 
             $task = Task::create([
-                'title' => $template ? $template->template_name : $request->title,
+                'title' => $template ? $template->title : $request->title,
                 'description' => $template ? ($template->standard_brief ?: $request->description) : $request->description,
                 'status_id' => $request->status_id,
                 'priority_id' => $request->priority_id,
