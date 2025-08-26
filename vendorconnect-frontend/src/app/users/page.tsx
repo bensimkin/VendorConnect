@@ -118,7 +118,7 @@ export default function UsersPage() {
   }
 
   return (
-    <RoleGuard allowedRoles={['Admin']}>
+            <RoleGuard allowedRoles={['admin']}>
       <MainLayout>
         <div className="space-y-8">
         <div className="flex justify-between items-center">

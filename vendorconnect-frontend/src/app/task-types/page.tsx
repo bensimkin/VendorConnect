@@ -135,7 +135,7 @@ export default function TaskTypesPage() {
   }
 
   return (
-    <RoleGuard allowedRoles={['Admin', 'sub admin']}>
+            <RoleGuard allowedRoles={['admin', 'sub_admin']}>
       <MainLayout>
         <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex justify-between items-center">
