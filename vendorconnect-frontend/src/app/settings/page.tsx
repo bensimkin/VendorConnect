@@ -106,7 +106,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <RoleGuard allowedRoles={['Admin']}>
+            <RoleGuard allowedRoles={['admin']}>
       <MainLayout>
         <div className="space-y-8">
         <div>
