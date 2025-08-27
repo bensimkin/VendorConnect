@@ -30,7 +30,8 @@ class UserController extends BaseController
                       ->orWhere('last_name', 'like', "%{$search}%");
                     
                     // Only admins and sub-admins can search by email
-                    if ($user->hasRole('admin') || $user->hasRole('sub_admin')) {
+                    $canSearchEmail = $user->hasRole('admin') || $user->hasRole('Admin') || $user->hasRole('sub_admin');
+                    if ($canSearchEmail) {
                         $q->orWhere('email', 'like', "%{$search}%");
                     }
                 });
@@ -54,7 +55,8 @@ class UserController extends BaseController
             $users = $query->paginate($request->get('per_page', 15));
 
             // Apply role-based data protection to the response
-            if (!$user->hasRole('admin') && !$user->hasRole('sub_admin')) {
+            $isAdmin = $user->hasRole('admin') || $user->hasRole('Admin') || $user->hasRole('sub_admin');
+            if (!$isAdmin) {
                 // Remove sensitive data for requesters and taskers
                 $users->getCollection()->transform(function ($user) {
                     unset($user->email);
@@ -132,7 +134,8 @@ class UserController extends BaseController
             }
 
             // Apply role-based data protection
-            if (!$currentUser->hasRole('admin') && !$currentUser->hasRole('sub_admin')) {
+            $isAdmin = $currentUser->hasRole('admin') || $currentUser->hasRole('Admin') || $currentUser->hasRole('sub_admin');
+            if (!$isAdmin) {
                 // Remove sensitive data for requesters and taskers
                 unset($user->email);
                 unset($user->phone);
