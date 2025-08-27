@@ -25,6 +25,15 @@ export default function RoleGuard({ children, allowedRoles, fallback }: RoleGuar
       return;
     }
 
+    // Debug logging
+    console.log('RoleGuard Debug:', {
+      user: user.email,
+      userRoles: user.roles?.map(r => r.name),
+      allowedRoles: allowedRoles,
+      normalizedAllowed: Array.from(allowed),
+      normalizedUserRoles: user.roles?.map(r => normalizeRole(r.name))
+    });
+
     const hasAccess = user.roles?.some(role => allowed.has(normalizeRole(role.name)));
     
     if (!hasAccess) {
