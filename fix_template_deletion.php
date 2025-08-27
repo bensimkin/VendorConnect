@@ -3,6 +3,8 @@ require __DIR__.'/vendor/autoload.php';
 
 use App\Models\TaskBriefTemplates;
 use App\Models\Task;
+use App\Models\TaskBriefQuestion;
+use App\Models\TaskBriefChecklist;
 
 $app = require __DIR__.'/bootstrap/app.php';
 $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
@@ -34,6 +36,20 @@ foreach ($problemTemplates as $templateName) {
         // Remove the template reference from all tasks
         $updated = Task::where('template_id', $template->id)->update(['template_id' => null]);
         echo "Updated $updated tasks\n";
+    }
+    
+    // Delete related brief questions
+    $questionsCount = TaskBriefQuestion::where('task_brief_templates_id', $template->id)->count();
+    if ($questionsCount > 0) {
+        echo "Deleting $questionsCount brief questions...\n";
+        TaskBriefQuestion::where('task_brief_templates_id', $template->id)->delete();
+    }
+    
+    // Delete related brief checklists
+    $checklistsCount = TaskBriefChecklist::where('task_brief_templates_id', $template->id)->count();
+    if ($checklistsCount > 0) {
+        echo "Deleting $checklistsCount brief checklists...\n";
+        TaskBriefChecklist::where('task_brief_templates_id', $template->id)->delete();
     }
     
     // Now try to delete the template
