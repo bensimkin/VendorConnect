@@ -30,7 +30,15 @@ class TaskBriefTemplateController extends BaseController
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
-            $templates = $query->with('taskType')->paginate($request->get('per_page', 15));
+            // If per_page is set to 'all', return all results without pagination
+            if ($request->get('per_page') === 'all') {
+                $templates = $query->with('taskType')->get();
+                return $this->sendResponse($templates, 'Task brief templates retrieved successfully');
+            }
+
+            $perPage = $request->get('per_page', 15);
+            $perPage = is_numeric($perPage) ? (int)$perPage : 15;
+            $templates = $query->with('taskType')->paginate($perPage);
 
             return $this->sendPaginatedResponse($templates, 'Task brief templates retrieved successfully');
         } catch (\Exception $e) {
@@ -101,7 +109,7 @@ class TaskBriefTemplateController extends BaseController
             }
 
             $validator = Validator::make($request->all(), [
-                'template_name' => 'sometimes|required|string|max:255',
+                'title' => 'sometimes|required|string|max:255',
                 'standard_brief' => 'nullable|string',
                 'description' => 'nullable|string',
                 'deliverable_quantity' => 'nullable|integer|min:1',
@@ -112,7 +120,7 @@ class TaskBriefTemplateController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $template->update($request->only(['template_name', 'standard_brief', 'description', 'deliverable_quantity', 'task_type_id']));
+            $template->update($request->only(['title', 'standard_brief', 'description', 'deliverable_quantity', 'task_type_id']));
 
             return $this->sendResponse($template, 'Task brief template updated successfully');
         } catch (\Exception $e) {

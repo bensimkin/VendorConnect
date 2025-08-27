@@ -90,6 +90,7 @@ export default function NewTaskPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    standard_brief: '',
     note: '',
     status_id: '',
     priority_id: '',
@@ -218,7 +219,8 @@ export default function NewTaskPage() {
             ...prev,
             title: template.title,
             task_type_id: template.task_type_id?.toString() || '',
-            description: template.standard_brief || '',
+            standard_brief: template.standard_brief || '',
+            description: template.description || '',
             note: template.description || '',
             deliverable_quantity: template.deliverable_quantity || 1,
           }));
@@ -278,6 +280,7 @@ export default function NewTaskPage() {
       const payload = {
         title: formData.title,
         description: formData.description || null,
+        standard_brief: formData.standard_brief || null,
         note: formData.note || null,
         status_id: parseInt(formData.status_id),
         priority_id: parseInt(formData.priority_id),
@@ -475,6 +478,18 @@ export default function NewTaskPage() {
                   placeholder="Enter task title"
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="standard_brief">Standard Brief</Label>
+                <Textarea
+                  id="standard_brief"
+                  value={formData.standard_brief}
+                  onChange={(e) => setFormData({ ...formData, standard_brief: e.target.value })}
+                  placeholder="Enter standard brief for this task"
+                  rows={4}
+                />
+                <p className="text-xs text-muted-foreground">Standard brief that will be applied to this task</p>
               </div>
 
               <div className="space-y-2">
