@@ -15,6 +15,9 @@ export default function RoleGuard({ children, allowedRoles, fallback }: RoleGuar
   const { user } = useAuthStore();
   const router = useRouter();
 
+  const normalizeRole = (name?: string) => (name || '').toLowerCase().replace(/\s+/g, '_').trim();
+  const allowed = new Set((allowedRoles || []).map(normalizeRole));
+
   useEffect(() => {
     if (!user) {
       toast.error('Please log in to access this page');
@@ -22,7 +25,7 @@ export default function RoleGuard({ children, allowedRoles, fallback }: RoleGuar
       return;
     }
 
-    const hasAccess = user.roles?.some(role => allowedRoles.includes(role.name));
+    const hasAccess = user.roles?.some(role => allowed.has(normalizeRole(role.name)));
     
     if (!hasAccess) {
       toast.error('You do not have permission to access this page');
@@ -34,7 +37,7 @@ export default function RoleGuard({ children, allowedRoles, fallback }: RoleGuar
     return fallback || <div>Loading...</div>;
   }
 
-  const hasAccess = user.roles?.some(role => allowedRoles.includes(role.name));
+  const hasAccess = user.roles?.some(role => allowed.has(normalizeRole(role.name)));
   
   if (!hasAccess) {
     return fallback || <div>Access Denied</div>;

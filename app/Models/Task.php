@@ -21,6 +21,7 @@ class Task extends Model implements HasMedia
         'close_deadline',
         'end_date',
         'description',
+        'standard_brief',
         'user_id',
         'admin_id',
         'created_by',
