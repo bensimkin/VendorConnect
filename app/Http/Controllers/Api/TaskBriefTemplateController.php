@@ -134,7 +134,7 @@ class TaskBriefTemplateController extends BaseController
     public function destroy($id)
     {
         try {
-            $template = TaskBriefTemplate::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $template = TaskBriefTemplates::find($id);
 
             if (!$template) {
                 return $this->sendNotFound('Task brief template not found');
