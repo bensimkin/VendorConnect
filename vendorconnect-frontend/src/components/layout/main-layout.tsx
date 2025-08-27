@@ -57,10 +57,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   
   console.log('MainLayout loaded, user:', user);
 
-  // Helper function to check if user has access to navigation item
+  // Helper function to check if user has access to navigation item (case/format insensitive)
+  const normalizeRole = (name?: string) => (name || '').toLowerCase().replace(/\s+/g, '_').trim();
   const hasAccess = (itemRoles: string[]) => {
     if (!user?.roles) return false;
-    return user.roles.some(role => itemRoles.includes(role.name));
+    const allowed = new Set((itemRoles || []).map(normalizeRole));
+    return user.roles.some(role => allowed.has(normalizeRole(role.name)));
   };
 
   // Filter navigation items based on user roles
@@ -112,7 +114,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             </div>
             
             {/* Admin Navigation */}
-            {user?.roles?.some(role => role.name === 'Admin') && (
+            {user?.roles?.some(role => normalizeRole(role.name) === 'admin') && (
               <>
                 <div className="px-3 py-2">
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -181,7 +183,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             })}
             
             {/* Admin Navigation */}
-            {user?.roles?.some(role => role.name === 'Admin') && (
+            {user?.roles?.some(role => normalizeRole(role.name) === 'admin') && (
               <>
                 <div className="px-3 py-2">
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">

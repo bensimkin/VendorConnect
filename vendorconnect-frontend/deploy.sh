@@ -9,9 +9,8 @@ SERVER="root@vc.themastermind.com.au"
 REMOTE_PATH="/var/www/vendorconnect-frontend"
 LOCAL_PATH="."
 
-# Build the application locally
-echo "📦 Building the application..."
-npm run build
+# Build the application on the server (local npm may be unavailable)
+echo "📦 Building the application on server..."
 
 # Create deployment directory on server
 echo "📁 Creating deployment directory on server..."
@@ -24,7 +23,7 @@ rsync -avz --exclude='node_modules' --exclude='.git' --exclude='.next/cache' \
 
 # Install dependencies and build on server
 echo "📦 Installing dependencies on server..."
-ssh $SERVER "cd $REMOTE_PATH && npm install --production"
+ssh $SERVER "cd $REMOTE_PATH && npm ci --omit=dev && npm run build"
 
 # Set up PM2 process
 echo "🔧 Setting up PM2 process..."
