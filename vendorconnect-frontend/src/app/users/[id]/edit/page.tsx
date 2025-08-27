@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Save } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import { formatRoleName } from '@/lib/utils/format-role';
 
 interface User {
   id: number;
@@ -283,7 +284,7 @@ export default function EditUserPage() {
                           className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                         />
                         <label htmlFor={`role-${role.id}`} className="text-sm">
-                          {role.name}
+                          {formatRoleName(role.name)}
                         </label>
                       </div>
                     ))}
