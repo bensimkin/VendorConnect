@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Edit, Mail, Phone, Calendar, User, Building, MapPin, Trash2 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
+import { formatRoleName } from '@/lib/utils/format-role';
 
 interface User {
   id: number;
@@ -225,7 +226,7 @@ export default function UserDetailPage() {
                   <div className="flex flex-wrap gap-2">
                     {user.roles.map((role) => (
                       <Badge key={role.id} variant="secondary">
-                        {role.name}
+                        {formatRoleName(role.name)}
                       </Badge>
                     ))}
                   </div>
