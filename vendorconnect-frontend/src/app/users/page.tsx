@@ -12,6 +12,7 @@ import { Plus, Search, Mail, Phone, Calendar, Edit, Trash2 } from 'lucide-react'
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import RoleGuard from '@/components/auth/role-guard';
+import { formatRoleName } from '@/lib/utils/format-role';
 
 interface User {
   id: number;
@@ -160,7 +161,7 @@ export default function UsersPage() {
                       </CardTitle>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-xs">
-                          {user.role || 'User'}
+                          {formatRoleName(user.role || 'User')}
                         </Badge>
                       </div>
                     </div>
