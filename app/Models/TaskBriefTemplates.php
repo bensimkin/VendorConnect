@@ -33,4 +33,9 @@ class TaskBriefTemplates extends Model
         return $this->hasMany(TaskBriefChecklist::class);
     }
 
+    public function tasks()
+    {
+        return $this->hasMany(Task::class, 'template_id');
+    }
+
 }
