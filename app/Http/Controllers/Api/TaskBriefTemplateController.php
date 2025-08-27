@@ -140,9 +140,40 @@ class TaskBriefTemplateController extends BaseController
                 return $this->sendNotFound('Task brief template not found');
             }
 
-            $template->delete();
+            // Start a database transaction
+            \DB::beginTransaction();
 
-            return $this->sendResponse(null, 'Task brief template deleted successfully');
+            try {
+                // 1. Remove template reference from any tasks using this template
+                $tasksUpdated = \App\Models\Task::where('template_id', $template->id)
+                    ->update(['template_id' => null]);
+
+                // 2. Delete all associated brief questions
+                \App\Models\TaskBriefQuestion::where('task_brief_templates_id', $template->id)->delete();
+
+                // 3. Delete all associated brief checklists
+                \App\Models\TaskBriefChecklist::where('task_brief_templates_id', $template->id)->delete();
+
+                // 4. Delete any task briefs that might be associated (if the relationship exists)
+                if (method_exists($template, 'taskBriefs')) {
+                    $template->taskBriefs()->delete();
+                }
+
+                // 5. Finally, delete the template itself
+                $template->delete();
+
+                \DB::commit();
+
+                $message = 'Task brief template deleted successfully';
+                if ($tasksUpdated > 0) {
+                    $message .= " ($tasksUpdated tasks were updated to remove template reference)";
+                }
+
+                return $this->sendResponse(null, $message);
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                throw $e;
+            }
         } catch (\Exception $e) {
             return $this->sendServerError('Error deleting task brief template: ' . $e->getMessage());
         }
