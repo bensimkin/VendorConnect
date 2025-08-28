@@ -870,10 +870,21 @@ class TaskController extends BaseController
     public function getChecklistStatus($id)
     {
         try {
+            \Log::info("Getting checklist status for task ID: {$id}", [
+                'user_id' => Auth::id(),
+                'task_id' => $id,
+                'request_url' => request()->fullUrl(),
+                'user_agent' => request()->userAgent()
+            ]);
+
             $task = Task::with(['checklistAnswers.briefChecklist'])
                 ->find($id);
 
             if (!$task) {
+                \Log::warning("Task not found for checklist status", [
+                    'task_id' => $id,
+                    'user_id' => Auth::id()
+                ]);
                 return $this->sendNotFound('Task not found');
             }
 
@@ -891,8 +902,19 @@ class TaskController extends BaseController
                 }
             }
 
+            \Log::info("Checklist status retrieved successfully", [
+                'task_id' => $id,
+                'checklist_count' => count($checklistStatus)
+            ]);
+
             return $this->sendResponse($checklistStatus, 'Checklist status retrieved successfully');
         } catch (\Exception $e) {
+            \Log::error("Error retrieving checklist status", [
+                'task_id' => $id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return $this->sendServerError('Error retrieving checklist status: ' . $e->getMessage());
         }
     }
