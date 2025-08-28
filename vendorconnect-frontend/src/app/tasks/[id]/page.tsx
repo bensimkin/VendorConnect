@@ -763,9 +763,10 @@ export default function TaskDetailPage() {
                     <div key={index} className="flex items-center space-x-2">
                       <Checkbox
                         checked={checklistCompleted[index] || false}
-                        onCheckedChange={(checked) => 
-                          handleChecklistToggle(index, checked as boolean)
-                        }
+                        onCheckedChange={(checked) => {
+                          console.log('Checkbox clicked:', { index, checked, item });
+                          handleChecklistToggle(index, checked as boolean);
+                        }}
                       />
                       <span className={checklistCompleted[index] ? 'line-through text-muted-foreground' : ''}>
                         {item}
@@ -775,6 +776,18 @@ export default function TaskDetailPage() {
                 </CardContent>
               </Card>
             )}
+            
+            {/* Debug info */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Debug Info</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>Checklist items count: {checklistItems.length}</p>
+                <p>Checklist completed state: {JSON.stringify(checklistCompleted)}</p>
+                <p>Task template ID: {task?.task_brief_templates_id}</p>
+              </CardContent>
+            </Card>
 
 
 
