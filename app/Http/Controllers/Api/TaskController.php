@@ -895,6 +895,8 @@ class TaskController extends BaseController
                     $checklistStatus[] = [
                         'id' => $answer->id,
                         'checklist_id' => $answer->checklist_id,
+                        'item_index' => $answer->checklist_answer['item_index'] ?? 0,
+                        'original_checklist_id' => $answer->checklist_answer['original_checklist_id'] ?? $answer->checklist_id,
                         'completed' => $answer->checklist_answer['completed'] ?? false,
                         'notes' => $answer->checklist_answer['notes'] ?? '',
                         'answer_by' => $answer->answer_by,
@@ -943,6 +945,7 @@ class TaskController extends BaseController
 
             $validator = Validator::make($request->all(), [
                 'checklist_id' => 'required|exists:task_brief_checklists,id',
+                'item_index' => 'required|integer|min:0',
                 'completed' => 'required|boolean',
                 'notes' => 'nullable|string',
             ]);
@@ -951,15 +954,20 @@ class TaskController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
+            // Create a unique identifier for this specific checklist item
+            $itemIdentifier = $request->checklist_id . '_' . $request->item_index;
+
             $answer = $task->checklistAnswers()->updateOrCreate(
                 [
-                    'checklist_id' => $request->checklist_id,
+                    'checklist_id' => $itemIdentifier,
                     'answer_by' => Auth::user()->id,
                 ],
                 [
                     'checklist_answer' => [
                         'completed' => $request->completed,
                         'notes' => $request->notes,
+                        'item_index' => $request->item_index,
+                        'original_checklist_id' => $request->checklist_id,
                     ],
                 ]
             );
