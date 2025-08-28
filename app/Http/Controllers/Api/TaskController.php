@@ -865,6 +865,39 @@ class TaskController extends BaseController
     }
 
     /**
+     * Get checklist status for a task
+     */
+    public function getChecklistStatus($id)
+    {
+        try {
+            $task = Task::with(['checklistAnswers.briefChecklist'])
+                ->find($id);
+
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+
+            // Calculate checklist completion status
+            $checklistStatus = [];
+            if ($task->checklistAnswers) {
+                foreach ($task->checklistAnswers as $answer) {
+                    $checklistStatus[] = [
+                        'id' => $answer->id,
+                        'checklist_id' => $answer->checklist_id,
+                        'completed' => $answer->checklist_answer['completed'] ?? false,
+                        'notes' => $answer->checklist_answer['notes'] ?? '',
+                        'answer_by' => $answer->answer_by,
+                    ];
+                }
+            }
+
+            return $this->sendResponse($checklistStatus, 'Checklist status retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving checklist status: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Submit checklist answer
      */
     public function submitChecklistAnswer(Request $request, $id)
