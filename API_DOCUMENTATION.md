@@ -2147,24 +2147,24 @@ multipart/form-data with media files
 {
   "success": true,
   "message": "Clients retrieved successfully",
-  "data": {
-    "data": [
-      {
-        "id": 1,
-        "name": "John Smith",
-        "company": "ABC Corp",
-        "email": "john@abccorp.com",
-        "phone": "+1234567890",
-        "address": "123 Main St, City, State",
-        "website": "https://abccorp.com",
-        "notes": "Important client",
-        "status": 1,
-        "created_at": "2025-08-28T06:00:00.000000Z",
-        "updated_at": "2025-08-28T06:00:00.000000Z",
-        "projects_count": 5,
-        "tasks_count": 12
-      }
-    ],
+  "data": [
+    {
+      "id": 1,
+      "name": "John Smith",
+      "company": "ABC Corp",
+      "email": "john@abccorp.com",
+      "phone": "+1234567890",
+      "address": "123 Main St, City, State",
+      "website": "https://abccorp.com",
+      "notes": "Important client",
+      "status": 1,
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z",
+      "projects_count": 5,
+      "tasks_count": 12
+    }
+  ],
+  "pagination": {
     "current_page": 1,
     "last_page": 3,
     "per_page": 15,
@@ -2178,7 +2178,7 @@ multipart/form-data with media files
 **Database Operations**:
 - **Read**: `clients` table (client data)
 - **Read**: `projects` table (project counts)
-- **Read**: `tasks` table (task counts)
+- **Read**: `task_client` table (task assignments)
 
 **Frontend Pages**:
 - `/clients` - Client list page
@@ -2234,6 +2234,7 @@ multipart/form-data with media files
 ```json
 {
   "success": true,
+  "message": "Client retrieved successfully",
   "data": {
     "id": 1,
     "name": "John Smith",
@@ -2245,50 +2246,19 @@ multipart/form-data with media files
     "notes": "Important client",
     "status": 1,
     "created_at": "2025-08-28T06:00:00.000000Z",
-    "updated_at": "2025-08-28T06:00:00.000000Z",
-    "projects": [
-      {
-        "id": 1,
-        "title": "E-commerce Platform",
-        "status": {
-          "id": 1,
-          "name": "Active"
-        }
-      }
-    ],
-    "tasks": [
-      {
-        "id": 1,
-        "title": "Website Design",
-        "status": {
-          "id": 1,
-          "name": "In Progress"
-        }
-      }
-    ],
-    "credentials": [
-      {
-        "id": 1,
-        "platform": "WordPress",
-        "username": "admin",
-        "url": "https://abccorp.com/wp-admin"
-      }
-    ]
+    "updated_at": "2025-08-28T06:00:00.000000Z"
   }
 }
 ```
 
 **Database Operations**:
 - **Read**: `clients` table (client data)
-- **Read**: `projects` table (client projects)
-- **Read**: `tasks` table (client tasks)
-- **Read**: `client_credentials` table (client credentials)
-- **Read**: `project_statuses` table (project status)
-- **Read**: `statuses` table (task status)
 
 **Frontend Pages**:
 - `/clients/{id}` - Client detail page
 - `/clients/{id}/edit` - Client edit page
+
+> Use `/clients/{id}/projects` and `/clients/{id}/tasks` to fetch related projects and tasks.
 
 ---
 
@@ -2364,23 +2334,24 @@ multipart/form-data with media files
 ```json
 {
   "success": true,
-  "data": {
-    "data": [
-      {
+  "message": "Client projects retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "title": "E-commerce Platform",
+      "description": "Modern e-commerce solution",
+      "status_id": 1,
+      "start_date": "2025-08-01",
+      "end_date": "2025-12-31",
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "status": {
         "id": 1,
-        "title": "E-commerce Platform",
-        "description": "Modern e-commerce solution",
-        "status_id": 1,
-        "start_date": "2025-08-01",
-        "end_date": "2025-12-31",
-        "created_at": "2025-08-28T06:00:00.000000Z",
-        "status": {
-          "id": 1,
-          "name": "Active",
-          "color": "#3B82F6"
-        }
+        "name": "Active",
+        "color": "#3B82F6"
       }
-    ],
+    }
+  ],
+  "pagination": {
     "current_page": 1,
     "last_page": 2,
     "per_page": 15,
@@ -2393,6 +2364,7 @@ multipart/form-data with media files
 
 **Database Operations**:
 - **Read**: `projects` table (client projects)
+- **Read**: `client_project` table (client assignments)
 - **Read**: `project_statuses` table (project status)
 
 **Frontend Pages**:
@@ -2413,29 +2385,30 @@ multipart/form-data with media files
 ```json
 {
   "success": true,
-  "data": {
-    "data": [
-      {
+  "message": "Client tasks retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "title": "Website Design",
+      "description": "Complete website design",
+      "status_id": 1,
+      "priority_id": 2,
+      "start_date": "2025-08-01",
+      "end_date": "2025-08-31",
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "status": {
         "id": 1,
-        "title": "Website Design",
-        "description": "Complete website design",
-        "status_id": 1,
-        "priority_id": 2,
-        "start_date": "2025-08-01",
-        "end_date": "2025-08-31",
-        "created_at": "2025-08-28T06:00:00.000000Z",
-        "status": {
-          "id": 1,
-          "name": "In Progress",
-          "color": "#3B82F6"
-        },
-        "priority": {
-          "id": 2,
-          "name": "High",
-          "color": "#EF4444"
-        }
+        "name": "In Progress",
+        "color": "#3B82F6"
+      },
+      "priority": {
+        "id": 2,
+        "name": "High",
+        "color": "#EF4444"
       }
-    ],
+    }
+  ],
+  "pagination": {
     "current_page": 1,
     "last_page": 2,
     "per_page": 15,
@@ -2448,6 +2421,7 @@ multipart/form-data with media files
 
 **Database Operations**:
 - **Read**: `tasks` table (client tasks)
+- **Read**: `task_client` table (task assignments)
 - **Read**: `statuses` table (task status)
 - **Read**: `priorities` table (task priority)
 
