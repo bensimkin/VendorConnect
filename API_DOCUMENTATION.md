@@ -1,594 +1,488 @@
 # VendorConnect API Documentation
 
-## Base URL
-```
-http://your-domain.com/api/v1
-```
+## Overview
+This document provides comprehensive documentation for all VendorConnect API endpoints, including request/response formats, database operations, and frontend page associations.
 
-## Authentication
-All protected endpoints require a Bearer token in the Authorization header:
-```
-Authorization: Bearer {your_token}
-```
+**Base URL**: `https://vc.themastermind.com.au/api/v1`
 
-## Endpoints
+---
 
-### Authentication
+## 🔐 Authentication APIs
 
-#### Login
-```
-POST /auth/login
-```
+### POST `/auth/login`
+**Purpose**: Authenticate user and generate access token
 
-**Request Body:**
+**Request Body**:
 ```json
 {
-    "email": "user@example.com",
-    "password": "password123"
+  "email": "user@example.com",
+  "password": "password123"
 }
 ```
 
-**Response:**
+**Response**:
 ```json
 {
-    "success": true,
-    "message": "Login successful",
-    "data": {
-        "user": {
-            "id": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "email": "user@example.com",
-            "photo": "path/to/photo.jpg",
-            "status": 1
-        },
-        "permissions": ["view_tasks", "create_tasks"],
-        "token": "1|abc123...",
-        "token_type": "Bearer"
-    }
-}
-```
-
-#### Logout
-```
-POST /auth/logout
-```
-
-**Headers:**
-```
-Authorization: Bearer {token}
-```
-
-#### Forgot Password
-```
-POST /auth/forgot-password
-```
-
-**Request Body:**
-```json
-{
-    "email": "user@example.com"
-}
-```
-
-#### Reset Password
-```
-POST /auth/reset-password
-```
-
-**Request Body:**
-```json
-{
-    "token": "reset_token",
-    "email": "user@example.com",
-    "password": "newpassword123",
-    "password_confirmation": "newpassword123"
-}
-```
-
-### Tasks
-
-#### Get All Tasks
-```
-GET /tasks
-```
-
-**Query Parameters:**
-- `page` (optional): Page number for pagination
-- `per_page` (optional): Items per page (default: 15)
-- `status_id` (optional): Filter by status
-- `priority_id` (optional): Filter by priority
-- `user_id` (optional): Filter by assigned user
-- `client_id` (optional): Filter by client
-- `search` (optional): Search in title and description
-- `sort_by` (optional): Sort field (default: created_at)
-- `sort_order` (optional): Sort order (asc/desc, default: desc)
-
-**Headers:**
-```
-Authorization: Bearer {token}
-```
-
-**Response:**
-```json
-{
-    "success": true,
-    "message": "Tasks retrieved successfully",
-    "data": [
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "user@example.com",
+      "photo": null,
+      "status": 1,
+      "dark_mode": 0,
+      "country_code": "AU",
+      "last_login_at": "2025-08-28T06:30:00.000000Z",
+      "roles": [
         {
-            "id": 1,
-            "title": "Task Title",
-            "description": "Task description",
-            "status_id": 1,
-            "priority_id": 1,
-            "project_id": 1,
-            "start_date": "2024-01-01",
-            "end_date": "2024-01-31",
-            "created_at": "2024-01-01T00:00:00.000000Z",
-            "updated_at": "2024-01-01T00:00:00.000000Z",
-            "users": [...],
-            "clients": [...],
-            "status": {...},
-            "priority": {...},
-            "project": {...},
-            "tags": [...]
+          "id": 1,
+          "name": "admin"
         }
+      ]
+    },
+    "token": "1|abc123...",
+    "permissions": ["view_tasks", "create_tasks", "edit_tasks"]
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `users` table (id, first_name, last_name, email, photo, status, dark_mode, country_code, last_login_at)
+- **Read**: `model_has_roles` table (role assignments)
+- **Read**: `roles` table (role names)
+- **Update**: `users.last_login_at` (updates login timestamp)
+- **Create**: `personal_access_tokens` table (creates new token)
+
+**Frontend Pages**:
+- `/login` - Login page
+- All authenticated pages (redirects to login if not authenticated)
+
+---
+
+### POST `/auth/logout`
+**Purpose**: Invalidate current access token
+
+**Request Headers**:
+```
+Authorization: Bearer {token}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Logged out successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `personal_access_tokens` table (removes current token)
+
+**Frontend Pages**:
+- All authenticated pages (redirects to login after logout)
+
+---
+
+### POST `/auth/forgot-password`
+**Purpose**: Send password reset email
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Password reset email sent"
+}
+```
+
+**Database Operations**:
+- **Read**: `users` table (verifies email exists)
+- **Create**: `password_resets` table (creates reset token)
+
+**Frontend Pages**:
+- `/forgot-password` - Forgot password page
+
+---
+
+### POST `/auth/reset-password`
+**Purpose**: Reset password using token
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com",
+  "token": "reset_token_here",
+  "password": "new_password123",
+  "password_confirmation": "new_password123"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Password reset successfully"
+}
+```
+
+**Database Operations**:
+- **Read**: `password_resets` table (validates token)
+- **Update**: `users.password` (updates hashed password)
+- **Delete**: `password_resets` table (removes used token)
+
+**Frontend Pages**:
+- `/reset-password` - Reset password page
+
+---
+
+### GET `/user`
+**Purpose**: Get current authenticated user information
+
+**Request Headers**:
+```
+Authorization: Bearer {token}
+```
+
+**Response**:
+```json
+{
+  "id": 1,
+  "first_name": "John",
+  "last_name": "Doe",
+  "email": "user@example.com",
+  "photo": null,
+  "status": 1,
+  "dark_mode": 0,
+  "country_code": "AU",
+  "last_login_at": "2025-08-28T06:30:00.000000Z",
+  "roles": [
+    {
+      "id": 1,
+      "name": "admin"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `users` table (current user data)
+- **Read**: `model_has_roles` table (user role assignments)
+- **Read**: `roles` table (role information)
+
+**Frontend Pages**:
+- All authenticated pages (loads user data for navigation/profile)
+
+---
+
+## 👤 Profile Management APIs
+
+### GET `/profile`
+**Purpose**: Get current user's profile information
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "user@example.com",
+    "photo": null,
+    "status": 1,
+    "dark_mode": 0,
+    "country_code": "AU",
+    "last_login_at": "2025-08-28T06:30:00.000000Z",
+    "roles": [
+      {
+        "id": 1,
+        "name": "admin"
+      }
+    ]
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `users` table (profile data)
+- **Read**: `model_has_roles` table (role assignments)
+- **Read**: `roles` table (role names)
+
+**Frontend Pages**:
+- `/settings` - User settings page
+- Navigation components (user menu)
+
+---
+
+### GET `/profile/{id}`
+**Purpose**: Get specific user's profile information
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 2,
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "email": "jane@example.com",
+    "photo": null,
+    "status": 1,
+    "dark_mode": 0,
+    "country_code": "AU",
+    "last_login_at": "2025-08-28T05:30:00.000000Z",
+    "roles": [
+      {
+        "id": 2,
+        "name": "tasker"
+      }
+    ]
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `users` table (user data by ID)
+- **Read**: `model_has_roles` table (role assignments)
+- **Read**: `roles` table (role names)
+
+**Frontend Pages**:
+- `/users/{id}` - User detail page
+- `/users/{id}/edit` - User edit page
+
+---
+
+### PUT `/profile/{id}`
+**Purpose**: Update user profile information
+
+**Request Body**:
+```json
+{
+  "first_name": "John",
+  "last_name": "Doe",
+  "email": "john.doe@example.com",
+  "country_code": "AU",
+  "dark_mode": 1
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "data": {
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john.doe@example.com",
+    "country_code": "AU",
+    "dark_mode": 1
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `users` table (first_name, last_name, email, country_code, dark_mode)
+
+**Frontend Pages**:
+- `/settings` - User settings page
+- `/users/{id}/edit` - User edit page
+
+---
+
+### PUT `/profile/{id}/photo`
+**Purpose**: Update user profile photo
+
+**Request Body**:
+```
+multipart/form-data with photo file
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Photo updated successfully",
+  "data": {
+    "photo": "storage/photos/user_1_photo.jpg"
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `users.photo` (stores photo path)
+
+**Frontend Pages**:
+- `/settings` - User settings page
+- Navigation components (user avatar)
+
+---
+
+## 📊 Dashboard APIs
+
+### GET `/dashboard`
+**Purpose**: Get main dashboard data and statistics
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "total_tasks": 150,
+    "completed_tasks": 120,
+    "pending_tasks": 30,
+    "total_projects": 25,
+    "active_projects": 20,
+    "total_clients": 45,
+    "recent_tasks": [
+      {
+        "id": 1,
+        "title": "Website Redesign",
+        "status": {
+          "id": 1,
+          "name": "In Progress"
+        },
+        "priority": {
+          "id": 2,
+          "name": "High"
+        },
+        "created_at": "2025-08-28T06:00:00.000000Z"
+      }
     ],
-    "pagination": {
-        "current_page": 1,
-        "last_page": 5,
-        "per_page": 15,
-        "total": 75,
-        "from": 1,
-        "to": 15
-    }
+    "recent_projects": [
+      {
+        "id": 1,
+        "title": "E-commerce Platform",
+        "status": {
+          "id": 1,
+          "name": "Active"
+        },
+        "created_at": "2025-08-28T06:00:00.000000Z"
+      }
+    ]
+  }
 }
 ```
 
-#### Create Task
-```
-POST /tasks
-```
+**Database Operations**:
+- **Read**: `tasks` table (counts and recent tasks)
+- **Read**: `projects` table (counts and recent projects)
+- **Read**: `clients` table (total count)
+- **Read**: `statuses` table (task/project status info)
+- **Read**: `priorities` table (task priority info)
 
-**Request Body:**
+**Frontend Pages**:
+- `/dashboard` - Main dashboard page
+
+---
+
+### GET `/dashboard/tasker`
+**Purpose**: Get tasker-specific dashboard data
+
+**Response**:
 ```json
 {
-    "title": "New Task",
-    "description": "Task description",
-    "status_id": 1,
-    "priority_id": 1,
-    "project_id": 1,
-    "user_ids": [1, 2, 3],
-    "client_ids": [1, 2],
-    "tag_ids": [1, 2],
-    "start_date": "2024-01-01",
-    "end_date": "2024-01-31"
+  "success": true,
+  "data": {
+    "assigned_tasks": 25,
+    "completed_tasks": 20,
+    "pending_tasks": 5,
+    "overdue_tasks": 2,
+    "my_tasks": [
+      {
+        "id": 1,
+        "title": "Logo Design",
+        "status": {
+          "id": 1,
+          "name": "In Progress"
+        },
+        "priority": {
+          "id": 2,
+          "name": "High"
+        },
+        "end_date": "2025-08-30",
+        "project": {
+          "id": 1,
+          "title": "Brand Identity"
+        }
+      }
+    ]
+  }
 }
 ```
 
-#### Get Task
-```
-GET /tasks/{id}
-```
+**Database Operations**:
+- **Read**: `tasks` table (user's assigned tasks)
+- **Read**: `task_user` table (task assignments)
+- **Read**: `projects` table (project info for tasks)
+- **Read**: `statuses` table (task status)
+- **Read**: `priorities` table (task priority)
 
-#### Update Task
-```
-PUT /tasks/{id}
-```
+**Frontend Pages**:
+- `/dashboard/tasker` - Tasker dashboard page
 
-**Request Body:** (same as create, but all fields optional)
+---
 
-#### Delete Task
-```
-DELETE /tasks/{id}
-```
+### GET `/dashboard/requester`
+**Purpose**: Get requester-specific dashboard data
 
-#### Delete Multiple Tasks
-```
-DELETE /tasks
-```
-
-**Request Body:**
+**Response**:
 ```json
 {
-    "task_ids": [1, 2, 3]
+  "success": true,
+  "data": {
+    "created_tasks": 50,
+    "completed_tasks": 35,
+    "pending_tasks": 15,
+    "my_projects": [
+      {
+        "id": 1,
+        "title": "Website Development",
+        "status": {
+          "id": 1,
+          "name": "Active"
+        },
+        "task_count": 12,
+        "completed_task_count": 8
+      }
+    ],
+    "recent_requests": [
+      {
+        "id": 1,
+        "title": "Social Media Graphics",
+        "status": {
+          "id": 1,
+          "name": "In Progress"
+        },
+        "assigned_to": [
+          {
+            "id": 2,
+            "first_name": "Jane",
+            "last_name": "Smith"
+          }
+        ]
+      }
+    ]
+  }
 }
 ```
 
-#### Update Task Status
-```
-PUT /tasks/{id}/status
-```
-
-**Request Body:**
-```json
-{
-    "status_id": 2
-}
-```
-
-#### Update Task Deadline
-```
-PUT /tasks/{id}/deadline
-```
-
-**Request Body:**
-```json
-{
-    "end_date": "2024-02-15"
-}
-```
-
-#### Get Task Information
-```
-GET /tasks/{id}/information
-```
-
-### Users
-
-#### Get All Users
-```
-GET /users
-```
-
-#### Create User
-```
-POST /users
-```
-
-#### Get User
-```
-GET /users/{id}
-```
-
-#### Update User
-```
-PUT /users/{id}
-```
-
-#### Delete User
-```
-DELETE /users/{id}
-```
-
-### Clients
-
-#### Get All Clients
-```
-GET /clients
-```
-
-#### Create Client
-```
-POST /clients
-```
-
-#### Get Client
-```
-GET /clients/{id}
-```
-
-#### Update Client
-```
-PUT /clients/{id}
-```
-
-#### Delete Client
-```
-DELETE /clients/{id}
-```
-
-### Statuses
-
-#### Get All Statuses
-```
-GET /statuses
-```
-
-#### Create Status
-```
-POST /statuses
-```
-
-#### Get Status
-```
-GET /statuses/{id}
-```
-
-#### Update Status
-```
-PUT /statuses/{id}
-```
-
-#### Delete Status
-```
-DELETE /statuses/{id}
-```
-
-### Priorities
-
-#### Get All Priorities
-```
-GET /priorities
-```
-
-#### Create Priority
-```
-POST /priorities
-```
-
-#### Get Priority
-```
-GET /priorities/{id}
-```
-
-#### Update Priority
-```
-PUT /priorities/{id}
-```
-
-#### Delete Priority
-```
-DELETE /priorities/{id}
-```
-
-### Tags
-
-#### Get All Tags
-```
-GET /tags
-```
-
-#### Create Tag
-```
-POST /tags
-```
-
-#### Get Tag
-```
-GET /tags/{id}
-```
-
-#### Update Tag
-```
-PUT /tags/{id}
-```
-
-#### Delete Tag
-```
-DELETE /tags/{id}
-```
-
-### Task Types
-
-#### Get All Task Types
-```
-GET /task-types
-```
-
-#### Create Task Type
-```
-POST /task-types
-```
-
-#### Get Task Type
-```
-GET /task-types/{id}
-```
-
-#### Update Task Type
-```
-PUT /task-types/{id}
-```
-
-#### Delete Task Type
-```
-DELETE /task-types/{id}
-```
-
-### User Roles
-
-#### Get All User Roles
-```
-GET /user-roles
-```
-
-#### Create User Role
-```
-POST /user-roles
-```
-
-#### Get User Role
-```
-GET /user-roles/{id}
-```
-
-#### Update User Role
-```
-PUT /user-roles/{id}
-```
-
-#### Delete User Role
-```
-DELETE /user-roles/{id}
-```
-
-### Task Brief Templates
-
-#### Get All Task Brief Templates
-```
-GET /task-brief-templates
-```
-
-#### Create Task Brief Template
-```
-POST /task-brief-templates
-```
-
-#### Get Task Brief Template
-```
-GET /task-brief-templates/{id}
-```
-
-#### Update Task Brief Template
-```
-PUT /task-brief-templates/{id}
-```
-
-#### Delete Task Brief Template
-```
-DELETE /task-brief-templates/{id}
-```
-
-### Task Brief Questions
-
-#### Get All Task Brief Questions
-```
-GET /task-brief-questions
-```
-
-#### Create Task Brief Question
-```
-POST /task-brief-questions
-```
-
-#### Get Task Brief Question
-```
-GET /task-brief-questions/{id}
-```
-
-#### Update Task Brief Question
-```
-PUT /task-brief-questions/{id}
-```
-
-#### Delete Task Brief Question
-```
-DELETE /task-brief-questions/{id}
-```
-
-### Task Brief Checklists
-
-#### Get All Task Brief Checklists
-```
-GET /task-brief-checklists
-```
-
-#### Create Task Brief Checklist
-```
-POST /task-brief-checklists
-```
-
-#### Get Task Brief Checklist
-```
-GET /task-brief-checklists/{id}
-```
-
-#### Update Task Brief Checklist
-```
-PUT /task-brief-checklists/{id}
-```
-
-#### Delete Task Brief Checklist
-```
-DELETE /task-brief-checklists/{id}
-```
-
-### Notifications
-
-#### Get All Notifications
-```
-GET /notifications
-```
-
-#### Mark Notification as Read
-```
-PUT /notifications/{id}/read
-```
-
-#### Mark All Notifications as Read
-```
-PUT /notifications/read-all
-```
-
-### Profile
-
-#### Get Profile
-```
-GET /profile/{id}
-```
-
-#### Update Profile
-```
-PUT /profile/{id}
-```
-
-#### Update Profile Photo
-```
-PUT /profile/{id}/photo
-```
-
-**Request:** Multipart form data with photo file
-
-### Dashboard
-
-#### Get Dashboard Data
-```
-GET /dashboard
-```
-
-## Error Responses
-
-All endpoints return consistent error responses:
-
-```json
-{
-    "success": false,
-    "message": "Error message",
-    "errors": {
-        "field": ["Validation error message"]
-    }
-}
-```
-
-## HTTP Status Codes
-
-- `200` - Success
-- `201` - Created
-- `400` - Bad Request
-- `401` - Unauthorized
-- `403` - Forbidden
-- `404` - Not Found
-- `422` - Validation Error
-- `500` - Server Error
-
-## Testing the API
-
-You can test the API using tools like:
-- Postman
-- Insomnia
-- curl
-- Thunder Client (VS Code extension)
-
-### Example curl commands:
-
-**Login:**
-```bash
-curl -X POST http://your-domain.com/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"password123"}'
-```
-
-**Get Tasks:**
-```bash
-curl -X GET http://your-domain.com/api/v1/tasks \
-  -H "Authorization: Bearer {your_token}"
-```
-
-**Create Task:**
-```bash
-curl -X POST http://your-domain.com/api/v1/tasks \
-  -H "Authorization: Bearer {your_token}" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"New Task","description":"Description","status_id":1,"priority_id":1,"user_ids":[1]}'
-```
+**Database Operations**:
+- **Read**: `tasks` table (user's created tasks)
+- **Read**: `projects` table (user's projects)
+- **Read**: `task_user` table (task assignments)
+- **Read**: `users` table (assigned users)
+- **Read**: `statuses` table (task/project status)
+
+**Frontend Pages**:
+- `/dashboard/requester` - Requester dashboard page
