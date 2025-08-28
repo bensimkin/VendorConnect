@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Client;
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -42,9 +43,9 @@ class ClientController extends BaseController
             }
 
             if ($request->has('user_id')) {
-                $query->whereHas('users', function ($q) use ($request) {
-                    $q->where('user_id', $request->user_id);
-                });
+                // $query->whereHas('users', function ($q) use ($request) {
+                //     $q->where('user_id', $request->user_id);
+                // });
             }
 
             // Apply sorting
@@ -132,12 +133,12 @@ class ClientController extends BaseController
 
             // Attach users
             if ($request->has('user_ids')) {
-                $client->users()->attach($request->user_ids);
+                // $client->users()->attach($request->user_ids);
             }
 
             DB::commit();
 
-            $client->load(['users', 'tasks']);
+            // $client->load(['users', 'tasks']);
 
             return $this->sendResponse($client, 'Client created successfully');
         } catch (\Exception $e) {
@@ -337,16 +338,35 @@ class ClientController extends BaseController
     public function projects($id)
     {
         try {
+            \Log::info('=== CLIENT PROJECTS REQUEST START ===');
+            \Log::info('ClientController::projects called with ID: ' . $id);
+            \Log::info('Request method: ' . request()->method());
+            \Log::info('Request URL: ' . request()->fullUrl());
+            \Log::info('Auth user: ' . json_encode(Auth::user()));
+            
             $client = Client::find($id);
+            \Log::info('Client found: ' . ($client ? 'yes' : 'no'));
 
             if (!$client) {
+                \Log::warning('Client not found with ID: ' . $id);
                 return $this->sendNotFound('Client not found');
             }
 
+            \Log::info('Fetching projects for client: ' . $client->id);
             $projects = $client->projects()->with(['status', 'client'])->paginate(15);
+            \Log::info('Projects query executed successfully');
+            \Log::info('Projects count: ' . $projects->count());
+            \Log::info('Projects data: ' . json_encode($projects->toArray()));
 
+            \Log::info('=== CLIENT PROJECTS REQUEST SUCCESS ===');
             return $this->sendPaginatedResponse($projects, 'Client projects retrieved successfully');
         } catch (\Exception $e) {
+            \Log::error('=== CLIENT PROJECTS REQUEST ERROR ===');
+            \Log::error('ClientController::projects error: ' . $e->getMessage());
+            \Log::error('Error class: ' . get_class($e));
+            \Log::error('Error file: ' . $e->getFile() . ':' . $e->getLine());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('=== CLIENT PROJECTS REQUEST ERROR END ===');
             return $this->sendServerError('Error retrieving client projects: ' . $e->getMessage());
         }
     }
@@ -357,16 +377,75 @@ class ClientController extends BaseController
     public function tasks($id)
     {
         try {
+            \Log::info('=== CLIENT TASKS REQUEST START ===');
+            \Log::info('ClientController::tasks called with ID: ' . $id);
+            \Log::info('Request method: ' . request()->method());
+            \Log::info('Request URL: ' . request()->fullUrl());
+            \Log::info('Auth user: ' . json_encode(Auth::user()));
+            
             $client = Client::find($id);
+            \Log::info('Client found: ' . ($client ? 'yes' : 'no'));
 
             if (!$client) {
+                \Log::warning('Client not found with ID: ' . $id);
                 return $this->sendNotFound('Client not found');
             }
 
-            $tasks = $client->tasks()->with(['status', 'priority', 'assigned_to'])->paginate(15);
+            \Log::info('Fetching tasks for client: ' . $client->id);
+            \Log::info('Client projects count: ' . $client->projects()->count());
+            
+            // Debug: Check what relationships exist
+            $directTasks = $client->clientTasks()->count();
+            $projectTasks = Task::whereHas('project', function($q) use ($client) {
+                $q->where('client_id', $client->id);
+            })->count();
+            $pivotTasks = Task::whereHas('project', function($q) use ($client) {
+                $q->whereHas('clients', function($subQ) use ($client) {
+                    $subQ->where('clients.id', $client->id);
+                });
+            })->count();
+            
+            \Log::info('Direct client tasks count: ' . $directTasks);
+            \Log::info('Project tasks count (direct client_id): ' . $projectTasks);
+            \Log::info('Pivot tasks count (via client_project): ' . $pivotTasks);
+            
+            // Get tasks for this client - try multiple approaches
+            $tasks = Task::where(function($query) use ($client) {
+                // Method 1: Direct relationship via client_task table
+                $query->whereHas('clients', function($q) use ($client) {
+                    $q->where('clients.id', $client->id);
+                });
+            })
+            ->orWhere(function($query) use ($client) {
+                // Method 2: Indirect relationship via projects
+                $query->whereHas('project', function($q) use ($client) {
+                    $q->whereHas('clients', function($subQ) use ($client) {
+                        $subQ->where('clients.id', $client->id);
+                    });
+                });
+            })
+            ->orWhere(function($query) use ($client) {
+                // Method 3: Direct project relationship (if project has client_id)
+                $query->whereHas('project', function($q) use ($client) {
+                    $q->where('client_id', $client->id);
+                });
+            })
+            ->with(['status', 'priority', 'project'])
+            ->paginate(15);
+            
+            \Log::info('Tasks query executed successfully');
+            \Log::info('Tasks count: ' . $tasks->count());
+            \Log::info('Tasks data: ' . json_encode($tasks->toArray()));
 
+            \Log::info('=== CLIENT TASKS REQUEST SUCCESS ===');
             return $this->sendPaginatedResponse($tasks, 'Client tasks retrieved successfully');
         } catch (\Exception $e) {
+            \Log::error('=== CLIENT TASKS REQUEST ERROR ===');
+            \Log::error('ClientController::tasks error: ' . $e->getMessage());
+            \Log::error('Error class: ' . get_class($e));
+            \Log::error('Error file: ' . $e->getFile() . ':' . $e->getLine());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('=== CLIENT TASKS REQUEST ERROR END ===');
             return $this->sendServerError('Error retrieving client tasks: ' . $e->getMessage());
         }
     }

@@ -8,14 +8,22 @@ export function middleware(request: NextRequest) {
   const publicPaths = ['/login', '/forgot-password', '/reset-password']
   const isPublicPath = publicPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
+  // Debug logging
+  console.log('🔍 [MIDDLEWARE] Path:', request.nextUrl.pathname)
+  console.log('🔍 [MIDDLEWARE] Token from cookie:', token ? 'Present' : 'Missing')
+  console.log('🔍 [MIDDLEWARE] Is public path:', isPublicPath)
+
   if (!token && !isPublicPath) {
+    console.log('🔍 [MIDDLEWARE] Redirecting to login - no token found')
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   if (token && request.nextUrl.pathname === '/login') {
+    console.log('🔍 [MIDDLEWARE] Redirecting to dashboard - user already logged in')
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
+  console.log('🔍 [MIDDLEWARE] Proceeding with request')
   return NextResponse.next()
 }
 
