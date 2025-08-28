@@ -36,7 +36,10 @@ interface Project {
   id: number;
   name: string;
   description?: string;
-  status?: string;
+  status?: {
+    name: string;
+    color?: string;
+  };
   start_date?: string;
   end_date?: string;
   created_at: string;
@@ -330,7 +333,14 @@ export default function ClientDetailPage() {
                         </div>
                         <div className="flex items-center space-x-2">
                           {project.status && (
-                            <Badge variant="outline">{project.status}</Badge>
+                            <Badge
+                              style={{
+                                backgroundColor: project.status.color ? `${project.status.color}20` : undefined,
+                                color: project.status.color || undefined,
+                              }}
+                            >
+                              {project.status.name}
+                            </Badge>
                           )}
                           <Button
                             variant="ghost"
