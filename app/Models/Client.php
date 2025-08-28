@@ -130,12 +130,7 @@ class Client extends Authenticatable implements MustVerifyEmail
 
     public function tasks()
     {
-        return Task::whereIn('project_id', $this->projects->pluck('id'));
-    }
-
-    public function clientTasks()
-    {
-        return $this->belongsToMany(Task::class);
+        return $this->belongsToMany(Task::class, 'task_client');
     }
 
     public function project_tasks($project_id)

@@ -54,6 +54,7 @@ class ClientController extends BaseController
             $query->orderBy($sortBy, $sortOrder);
 
             $clients = $query->withCount(['projects as projects_count'])
+                ->withCount(['tasks as tasks_count'])
                 ->withCount(['projects as active_projects' => function($query) {
                     $query->where('status_id', 20); // Active status ID
                 }])
@@ -170,7 +171,7 @@ class ClientController extends BaseController
                 return $this->sendNotFound('Client not found');
             }
             
-            $client = Client::with(['clientTasks'])
+            $client = Client::with(['tasks'])
                 ->find($id);
 
             \Log::info('Client query result: ' . ($client ? 'found' : 'not found'));
@@ -261,7 +262,7 @@ class ClientController extends BaseController
 
             DB::commit();
 
-            $client->load(['clientTasks']);
+            $client->load(['tasks']);
 
             return $this->sendResponse($client, 'Client updated successfully');
         } catch (\Exception $e) {
@@ -395,7 +396,7 @@ class ClientController extends BaseController
             \Log::info('Client projects count: ' . $client->projects()->count());
             
             // Debug: Check what relationships exist
-            $directTasks = $client->clientTasks()->count();
+            $directTasks = $client->tasks()->count();
             $projectTasks = Task::whereHas('project', function($q) use ($client) {
                 $q->where('client_id', $client->id);
             })->count();
@@ -411,7 +412,7 @@ class ClientController extends BaseController
             
             // Get tasks for this client - try multiple approaches
             $tasks = Task::where(function($query) use ($client) {
-                // Method 1: Direct relationship via client_task table
+                // Method 1: Direct relationship via task_client table
                 $query->whereHas('clients', function($q) use ($client) {
                     $q->where('clients.id', $client->id);
                 });
