@@ -18,8 +18,7 @@ class Client extends Authenticatable implements MustVerifyEmail
     use HasApiTokens, HasFactory, Notifiable, HasRoles, HasPermissions;
 
     protected $fillable = [
-        'first_name',
-        'last_name',
+        'name',
         'email',
         'password',
         'phone',
@@ -39,10 +38,10 @@ class Client extends Authenticatable implements MustVerifyEmail
         'email_verification_mail_sent',
         'internal_purpose',
         'admin_id',
-        'client_note',
+        'notes',
     ];
 
-    protected $appends = ['name'];
+    protected $appends = ['first_name', 'last_name'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -86,12 +85,31 @@ class Client extends Authenticatable implements MustVerifyEmail
 
     public function getresult()
     {
-        return str($this->first_name . " " . $this->last_name);
+        return str($this->name);
     }
 
-    public function getNameAttribute()
+    public function getFirstNameAttribute()
     {
-        return trim($this->first_name . ' ' . $this->last_name);
+        $parts = explode(' ', $this->name, 2);
+        return $parts[0] ?? '';
+    }
+
+    public function getLastNameAttribute()
+    {
+        $parts = explode(' ', $this->name, 2);
+        return $parts[1] ?? '';
+    }
+
+    public function setFirstNameAttribute($value)
+    {
+        $parts = explode(' ', $this->attributes['name'] ?? '', 2);
+        $this->attributes['name'] = trim($value . ' ' . ($parts[1] ?? ''));
+    }
+
+    public function setLastNameAttribute($value)
+    {
+        $parts = explode(' ', $this->attributes['name'] ?? '', 2);
+        $this->attributes['name'] = trim(($parts[0] ?? '') . ' ' . $value);
     }
 
     public function todos($status = null, $search = '')
