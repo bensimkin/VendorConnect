@@ -361,7 +361,8 @@ class TaskController extends BaseController
 
             $task->update($request->only([
                 'title', 'description', 'status_id', 'priority_id', 
-                'task_type_id', 'project_id', 'start_date', 'end_date', 'close_deadline'
+                'task_type_id', 'project_id', 'start_date', 'end_date', 'close_deadline',
+                'note', 'deliverable_quantity'
             ]));
 
             // Sync users
