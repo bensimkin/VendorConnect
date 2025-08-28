@@ -43,8 +43,10 @@ This document provides comprehensive documentation for all VendorConnect API end
         }
       ]
     },
+    "permissions": ["view_tasks", "create_tasks", "edit_tasks"],
     "token": "1|abc123...",
-    "permissions": ["view_tasks", "create_tasks", "edit_tasks"]
+    "token_type": "Bearer",
+    "expires_at": "2025-09-04T06:30:00.000000Z"
   }
 }
 ```
