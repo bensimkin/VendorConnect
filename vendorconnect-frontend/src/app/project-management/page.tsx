@@ -188,8 +188,7 @@ export default function ProjectManagementPage() {
     const tasks = project.tasks || [];
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(task => 
-      task.status?.name?.toLowerCase() === 'completed' || 
-      task.status?.title?.toLowerCase() === 'completed'
+      task.status?.name?.toLowerCase() === 'completed'
     ).length;
     const activeTasks = totalTasks - completedTasks;
     
@@ -197,8 +196,7 @@ export default function ProjectManagementPage() {
     const overdueTasks = tasks.filter(task => {
       if (!task.end_date) return false;
       const endDate = new Date(task.end_date);
-      const isCompleted = task.status?.name?.toLowerCase() === 'completed' || 
-                         task.status?.title?.toLowerCase() === 'completed';
+      const isCompleted = task.status?.name?.toLowerCase() === 'completed';
       return endDate < now && !isCompleted;
     }).length;
     
