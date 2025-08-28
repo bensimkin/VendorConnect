@@ -184,22 +184,35 @@ export default function TaskDetailPage() {
         setQuestionAnswers(answers);
       }
 
-      // Load checklist from task data
-      if (taskData.checklist_answers && taskData.checklist_answers.length > 0) {
-        const checklistItems: string[] = [];
-        const completedMap: Record<number, boolean> = {};
-        
-        taskData.checklist_answers.forEach((ca: any, index: number) => {
-          // Extract the completed status from the checklist_answer array
-          const completed = ca.checklist_answer?.completed || false;
-          const notes = ca.checklist_answer?.notes || ca.notes || `Checklist item ${index + 1}`;
+      // Load template checklist items and saved answers
+      if (taskData.task_brief_templates_id) {
+        try {
+          // Fetch template checklist items
+          const checklistResponse = await apiClient.get(`/task-brief-checklists?template_id=${taskData.task_brief_templates_id}`);
+          const templateChecklist = checklistResponse.data.data[0];
           
-          checklistItems.push(notes);
-          completedMap[index] = completed;
-        });
-        
-        setChecklistItems(checklistItems);
-        setChecklistCompleted(completedMap);
+          if (templateChecklist && templateChecklist.checklist) {
+            setChecklistItems(templateChecklist.checklist);
+            
+            // Fetch saved checklist answers
+            const checklistStatusResponse = await apiClient.get(`/tasks/${id}/checklist-status`);
+            const savedAnswers = checklistStatusResponse.data.data;
+            
+            // Create a map of checklist_id to completed status
+            const completedMap: Record<number, boolean> = {};
+            savedAnswers.forEach((answer: any) => {
+              // Map by array index (assuming checklist items are in order)
+              const index = answer.checklist_id - 1; // Convert to 0-based index
+              if (index >= 0 && index < templateChecklist.checklist.length) {
+                completedMap[index] = answer.completed;
+              }
+            });
+            
+            setChecklistCompleted(completedMap);
+          }
+        } catch (error) {
+          console.error('Failed to load checklist data:', error);
+        }
       }
 
       // Load deliverables
@@ -248,9 +261,17 @@ export default function TaskDetailPage() {
     if (!task) return;
     
     try {
-      // Use the index + 1 as checklist_id since we don't have proper checklist_id mapping
-      // This is a temporary fix - ideally we should have proper checklist_id from the template
-      const checklist_id = index + 1;
+      // Get the template checklist to find the correct checklist_id
+      const checklistResponse = await apiClient.get(`/task-brief-checklists?template_id=${task.task_brief_templates_id}`);
+      const templateChecklist = checklistResponse.data.data[0];
+      
+      if (!templateChecklist) {
+        toast.error('Template checklist not found');
+        return;
+      }
+      
+      // Use the template checklist ID for this item
+      const checklist_id = templateChecklist.id;
       
       await apiClient.post(`/tasks/${task.id}/checklist-answer`, {
         checklist_id: checklist_id,
@@ -258,8 +279,11 @@ export default function TaskDetailPage() {
         notes: checklistItems[index] || `Checklist item ${index + 1}`,
       });
       
-      // Refresh the task data to get the updated checklist answers
-      await fetchTaskDetail(task.id.toString());
+      // Update local state immediately for better UX
+      setChecklistCompleted(prev => ({
+        ...prev,
+        [index]: completed
+      }));
       
       toast.success('Checklist updated successfully');
     } catch (error) {
