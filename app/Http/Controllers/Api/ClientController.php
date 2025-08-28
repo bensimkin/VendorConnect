@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Client;
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -42,9 +43,9 @@ class ClientController extends BaseController
             }
 
             if ($request->has('user_id')) {
-                $query->whereHas('users', function ($q) use ($request) {
-                    $q->where('user_id', $request->user_id);
-                });
+                // $query->whereHas('users', function ($q) use ($request) {
+                //     $q->where('user_id', $request->user_id);
+                // });
             }
 
             // Apply sorting
@@ -132,12 +133,12 @@ class ClientController extends BaseController
 
             // Attach users
             if ($request->has('user_ids')) {
-                $client->users()->attach($request->user_ids);
+                // $client->users()->attach($request->user_ids);
             }
 
             DB::commit();
 
-            $client->load(['users', 'tasks']);
+            // $client->load(['users', 'tasks']);
 
             return $this->sendResponse($client, 'Client created successfully');
         } catch (\Exception $e) {
@@ -363,7 +364,14 @@ class ClientController extends BaseController
                 return $this->sendNotFound('Client not found');
             }
 
-            $tasks = $client->tasks()->with(['status', 'priority', 'assigned_to'])->paginate(15);
+            // Get tasks for this client's projects
+            $tasks = Task::whereHas('project', function($query) use ($client) {
+                $query->whereHas('clients', function($q) use ($client) {
+                    $q->where('clients.id', $client->id);
+                });
+            })
+            ->with(['status', 'priority'])
+            ->paginate(15);
 
             return $this->sendPaginatedResponse($tasks, 'Client tasks retrieved successfully');
         } catch (\Exception $e) {
