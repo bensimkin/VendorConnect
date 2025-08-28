@@ -1121,3 +1121,1008 @@ multipart/form-data with photo file
 **Frontend Pages**:
 - `/tasks/{id}` - Task detail page
 - `/tasks/{id}/edit` - Task edit page
+
+---
+
+### POST `/tasks/{id}/question-answer`
+**Purpose**: Submit answer to task brief question
+
+**Request Body**:
+```json
+{
+  "question_id": 1,
+  "answer": "My answer to the question"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Question answer submitted successfully"
+}
+```
+
+**Database Operations**:
+- **Create**: `question_answered` table (stores question answers)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (brief questions section)
+
+---
+
+### POST `/tasks/{id}/checklist-answer`
+**Purpose**: Submit checklist answer
+
+**Request Body**:
+```json
+{
+  "checklist_id": 1,
+  "answers": [
+    {
+      "item_id": 1,
+      "completed": true
+    },
+    {
+      "item_id": 2,
+      "completed": false
+    }
+  ]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Checklist answers submitted successfully"
+}
+```
+
+**Database Operations**:
+- **Create**: `checklist_answered` table (stores checklist answers)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (brief checklist section)
+
+---
+
+### GET `/tasks/{id}/information`
+**Purpose**: Get detailed task information including brief questions and checklist
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "task": {
+      "id": 1,
+      "title": "Website Redesign",
+      "description": "Complete website redesign for client"
+    },
+    "brief_questions": [
+      {
+        "id": 1,
+        "question_text": "What is your target audience?",
+        "question_type": "text",
+        "required": true,
+        "answer": "Young professionals aged 25-35"
+      }
+    ],
+    "brief_checklist": [
+      {
+        "id": 1,
+        "checklist": [
+          {
+            "id": 1,
+            "text": "Design mockups completed",
+            "completed": true
+          },
+          {
+            "id": 2,
+            "text": "Client feedback received",
+            "completed": false
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `tasks` table (task data)
+- **Read**: `task_brief_questions` table (template questions)
+- **Read**: `task_brief_checklists` table (template checklists)
+- **Read**: `question_answered` table (user answers)
+- **Read**: `checklist_answered` table (user checklist answers)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (information tab)
+
+---
+
+### POST `/tasks/{id}/stop-repetition`
+**Purpose**: Stop task repetition
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Task repetition stopped successfully"
+}
+```
+
+**Database Operations**:
+- **Update**: `tasks.is_repeating` (sets to 0)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (repetition controls)
+
+---
+
+### POST `/tasks/{id}/resume-repetition`
+**Purpose**: Resume task repetition
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Task repetition resumed successfully"
+}
+```
+
+**Database Operations**:
+- **Update**: `tasks.is_repeating` (sets to 1)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (repetition controls)
+
+---
+
+### GET `/tasks/{id}/repeating-history`
+**Purpose**: Get task repetition history
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "created_at": "2025-08-01T06:00:00.000000Z",
+      "status": "completed"
+    },
+    {
+      "id": 2,
+      "created_at": "2025-08-08T06:00:00.000000Z",
+      "status": "in_progress"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `tasks` table (repetition history)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (repetition history)
+
+---
+
+## 📎 Task Media APIs
+
+### POST `/tasks/{id}/media`
+**Purpose**: Upload media files to task
+
+**Request Body**:
+```
+multipart/form-data with media files
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Media uploaded successfully",
+  "data": [
+    {
+      "id": 1,
+      "name": "design-mockup.jpg",
+      "file_name": "design-mockup_123.jpg",
+      "mime_type": "image/jpeg",
+      "size": 1024000,
+      "url": "https://example.com/storage/media/design-mockup_123.jpg"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Create**: `media` table (file metadata)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (media section)
+
+---
+
+### GET `/tasks/{id}/media`
+**Purpose**: Get task media files
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "design-mockup.jpg",
+      "file_name": "design-mockup_123.jpg",
+      "mime_type": "image/jpeg",
+      "size": 1024000,
+      "url": "https://example.com/storage/media/design-mockup_123.jpg"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `media` table (task media files)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (media section)
+
+---
+
+### DELETE `/media/{mediaId}`
+**Purpose**: Delete specific media file
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Media deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `media` table (removes file record)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (media section)
+
+---
+
+### DELETE `/media`
+**Purpose**: Delete multiple media files
+
+**Request Body**:
+```json
+{
+  "media_ids": [1, 2, 3]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Media files deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `media` table (multiple records)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (bulk media actions)
+
+---
+
+## 💬 Task Messages APIs
+
+### POST `/tasks/{id}/messages`
+**Purpose**: Upload message to task
+
+**Request Body**:
+```json
+{
+  "message": "Task update message",
+  "attachment": "file" // optional
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Message uploaded successfully",
+  "data": {
+    "id": 1,
+    "message": "Task update message",
+    "attachment": "message_attachment.pdf",
+    "created_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `ch_messages` table (task messages)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (messages section)
+
+---
+
+### GET `/tasks/{id}/messages`
+**Purpose**: Get task messages
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "message": "Task update message",
+      "attachment": "message_attachment.pdf",
+      "from_id": 1,
+      "from_user": {
+        "id": 1,
+        "first_name": "John",
+        "last_name": "Doe"
+      },
+      "created_at": "2025-08-28T06:00:00.000000Z"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `ch_messages` table (task messages)
+- **Read**: `users` table (message sender info)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (messages section)
+
+---
+
+### DELETE `/messages/{messageId}`
+**Purpose**: Delete specific message
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Message deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `ch_messages` table (removes message)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (messages section)
+
+---
+
+### DELETE `/messages`
+**Purpose**: Delete multiple messages
+
+**Request Body**:
+```json
+{
+  "message_ids": [1, 2, 3]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Messages deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `ch_messages` table (multiple records)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (bulk message actions)
+
+---
+
+## 📦 Task Deliverable APIs
+
+### GET `/tasks/{taskId}/deliverables`
+**Purpose**: Get task deliverables
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "task_id": 1,
+      "title": "Website Design",
+      "description": "Complete website design",
+      "type": "design",
+      "quantity": 1,
+      "completed_at": null,
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `task_deliverables` table (deliverable data)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (deliverables section)
+
+---
+
+### POST `/tasks/{taskId}/deliverables`
+**Purpose**: Create task deliverable
+
+**Request Body**:
+```json
+{
+  "title": "Logo Design",
+  "description": "Company logo design",
+  "type": "design",
+  "quantity": 1
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Deliverable created successfully",
+  "data": {
+    "id": 1,
+    "title": "Logo Design",
+    "created_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `task_deliverables` table (deliverable data)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (deliverables section)
+
+---
+
+### GET `/tasks/{taskId}/deliverables/{deliverableId}`
+**Purpose**: Get specific deliverable
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "task_id": 1,
+    "title": "Website Design",
+    "description": "Complete website design",
+    "type": "design",
+    "quantity": 1,
+    "completed_at": null,
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `task_deliverables` table (deliverable data)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (deliverables section)
+
+---
+
+### PUT `/tasks/{taskId}/deliverables/{deliverableId}`
+**Purpose**: Update deliverable
+
+**Request Body**:
+```json
+{
+  "title": "Updated Logo Design",
+  "description": "Updated logo description",
+  "type": "design",
+  "quantity": 2
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Deliverable updated successfully",
+  "data": {
+    "id": 1,
+    "title": "Updated Logo Design",
+    "updated_at": "2025-08-28T06:30:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `task_deliverables` table (deliverable data)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (deliverables section)
+
+---
+
+### DELETE `/tasks/{taskId}/deliverables/{deliverableId}`
+**Purpose**: Delete deliverable
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Deliverable deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `task_deliverables` table (removes deliverable)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (deliverables section)
+
+---
+
+### POST `/tasks/{taskId}/deliverables/{deliverableId}/complete`
+**Purpose**: Mark deliverable as complete
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Deliverable marked as complete",
+  "data": {
+    "completed_at": "2025-08-28T06:30:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `task_deliverables.completed_at` (sets completion timestamp)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (deliverables section)
+
+---
+
+### DELETE `/tasks/{taskId}/deliverables/{deliverableId}/files/{mediaId}`
+**Purpose**: Delete deliverable file
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Deliverable file deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `media` table (removes file)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page (deliverables section)
+
+---
+
+## 📁 Project Management APIs
+
+### GET `/projects`
+**Purpose**: Get all projects with filtering and pagination
+
+**Query Parameters**:
+- `page` (optional): Page number for pagination
+- `per_page` (optional): Items per page (default: 15)
+- `status_id` (optional): Filter by status
+- `priority_id` (optional): Filter by priority
+- `workspace_id` (optional): Filter by workspace
+- `search` (optional): Search in title and description
+- `sort_by` (optional): Sort field (default: created_at)
+- `sort_order` (optional): Sort order (asc/desc, default: desc)
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Projects retrieved successfully",
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "title": "E-commerce Platform",
+        "description": "Modern e-commerce solution",
+        "start_date": "2025-08-01",
+        "end_date": "2025-12-31",
+        "status_id": 1,
+        "priority_id": 2,
+        "workspace_id": 1,
+        "created_by": 1,
+        "created_at": "2025-08-28T06:00:00.000000Z",
+        "updated_at": "2025-08-28T06:00:00.000000Z",
+        "status": {
+          "id": 1,
+          "name": "Active",
+          "color": "#3B82F6"
+        },
+        "priority": {
+          "id": 2,
+          "name": "High",
+          "color": "#EF4444",
+          "level": 4
+        },
+        "workspace": {
+          "id": 1,
+          "name": "Main Workspace"
+        },
+        "creator": {
+          "id": 1,
+          "first_name": "John",
+          "last_name": "Doe"
+        },
+        "users": [
+          {
+            "id": 2,
+            "first_name": "Jane",
+            "last_name": "Smith"
+          }
+        ],
+        "clients": [
+          {
+            "id": 1,
+            "name": "ABC Company"
+          }
+        ],
+        "task_count": 12,
+        "completed_task_count": 8
+      }
+    ],
+    "current_page": 1,
+    "last_page": 3,
+    "per_page": 15,
+    "total": 45,
+    "from": 1,
+    "to": 15
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `projects` table (main project data)
+- **Read**: `project_statuses` table (status information)
+- **Read**: `priorities` table (priority information)
+- **Read**: `workspaces` table (workspace information)
+- **Read**: `users` table (creator and assigned users)
+- **Read**: `project_user` table (user assignments)
+- **Read**: `project_client` table (client assignments)
+- **Read**: `clients` table (assigned clients)
+- **Read**: `tasks` table (task counts)
+
+**Frontend Pages**:
+- `/projects` - Project list page
+- `/project-management` - Project management page
+- `/dashboard` - Dashboard (recent projects)
+
+---
+
+### POST `/projects`
+**Purpose**: Create a new project
+
+**Request Body**:
+```json
+{
+  "title": "New Project",
+  "description": "Project description",
+  "start_date": "2025-08-01",
+  "end_date": "2025-12-31",
+  "status_id": 1,
+  "priority_id": 2,
+  "workspace_id": 1,
+  "user_ids": [1, 2],
+  "client_ids": [1, 2]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Project created successfully",
+  "data": {
+    "id": 1,
+    "title": "New Project",
+    "description": "Project description",
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `projects` table (main project data)
+- **Create**: `project_user` table (user assignments)
+- **Create**: `project_client` table (client assignments)
+
+**Frontend Pages**:
+- `/projects/create` - Create project page
+- `/projects` - Project list page (redirects after creation)
+
+---
+
+### GET `/projects/{id}`
+**Purpose**: Get specific project details
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "E-commerce Platform",
+    "description": "Modern e-commerce solution",
+    "start_date": "2025-08-01",
+    "end_date": "2025-12-31",
+    "status_id": 1,
+    "priority_id": 2,
+    "workspace_id": 1,
+    "created_by": 1,
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z",
+    "status": {
+      "id": 1,
+      "name": "Active",
+      "color": "#3B82F6"
+    },
+    "priority": {
+      "id": 2,
+      "name": "High",
+      "color": "#EF4444",
+      "level": 4
+    },
+    "workspace": {
+      "id": 1,
+      "name": "Main Workspace"
+    },
+    "creator": {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe"
+    },
+    "users": [
+      {
+        "id": 2,
+        "first_name": "Jane",
+        "last_name": "Smith"
+      }
+    ],
+    "clients": [
+      {
+        "id": 1,
+        "name": "ABC Company"
+      }
+    ],
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Website Design",
+        "status": {
+          "id": 1,
+          "name": "In Progress"
+        },
+        "priority": {
+          "id": 2,
+          "name": "High"
+        }
+      }
+    ],
+    "statistics": {
+      "total_tasks": 12,
+      "completed_tasks": 8,
+      "pending_tasks": 4,
+      "completion_percentage": 66.67
+    }
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `projects` table (project data)
+- **Read**: `project_statuses` table (status information)
+- **Read**: `priorities` table (priority information)
+- **Read**: `workspaces` table (workspace information)
+- **Read**: `users` table (creator and assigned users)
+- **Read**: `project_user` table (user assignments)
+- **Read**: `project_client` table (client assignments)
+- **Read**: `clients` table (assigned clients)
+- **Read**: `tasks` table (project tasks)
+- **Read**: `statuses` table (task status)
+- **Read**: `priorities` table (task priority)
+
+**Frontend Pages**:
+- `/projects/{id}` - Project detail page
+- `/projects/{id}/edit` - Project edit page
+
+---
+
+### PUT `/projects/{id}`
+**Purpose**: Update existing project
+
+**Request Body**:
+```json
+{
+  "title": "Updated Project Title",
+  "description": "Updated description",
+  "status_id": 2,
+  "priority_id": 1,
+  "user_ids": [1, 3],
+  "client_ids": [1]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Project updated successfully",
+  "data": {
+    "id": 1,
+    "title": "Updated Project Title",
+    "updated_at": "2025-08-28T06:30:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `projects` table (project data)
+- **Delete/Create**: `project_user` table (user assignments)
+- **Delete/Create**: `project_client` table (client assignments)
+
+**Frontend Pages**:
+- `/projects/{id}/edit` - Project edit page
+- `/projects/{id}` - Project detail page (redirects after update)
+
+---
+
+### DELETE `/projects/{id}`
+**Purpose**: Delete specific project
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Project deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `projects` table (cascades to related tables)
+- **Delete**: `project_user` table (user assignments)
+- **Delete**: `project_client` table (client assignments)
+- **Delete**: `tasks` table (project tasks)
+
+**Frontend Pages**:
+- `/projects/{id}` - Project detail page
+- `/projects` - Project list page (redirects after deletion)
+
+---
+
+### GET `/projects/{id}/statistics`
+**Purpose**: Get project statistics
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "total_tasks": 12,
+    "completed_tasks": 8,
+    "pending_tasks": 4,
+    "overdue_tasks": 1,
+    "completion_percentage": 66.67,
+    "average_task_duration": 5.2,
+    "team_performance": {
+      "total_hours": 120,
+      "efficiency_score": 85.5
+    },
+    "timeline": {
+      "start_date": "2025-08-01",
+      "end_date": "2025-12-31",
+      "days_remaining": 45,
+      "on_schedule": true
+    }
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `tasks` table (task counts and statistics)
+- **Read**: `projects` table (project timeline)
+- **Read**: `time_trackers` table (time tracking data)
+
+**Frontend Pages**:
+- `/projects/{id}` - Project detail page (statistics tab)
+- `/project-management` - Project management dashboard
+
+---
+
+### GET `/projects/{id}/tasks`
+**Purpose**: Get project tasks
+
+**Query Parameters**:
+- `page` (optional): Page number for pagination
+- `per_page` (optional): Items per page (default: 15)
+- `status_id` (optional): Filter by status
+- `priority_id` (optional): Filter by priority
+- `user_id` (optional): Filter by assigned user
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "title": "Website Design",
+        "description": "Complete website design",
+        "status_id": 1,
+        "priority_id": 2,
+        "start_date": "2025-08-01",
+        "end_date": "2025-08-31",
+        "created_at": "2025-08-28T06:00:00.000000Z",
+        "status": {
+          "id": 1,
+          "name": "In Progress",
+          "color": "#3B82F6"
+        },
+        "priority": {
+          "id": 2,
+          "name": "High",
+          "color": "#EF4444"
+        },
+        "users": [
+          {
+            "id": 2,
+            "first_name": "Jane",
+            "last_name": "Smith"
+          }
+        ]
+      }
+    ],
+    "current_page": 1,
+    "last_page": 2,
+    "per_page": 15,
+    "total": 25,
+    "from": 1,
+    "to": 15
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `tasks` table (project tasks)
+- **Read**: `statuses` table (task status)
+- **Read**: `priorities` table (task priority)
+- **Read**: `task_user` table (user assignments)
+- **Read**: `users` table (assigned users)
+
+**Frontend Pages**:
+- `/projects/{id}` - Project detail page (tasks tab)
+- `/project-management` - Project management page
+
