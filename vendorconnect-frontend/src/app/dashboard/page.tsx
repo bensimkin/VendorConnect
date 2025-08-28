@@ -53,8 +53,8 @@ interface DashboardData {
     description?: string;
     note?: string;
     deliverable_quantity?: number;
-    status?: { name: string; color?: string };
-    priority?: { name: string; color?: string };
+      status?: { name: string };
+  priority?: { name: string };
     project?: { title: string };
     template?: {
       id: number;

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\BaseController;
 use App\Models\Task;
 use App\Models\TaskDeliverable;
 use App\Services\NotificationService;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
-class TaskDeliverableController extends Controller
+class TaskDeliverableController extends BaseController
 {
     /**
      * Get all deliverables for a task

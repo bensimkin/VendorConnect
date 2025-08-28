@@ -24,8 +24,8 @@ interface RequesterDashboardData {
     description?: string;
     note?: string;
     deliverable_quantity?: number;
-    status?: { name: string; color?: string };
-    priority?: { name: string; color?: string };
+      status?: { name: string };
+  priority?: { name: string };
     end_date?: string;
     project?: { title: string };
     users?: Array<{ first_name: string; last_name: string }>;

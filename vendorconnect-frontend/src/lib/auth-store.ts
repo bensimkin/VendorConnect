@@ -34,19 +34,26 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true });
         try {
+          console.log('🔍 [AUTH] Attempting login for:', email);
           const response = await apiClient.post('/auth/login', { email, password });
           const { user, token, permissions } = response.data.data;
           
+          console.log('🔍 [AUTH] Login successful, setting token');
+          
           // Save to localStorage
           localStorage.setItem('auth_token', token);
+          console.log('🔍 [AUTH] Token saved to localStorage');
           
           // Also set as a cookie for middleware
           document.cookie = `auth_token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+          console.log('🔍 [AUTH] Token saved as cookie');
           
           set({ user, token, permissions, isLoading: false });
+          console.log('🔍 [AUTH] Auth state updated');
           
           toast.success('Login successful!');
         } catch (error: any) {
+          console.error('🔍 [AUTH] Login error:', error);
           set({ isLoading: false });
           throw error;
         }
