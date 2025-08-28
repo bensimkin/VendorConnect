@@ -12,17 +12,39 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('clients', function (Blueprint $table) {
-            $table->string('company')->nullable()->change();
-            $table->string('phone')->nullable()->change();
-            $table->string('country_code')->nullable()->change();
-            $table->string('password')->nullable()->change();
-            $table->date('dob')->nullable()->change();
-            $table->date('doj')->nullable()->change();
-            $table->string('address')->nullable()->change();
-            $table->string('city')->nullable()->change();
-            $table->string('state')->nullable()->change();
-            $table->string('country')->nullable()->change();
-            $table->string('zip')->nullable()->change();
+            if (Schema::hasColumn('clients', 'company')) {
+                $table->string('company')->nullable()->change();
+            }
+            if (Schema::hasColumn('clients', 'phone')) {
+                $table->string('phone')->nullable()->change();
+            }
+            if (Schema::hasColumn('clients', 'country_code')) {
+                $table->string('country_code')->nullable()->change();
+            }
+            if (Schema::hasColumn('clients', 'password')) {
+                $table->string('password')->nullable()->change();
+            }
+            if (Schema::hasColumn('clients', 'dob')) {
+                $table->date('dob')->nullable()->change();
+            }
+            if (Schema::hasColumn('clients', 'doj')) {
+                $table->date('doj')->nullable()->change();
+            }
+            if (Schema::hasColumn('clients', 'address')) {
+                $table->text('address')->nullable()->change();
+            }
+            if (Schema::hasColumn('clients', 'city')) {
+                $table->string('city')->nullable()->change();
+            }
+            if (Schema::hasColumn('clients', 'state')) {
+                $table->string('state')->nullable()->change();
+            }
+            if (Schema::hasColumn('clients', 'country')) {
+                $table->string('country')->nullable()->change();
+            }
+            if (Schema::hasColumn('clients', 'zip')) {
+                $table->string('zip')->nullable()->change();
+            }
         });
     }
 
@@ -32,17 +54,39 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('clients', function (Blueprint $table) {
-            $table->string('company')->change();
-            $table->string('phone')->change();
-            $table->string('country_code')->change();
-            $table->string('password')->change();
-            $table->date('dob')->change();
-            $table->date('doj')->change();
-            $table->string('address')->change();
-            $table->string('city')->change();
-            $table->string('state')->change();
-            $table->string('country')->change();
-            $table->string('zip')->change();
+            if (Schema::hasColumn('clients', 'company')) {
+                $table->string('company')->change();
+            }
+            if (Schema::hasColumn('clients', 'phone')) {
+                $table->string('phone')->change();
+            }
+            if (Schema::hasColumn('clients', 'country_code')) {
+                $table->string('country_code')->change();
+            }
+            if (Schema::hasColumn('clients', 'password')) {
+                $table->string('password')->change();
+            }
+            if (Schema::hasColumn('clients', 'dob')) {
+                $table->date('dob')->change();
+            }
+            if (Schema::hasColumn('clients', 'doj')) {
+                $table->date('doj')->change();
+            }
+            if (Schema::hasColumn('clients', 'address')) {
+                $table->text('address')->change();
+            }
+            if (Schema::hasColumn('clients', 'city')) {
+                $table->string('city')->change();
+            }
+            if (Schema::hasColumn('clients', 'state')) {
+                $table->string('state')->change();
+            }
+            if (Schema::hasColumn('clients', 'country')) {
+                $table->string('country')->change();
+            }
+            if (Schema::hasColumn('clients', 'zip')) {
+                $table->string('zip')->change();
+            }
         });
     }
 };
