@@ -36,6 +36,56 @@ vendorconnect-frontend/
 
 ---
 
+## ⚠️ CRITICAL: Field Naming Standards
+
+**IMPORTANT**: Frontend interfaces must use consistent field names that match the database schema:
+
+### **Correct Field Usage:**
+```typescript
+// ✅ CORRECT - Use database field names
+interface Task {
+  status: {
+    id: number;
+    title: string;  // NOT status.name
+  };
+  priority: {
+    id: number;
+    title: string;  // NOT priority.name
+  };
+  task_type: {
+    id: number;
+    task_type: string;  // NOT task_type.name
+  };
+  project: {
+    id: number;
+    title: string;  // ✅ Correct
+  };
+}
+```
+
+### **Incorrect Field Usage:**
+```typescript
+// ❌ INCORRECT - Don't use appended 'name' fields
+interface Task {
+  status: {
+    id: number;
+    name: string;  // Avoid - use title instead
+  };
+  priority: {
+    id: number;
+    name: string;  // Avoid - use title instead
+  };
+  task_type: {
+    id: number;
+    name: string;  // Avoid - use task_type instead
+  };
+}
+```
+
+**Reason**: API responses include both fields due to Laravel model `$appends`, but frontend should use the primary database field names for consistency.
+
+---
+
 ## 👥 User Roles & Permissions
 
 ### 1. **Administrator**
