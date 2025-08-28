@@ -92,7 +92,9 @@ Route::prefix('v1')->group(function () {
             Route::put('/{id}/deadline', [TaskController::class, 'updateDeadline']);
             
             // Task answers
+            Route::get('/{id}/question-answers', [TaskController::class, 'getQuestionAnswers']);
             Route::post('/{id}/question-answer', [TaskController::class, 'submitQuestionAnswer']);
+            Route::get('/{id}/checklist-answers', [TaskController::class, 'getChecklistAnswers']);
             Route::post('/{id}/checklist-answer', [TaskController::class, 'submitChecklistAnswer']);
             
             // Task deliverables
