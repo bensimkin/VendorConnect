@@ -17,7 +17,7 @@ class Priority extends Model
         'admin_id'
     ];
 
-    protected $appends = ['name'];
+    // protected $appends = ['name'];  // REMOVED: Causes duplicate fields in API
 
     // public static function all($columns = ['*'])
     // {
@@ -64,8 +64,9 @@ class Priority extends Model
         return $this->hasMany(Task::class);
     }
 
-    public function getNameAttribute()
-    {
-        return $this->title;
-    }
+    // public function getNameAttribute()
+    // {
+    //     return $this->title;
+    // }
+    // REMOVED: Causes duplicate fields in API responses
 }

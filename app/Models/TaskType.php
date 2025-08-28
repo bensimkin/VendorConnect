@@ -14,7 +14,7 @@ class TaskType extends Model
         "updated_at"
     ];
 
-    protected $appends = ['name'];
+    // protected $appends = ['name'];  // REMOVED: Causes duplicate fields in API
 
     public function briefTemplate()
     {
@@ -26,8 +26,9 @@ class TaskType extends Model
         return $this->hasMany(Task::class);
     }
 
-    public function getNameAttribute()
-    {
-        return $this->task_type;
-    }
+    // public function getNameAttribute()
+    // {
+    //     return $this->task_type;
+    // }
+    // REMOVED: Causes duplicate fields in API responses
 }
