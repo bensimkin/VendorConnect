@@ -34,7 +34,9 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user = User::where('email', $request->email)->first();
+        $credentials = $validator->validated();
+
+        $user = User::where('email', $credentials['email'])->first();
 
         if (!$user) {
             // $this->incrementLoginAttempts($request);
@@ -44,7 +46,7 @@ class AuthController extends Controller
             ], 404);
         }
 
-        if (!Hash::check($request->password, $user->password)) {
+        if (!Auth::attempt($credentials)) {
             // $this->incrementLoginAttempts($request);
             return response()->json([
                 'success' => false,
@@ -69,7 +71,7 @@ class AuthController extends Controller
         $permissions = $user->getAllPermissions()->pluck('name')->toArray();
 
         // Update last login
-        $user->update(['last_login_at' => now()]);
+        $user->forceFill(['last_login_at' => now()])->save();
 
         return response()->json([
             'success' => true,
