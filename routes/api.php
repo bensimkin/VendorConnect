@@ -96,6 +96,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/question-answer', [TaskController::class, 'submitQuestionAnswer']);
             Route::get('/{id}/checklist-answers', [TaskController::class, 'getChecklistAnswers']);
             Route::post('/{id}/checklist-answer', [TaskController::class, 'submitChecklistAnswer']);
+            Route::get('/{id}/checklist-status', [TaskController::class, 'getChecklistStatus']);
             
             // Task deliverables
             // Task Deliverables
