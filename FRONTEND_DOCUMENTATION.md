@@ -14,7 +14,7 @@ VendorConnect is a modern, responsive web application built with Next.js 14, Typ
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **State Management**: Zustand
-- **Authentication**: JWT with HTTP-only cookies
+- **Authentication**: Bearer tokens (Sanctum) stored in localStorage and cookies
 - **UI Components**: Custom components with shadcn/ui
 - **Notifications**: React Hot Toast
 - **Theme**: Dark/Light mode support
@@ -107,14 +107,13 @@ vendorconnect-frontend/
    - User enters email/password
    - Frontend validates input
    - API call to `/auth/login`
-   - JWT token stored in localStorage and HTTP-only cookie
+   - API token stored in localStorage and a cookie for middleware access
    - User redirected to dashboard
 
 2. **Session Management**:
    - Token automatically included in API requests
    - Middleware checks authentication on route changes
    - Automatic logout on token expiration
-   - Persistent sessions with refresh tokens
 
 3. **Logout Process**:
    - Clear localStorage and cookies
@@ -122,11 +121,9 @@ vendorconnect-frontend/
    - Redirect to login page
 
 ### Security Features
-- **HTTP-only Cookies**: Prevents XSS attacks
-- **JWT Tokens**: Stateless authentication
+- **Bearer Tokens**: Stateless authentication with Sanctum
 - **Route Protection**: Middleware-based access control
 - **Permission-based UI**: Components render based on user permissions
-- **Automatic Token Refresh**: Seamless session management
 
 ---
 
