@@ -926,7 +926,6 @@ class TaskController extends BaseController
                         'id' => $answer->id,
                         'checklist_id' => $answer->checklist_id,
                         'item_index' => $answer->checklist_answer['item_index'] ?? 0,
-                        'original_checklist_id' => $answer->checklist_answer['original_checklist_id'] ?? $answer->checklist_id,
                         'completed' => $answer->checklist_answer['completed'] ?? false,
                         'notes' => $answer->checklist_answer['notes'] ?? '',
                         'answer_by' => $answer->answer_by,
@@ -984,12 +983,9 @@ class TaskController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            // Create a unique identifier for this specific checklist item
-            $itemIdentifier = $request->checklist_id . '_' . $request->item_index;
-
             $answer = $task->checklistAnswers()->updateOrCreate(
                 [
-                    'checklist_id' => $itemIdentifier,
+                    'checklist_id' => $request->checklist_id,
                     'answer_by' => Auth::user()->id,
                 ],
                 [
@@ -997,7 +993,6 @@ class TaskController extends BaseController
                         'completed' => $request->completed,
                         'notes' => $request->notes,
                         'item_index' => $request->item_index,
-                        'original_checklist_id' => $request->checklist_id,
                     ],
                 ]
             );
