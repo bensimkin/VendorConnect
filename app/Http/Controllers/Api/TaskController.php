@@ -983,19 +983,35 @@ class TaskController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $answer = $task->checklistAnswers()->updateOrCreate(
-                [
-                    'checklist_id' => $request->checklist_id,
-                    'answer_by' => Auth::user()->id,
-                ],
-                [
+            // First, try to find existing answer for this specific item
+            $existingAnswer = $task->checklistAnswers()
+                ->where('checklist_id', $request->checklist_id)
+                ->where('answer_by', Auth::user()->id)
+                ->whereJsonContains('checklist_answer->item_index', $request->item_index)
+                ->first();
+
+            if ($existingAnswer) {
+                // Update existing answer
+                $existingAnswer->update([
                     'checklist_answer' => [
                         'completed' => $request->completed,
                         'notes' => $request->notes,
                         'item_index' => $request->item_index,
                     ],
-                ]
-            );
+                ]);
+                $answer = $existingAnswer;
+            } else {
+                // Create new answer
+                $answer = $task->checklistAnswers()->create([
+                    'checklist_id' => $request->checklist_id,
+                    'answer_by' => Auth::user()->id,
+                    'checklist_answer' => [
+                        'completed' => $request->completed,
+                        'notes' => $request->notes,
+                        'item_index' => $request->item_index,
+                    ],
+                ]);
+            }
 
             return $this->sendResponse($answer, 'Checklist answer submitted successfully');
         } catch (\Exception $e) {
