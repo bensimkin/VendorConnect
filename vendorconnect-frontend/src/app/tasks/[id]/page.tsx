@@ -199,13 +199,13 @@ export default function TaskDetailPage() {
             const checklistStatusResponse = await apiClient.get(`/tasks/${id}/checklist-status`);
             const savedAnswers = checklistStatusResponse.data.data;
             
-            // Create a map of checklist_id to completed status
+            // Create a map of item_index to completed status
             const completedMap: Record<number, boolean> = {};
             savedAnswers.forEach((answer: any) => {
-              // Map by array index (assuming checklist items are in order)
-              const index = answer.checklist_id - 1; // Convert to 0-based index
-              if (index >= 0 && index < templateChecklist.checklist.length) {
-                completedMap[index] = answer.completed;
+              // Use the item_index to map to the correct template item
+              const itemIndex = answer.item_index || 0;
+              if (itemIndex >= 0 && itemIndex < templateChecklist.checklist.length) {
+                completedMap[itemIndex] = answer.completed;
               }
             });
             
@@ -271,11 +271,12 @@ export default function TaskDetailPage() {
         return;
       }
       
-      // Use the template checklist ID for this item
+      // Use the template checklist ID and item index
       const checklist_id = templateChecklist.id;
       
       await apiClient.post(`/tasks/${task.id}/checklist-answer`, {
         checklist_id: checklist_id,
+        item_index: index,
         completed: completed,
         notes: checklistItems[index] || `Checklist item ${index + 1}`,
       });
