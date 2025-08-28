@@ -19,12 +19,10 @@ interface Task {
   status?: {
     id: number;
     name: string;
-    color?: string;
   };
   priority?: {
     id: number;
     name: string;
-    color?: string;
   };
   users?: Array<{
     id: number;
@@ -37,7 +35,21 @@ interface Task {
   }>;
   project?: {
     id: number;
-    name: string;
+    title: string;
+    description?: string;
+    admin_id?: number | null;
+    workspace_id?: number;
+    status_id?: number;
+    priority_id?: number | null;
+    budget?: number | null;
+    start_date?: string;
+    end_date?: string;
+    created_by?: number;
+    is_favorite?: number;
+    task_accessibility?: string;
+    note?: string | null;
+    created_at?: string;
+    updated_at?: string;
   };
   template?: {
     id: number;
@@ -115,9 +127,7 @@ export default function TasksPage() {
     return matchesStatus;
   });
 
-  const getStatusColor = (color?: string) => {
-    return color || '#6b7280'; // Default gray color
-  };
+
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'No date set';
@@ -207,7 +217,7 @@ export default function TasksPage() {
                       <div className="flex items-center gap-2 text-sm">
                         <Tag className="h-4 w-4 text-muted-foreground" />
                         <span className="truncate text-blue-600">
-                          {task.project.name || 'Unnamed Project'}
+                          {task.project.title || 'Unnamed Project'}
                         </span>
                       </div>
                     )}
@@ -246,7 +256,7 @@ export default function TasksPage() {
                     {task.template && (
                       <div className="flex items-center gap-2 text-sm">
                         <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                          Template: {task.template.title}
+                          {task.template.title}
                         </span>
                       </div>
                     )}
@@ -270,24 +280,12 @@ export default function TasksPage() {
                     {/* Priority and Status */}
                     <div className="flex items-center gap-2 flex-wrap">
                       {task.priority && (
-                        <span
-                          className="px-2 py-1 text-xs rounded-full"
-                          style={{
-                            backgroundColor: `${getStatusColor(task.priority.color)}20`,
-                            color: getStatusColor(task.priority.color),
-                          }}
-                        >
+                        <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
                           {task.priority.name || 'No Priority'}
                         </span>
                       )}
                       {task.status && (
-                        <span
-                          className="px-2 py-1 text-xs rounded-full"
-                          style={{
-                            backgroundColor: `${getStatusColor(task.status.color)}20`,
-                            color: getStatusColor(task.status.color),
-                          }}
-                        >
+                        <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
                           {task.status.name || 'No Status'}
                         </span>
                       )}

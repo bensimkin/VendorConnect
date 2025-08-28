@@ -10,6 +10,7 @@ use Spatie\Permission\Traits\HasPermissions;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Models\User;
 
 
 class Client extends Authenticatable implements MustVerifyEmail
@@ -77,6 +78,11 @@ class Client extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsToMany(Workspace::class);
     }
+
+    // public function users()
+    // {
+    //     return $this->belongsToMany(User::class, 'client_user');
+    // }
 
     public function getresult()
     {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import RoleGuard from '@/components/auth/role-guard';
@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import apiClient from '@/lib/api-client';
 import { Plus, Search, Building, Mail, Phone, MapPin, Calendar, Briefcase, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useAuthStore } from '@/lib/auth-store';
+import { filterSensitiveClientDataArray, hasAdminPrivileges } from '@/lib/utils/role-utils';
 
 interface Client {
   id: number;
@@ -27,6 +29,7 @@ interface Client {
 
 export default function ClientsPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -56,7 +59,11 @@ export default function ClientsPage() {
       const response = await apiClient.get(`/clients?${params.toString()}`);
       // Handle paginated response
       const clientData = response.data.data?.data || response.data.data || [];
-      setClients(Array.isArray(clientData) ? clientData : []);
+      const rawClients = Array.isArray(clientData) ? clientData : [];
+      
+      // Filter sensitive data based on user role
+      const filteredClients = filterSensitiveClientDataArray(rawClients, user);
+      setClients(filteredClients);
     } catch (error) {
       console.error('Failed to fetch clients:', error);
       setClients([]);
@@ -102,10 +109,10 @@ export default function ClientsPage() {
   if (loading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="mt-2 text-muted-foreground">Loading clients...</p>
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
+            <p className="mt-4 text-lg">Loading clients...</p>
           </div>
         </div>
       </MainLayout>
@@ -113,88 +120,103 @@ export default function ClientsPage() {
   }
 
   return (
-            <RoleGuard allowedRoles={['admin']}>
-      <MainLayout>
-        <div className="space-y-8">
-        <div className="flex justify-between items-center">
+    <MainLayout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Clients</h1>
-            <p className="text-muted-foreground">Manage your client relationships and projects</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Clients</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">
+              Manage your client relationships and projects
+            </p>
           </div>
-          <Button onClick={() => router.push('/clients/new')}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Client
+          <Button
+            onClick={() => router.push('/clients/new')}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Client
           </Button>
         </div>
 
-        {/* Search */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search clients by name, email, or company..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Search clients by name, company, or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
 
         {/* Clients Grid */}
-        {filteredClients.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredClients.map((client) => (
-              <Card key={client.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push(`/clients/${client.id}`)}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-xl">{client.name || 'Unnamed Client'}</CardTitle>
-                      {client.company && (
-                        <CardDescription className="flex items-center mt-1">
-                          <Building className="mr-1 h-3 w-3" />
-                          {client.company}
-                        </CardDescription>
-                      )}
-                    </div>
-                    <div
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        client.status === 1
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                      }`}
-                    >
-                      {client.status === 1 ? 'Active' : 'Inactive'}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2 text-sm">
-                    {client.email && (
-                      <div className="flex items-center text-muted-foreground">
-                        <Mail className="mr-2 h-4 w-4 flex-shrink-0" />
-                        <span className="truncate">{client.email}</span>
-                      </div>
-                    )}
-                    {client.phone && (
-                      <div className="flex items-center text-muted-foreground">
-                        <Phone className="mr-2 h-4 w-4 flex-shrink-0" />
-                        <span>{client.phone}</span>
-                      </div>
-                    )}
-                    {client.address && (
-                      <div className="flex items-center text-muted-foreground">
-                        <MapPin className="mr-2 h-4 w-4 flex-shrink-0" />
-                        <span className="truncate">{client.address}</span>
-                      </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredClients.map((client) => (
+            <Card
+              key={client.id}
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => router.push(`/clients/${client.id}`)}
+            >
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-xl truncate">{client.name || 'Unnamed Client'}</CardTitle>
+                    {client.company && (
+                      <CardDescription className="flex items-center mt-1">
+                        <Building className="mr-1 h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">{client.company}</span>
+                      </CardDescription>
                     )}
                   </div>
+                  <div
+                    className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ml-2 ${
+                      client.status === 1
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                    }`}
+                  >
+                    {client.status === 1 ? 'Active' : 'Inactive'}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3 text-sm">
+                  {/* Only show sensitive data to admin users */}
+                  {hasAdminPrivileges(user) && client.email && (
+                    <div className="flex items-center text-muted-foreground">
+                      <Mail className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="truncate min-w-0">{client.email}</span>
+                    </div>
+                  )}
+                  {hasAdminPrivileges(user) && client.phone && (
+                    <div className="flex items-center text-muted-foreground">
+                      <Phone className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="truncate min-w-0">{client.phone}</span>
+                    </div>
+                  )}
+                  {hasAdminPrivileges(user) && client.address && (
+                    <div className="flex items-center text-muted-foreground">
+                      <MapPin className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="truncate min-w-0">{client.address}</span>
+                    </div>
+                  )}
+                  {/* Show non-sensitive data to all users */}
+                  <div className="flex items-center text-muted-foreground">
+                    <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
+                    <span className="truncate min-w-0">
+                      Joined {format(new Date(client.created_at), 'MMM d, yyyy')}
+                    </span>
+                  </div>
+                </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <div className="flex items-center space-x-4 text-sm">
+                <div className="pt-4 border-t">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3 text-sm">
                       <div className="flex items-center">
-                        <Briefcase className="mr-1 h-4 w-4 text-muted-foreground" />
+                        <Briefcase className="mr-1 h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <span className="font-medium">{client.projects_count || 0}</span>
                         <span className="text-muted-foreground ml-1">projects</span>
                       </div>
@@ -204,19 +226,25 @@ export default function ClientsPage() {
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleStatus(client.id, client.status === 1 ? 0 : 1, client.name);
-                        }}
-                        className={client.status === 1 ? 'text-orange-600 hover:text-orange-700 hover:bg-orange-50' : 'text-green-600 hover:text-green-700 hover:bg-green-50'}
-                        title={client.status === 1 ? 'Deactivate Client' : 'Activate Client'}
-                      >
-                        {client.status === 1 ? 'Deactivate' : 'Activate'}
-                      </Button>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleStatus(client.id, client.status === 1 ? 0 : 1, client.name || '');
+                      }}
+                      className={`text-xs ${
+                        client.status === 1
+                          ? 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                          : 'text-green-600 hover:text-green-700 hover:bg-green-50'
+                      }`}
+                    >
+                      {client.status === 1 ? 'Deactivate' : 'Activate'}
+                    </Button>
+                    <div className="flex items-center space-x-1">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -224,6 +252,7 @@ export default function ClientsPage() {
                           e.stopPropagation();
                           router.push(`/clients/${client.id}/edit`);
                         }}
+                        className="p-1 h-8 w-8"
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
@@ -232,32 +261,39 @@ export default function ClientsPage() {
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteClient(client.id, client.name);
+                          handleDeleteClient(client.id, client.name || '');
                         }}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 h-8 w-8"
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Calendar className="mr-1 h-3 w-3" />
-                    Added {format(new Date(client.created_at), 'MMM dd, yyyy')}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
+        {filteredClients.length === 0 && !loading && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">
-              {searchTerm ? 'No clients found matching your search.' : 'No clients available. Create your first client to get started!'}
+            <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No clients found</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              {searchTerm ? 'Try adjusting your search terms.' : 'Get started by adding your first client.'}
             </p>
+            {!searchTerm && (
+              <Button
+                onClick={() => router.push('/clients/new')}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Client
+              </Button>
+            )}
           </div>
         )}
       </div>
-      </MainLayout>
-    </RoleGuard>
+    </MainLayout>
   );
 }

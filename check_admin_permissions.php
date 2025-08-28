@@ -102,3 +102,5 @@ $adminUser->forgetCachedPermissions();
 $adminRole->forgetCachedPermissions();
 
 echo "Done! Admin user should now have full permissions.\n";
+
+

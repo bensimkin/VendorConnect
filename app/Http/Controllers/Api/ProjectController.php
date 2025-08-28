@@ -66,6 +66,26 @@ class ProjectController extends BaseController
                 ->withCount(['users as team_members_count'])
                 ->paginate($request->get('per_page', 15));
 
+            // Add task users count to each project
+            foreach ($projects->items() as $project) {
+                $taskUsersCount = User::whereHas('tasks', function($query) use ($project) {
+                    $query->where('project_id', $project->id);
+                })->count();
+                
+                $project->team_members_count += $taskUsersCount;
+                
+                // Add additional task counts for frontend compatibility
+                $project->total_tasks = $project->tasks_count;
+                $project->active_tasks = $project->tasks_count - $project->completed_tasks;
+                
+                // Calculate overdue tasks
+                $overdueTasks = Task::where('project_id', $project->id)
+                    ->where('end_date', '<', now())
+                    ->where('status_id', '!=', 17) // Not completed
+                    ->count();
+                $project->overdue_tasks = $overdueTasks;
+            }
+
             return $this->sendPaginatedResponse($projects, 'Projects retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error retrieving projects: ' . $e->getMessage());
@@ -160,6 +180,7 @@ class ProjectController extends BaseController
     public function show($id)
     {
         try {
+            $user = Auth::user();
             $project = Project::with(['users', 'clients', 'tasks.status', 'status'])
                 ->find($id);
 
@@ -175,6 +196,21 @@ class ProjectController extends BaseController
             // Merge direct project users with task users
             $allUsers = $project->users->merge($taskUsers)->unique('id');
             $project->setRelation('users', $allUsers);
+
+            // Apply role-based data protection to project users
+            if (!$user->hasRole(['admin', 'sub_admin'])) {
+                // Remove sensitive data from users for requesters and taskers
+                foreach ($project->users as $projectUser) {
+                    unset($projectUser->email);
+                    unset($projectUser->phone);
+                    unset($projectUser->address);
+                    unset($projectUser->city);
+                    unset($projectUser->state);
+                    unset($projectUser->country);
+                    unset($projectUser->zip);
+                    unset($projectUser->dob);
+                }
+            }
 
             return $this->sendResponse($project, 'Project retrieved successfully');
         } catch (\Exception $e) {
