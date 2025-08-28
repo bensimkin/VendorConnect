@@ -17,7 +17,7 @@ class Status extends Model
         'admin_id'
     ];
 
-    protected $appends = ['name'];
+    // protected $appends = ['name'];  // REMOVED: Causes duplicate fields in API
 
     public function projects()
     {
@@ -43,8 +43,9 @@ class Status extends Model
         return $this->belongsToMany(Role::class, 'role_status');
     }
 
-    public function getNameAttribute()
-    {
-        return $this->title;
-    }
+    // public function getNameAttribute()
+    // {
+    //     return $this->title;
+    // }
+    // REMOVED: Causes duplicate fields in API responses
 }
