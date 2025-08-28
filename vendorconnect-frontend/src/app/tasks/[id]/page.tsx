@@ -201,13 +201,19 @@ export default function TaskDetailPage() {
             
             // Create a map of item_index to completed status
             const completedMap: Record<number, boolean> = {};
+            console.log('Loading checklist data:', { templateChecklist, savedAnswers });
+            
             savedAnswers.forEach((answer: any) => {
               // Use the item_index to map to the correct template item
               const itemIndex = answer.item_index || 0;
+              console.log('Processing answer:', { answer, itemIndex, templateLength: templateChecklist.checklist.length });
               if (itemIndex >= 0 && itemIndex < templateChecklist.checklist.length) {
                 completedMap[itemIndex] = answer.completed;
+                console.log(`Setting item ${itemIndex} to completed: ${answer.completed}`);
               }
             });
+            
+            console.log('Final completed map:', completedMap);
             
             setChecklistCompleted(completedMap);
           }
@@ -262,6 +268,8 @@ export default function TaskDetailPage() {
     if (!task) return;
     
     try {
+      console.log('Checklist toggle called:', { index, completed, task_id: task.id });
+      
       // Get the template checklist to find the correct checklist_id
       const checklistResponse = await apiClient.get(`/task-brief-checklists?template_id=${task.task_brief_templates_id}`);
       const templateChecklist = checklistResponse.data.data[0];
@@ -271,15 +279,23 @@ export default function TaskDetailPage() {
         return;
       }
       
+      console.log('Template checklist:', templateChecklist);
+      
       // Use the template checklist ID and item index
       const checklist_id = templateChecklist.id;
       
-      await apiClient.post(`/tasks/${task.id}/checklist-answer`, {
+      const requestData = {
         checklist_id: checklist_id,
         item_index: index,
         completed: completed,
         notes: checklistItems[index] || `Checklist item ${index + 1}`,
-      });
+      };
+      
+      console.log('Sending checklist answer request:', requestData);
+      
+      const response = await apiClient.post(`/tasks/${task.id}/checklist-answer`, requestData);
+      
+      console.log('Checklist answer response:', response.data);
       
       // Update local state immediately for better UX
       setChecklistCompleted(prev => ({
