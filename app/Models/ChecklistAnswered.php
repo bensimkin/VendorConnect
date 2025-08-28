@@ -23,4 +23,9 @@ class ChecklistAnswered extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function briefChecklist()
+    {
+        return $this->belongsTo(TaskBriefChecklist::class, 'checklist_id');
+    }
+
 }
