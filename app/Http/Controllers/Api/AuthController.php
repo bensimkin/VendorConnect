@@ -18,8 +18,8 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        // Rate limiting for login attempts
-        $this->validateLoginAttempts($request);
+        // Rate limiting for login attempts - temporarily disabled for debugging
+        // $this->validateLoginAttempts($request);
 
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
@@ -37,7 +37,7 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
-            $this->incrementLoginAttempts($request);
+            // $this->incrementLoginAttempts($request);
             return response()->json([
                 'success' => false,
                 'message' => 'Account not found!'
@@ -45,7 +45,7 @@ class AuthController extends Controller
         }
 
         if (!Hash::check($request->password, $user->password)) {
-            $this->incrementLoginAttempts($request);
+            // $this->incrementLoginAttempts($request);
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials!'

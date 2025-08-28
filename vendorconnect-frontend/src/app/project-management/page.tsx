@@ -40,12 +40,10 @@ interface Task {
   status?: {
     id: number;
     name: string;
-    color?: string;
   };
   priority?: {
     id: number;
     name: string;
-    color?: string;
   };
   users?: Array<{
     id: number;
@@ -116,10 +114,6 @@ export default function ProjectManagementPage() {
       newExpanded.delete(projectId);
     } else {
       newExpanded.add(projectId);
-      // Fetch tasks if not already loaded
-      if (!projectTasks[projectId]) {
-        fetchProjectTasks(projectId);
-      }
     }
     setExpandedProjects(newExpanded);
   };
@@ -131,16 +125,37 @@ export default function ProjectManagementPage() {
       case 'completed':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'in progress':
+      case 'active':
         return <Clock className="h-4 w-4 text-blue-500" />;
       case 'pending':
+      case 'accepted':
         return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      case 'overdue':
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
       default:
         return <Clock className="h-4 w-4 text-gray-500" />;
     }
   };
 
-  const getStatusColor = (color?: string) => {
-    return color || '#6b7280';
+
+
+  const getStatusColorByName = (statusName?: string) => {
+    if (!statusName) return '#6b7280';
+    
+    switch (statusName.toLowerCase()) {
+      case 'completed':
+        return '#10b981'; // green
+      case 'in progress':
+      case 'active':
+        return '#3b82f6'; // blue
+      case 'pending':
+      case 'accepted':
+        return '#f59e0b'; // yellow
+      case 'overdue':
+        return '#ef4444'; // red
+      default:
+        return '#6b7280'; // gray
+    }
   };
 
   const formatDate = (dateString?: string) => {
@@ -155,6 +170,39 @@ export default function ProjectManagementPage() {
   const calculateProgress = (completedTasks: number, totalTasks: number) => {
     if (totalTasks === 0) return 0;
     return Math.round((completedTasks / totalTasks) * 100);
+  };
+
+  const calculateOverdueTasks = (project: any) => {
+    if (!projectTasks[project.id]) return 0;
+    const now = new Date();
+    return projectTasks[project.id].filter((task: any) => {
+      if (!task.end_date) return false;
+      const endDate = new Date(task.end_date);
+      const isCompleted = task.status?.name?.toLowerCase() === 'completed' || 
+                         task.status?.title?.toLowerCase() === 'completed';
+      return endDate < now && !isCompleted;
+    }).length;
+  };
+
+  const calculateTaskCounts = (project: Project) => {
+    const tasks = project.tasks || [];
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(task => 
+      task.status?.name?.toLowerCase() === 'completed' || 
+      task.status?.title?.toLowerCase() === 'completed'
+    ).length;
+    const activeTasks = totalTasks - completedTasks;
+    
+    const now = new Date();
+    const overdueTasks = tasks.filter(task => {
+      if (!task.end_date) return false;
+      const endDate = new Date(task.end_date);
+      const isCompleted = task.status?.name?.toLowerCase() === 'completed' || 
+                         task.status?.title?.toLowerCase() === 'completed';
+      return endDate < now && !isCompleted;
+    }).length;
+    
+    return { totalTasks, activeTasks, overdueTasks };
   };
 
   // Filter projects based on status
@@ -265,12 +313,19 @@ export default function ProjectManagementPage() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <div className="text-sm font-medium">
-                          {project.total_tasks || 0} Total Tasks
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {project.active_tasks || 0} Active • {project.overdue_tasks || 0} Overdue
-                        </div>
+                        {(() => {
+                          const { totalTasks, activeTasks, overdueTasks } = calculateTaskCounts(project);
+                          return (
+                            <>
+                              <div className="text-sm font-medium">
+                                {totalTasks} Total Tasks
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {activeTasks} Active • {overdueTasks} Overdue
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                       <Button
                         variant="ghost"
@@ -302,58 +357,59 @@ export default function ProjectManagementPage() {
                         </Button>
                       </div>
                       
-                      {projectTasks[project.id] ? (
-                        projectTasks[project.id].length > 0 ? (
-                          <div className="space-y-3">
-                            {projectTasks[project.id].map((task) => (
-                              <div
-                                key={task.id}
-                                className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                                onClick={() => router.push(`/tasks/${task.id}`)}
-                              >
-                                <div className="flex items-center gap-3">
-                                  {getStatusIcon(task.status?.name)}
-                                  <div>
-                                    <p className="font-medium text-sm">{task.title}</p>
-                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                      {task.priority && (
-                                        <Badge
-                                          variant="secondary"
-                                          style={{
-                                            backgroundColor: getStatusColor(task.priority.color) + '20',
-                                            color: getStatusColor(task.priority.color),
-                                          }}
-                                        >
-                                          {task.priority.name}
-                                        </Badge>
-                                      )}
-                                      {task.end_date && (
-                                        <span>Due {formatDate(task.end_date)}</span>
-                                      )}
-                                    </div>
+                      {project.tasks && project.tasks.length > 0 ? (
+                        <div className="space-y-3">
+                          {project.tasks.map((task) => (
+                            <div
+                              key={task.id}
+                              className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                              onClick={() => router.push(`/tasks/${task.id}`)}
+                            >
+                              <div className="flex items-center gap-3">
+                                {getStatusIcon(task.status?.name)}
+                                <div>
+                                  <p className="font-medium text-sm">{task.title}</p>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    {task.status && (
+                                      <Badge
+                                        variant="secondary"
+                                        style={{
+                                          backgroundColor: getStatusColorByName(task.status.name) + '20',
+                                          color: getStatusColorByName(task.status.name),
+                                        }}
+                                      >
+                                        {task.status.name}
+                                      </Badge>
+                                    )}
+                                    {task.priority && (
+                                      <Badge
+                                        variant="secondary"
+                                        className="bg-blue-100 text-blue-800"
+                                      >
+                                        {task.priority.name}
+                                      </Badge>
+                                    )}
+                                    {task.end_date && (
+                                      <span>Due {formatDate(task.end_date)}</span>
+                                    )}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  {task.users && task.users.length > 0 && (
-                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                      <User className="h-3 w-3" />
-                                      <span>{task.users.length} assigned</span>
-                                    </div>
-                                  )}
-                                </div>
                               </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-center text-muted-foreground py-4">
-                            No tasks found for this project
-                          </p>
-                        )
-                      ) : (
-                        <div className="flex items-center justify-center py-4">
-                          <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                          <span className="ml-2 text-sm text-muted-foreground">Loading tasks...</span>
+                              <div className="flex items-center gap-2">
+                                {task.users && task.users.length > 0 && (
+                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <User className="h-3 w-3" />
+                                    <span>{task.users.length} assigned</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
                         </div>
+                      ) : (
+                        <p className="text-center text-muted-foreground py-4">
+                          No tasks found for this project
+                        </p>
                       )}
                     </div>
                   </CardContent>

@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import apiClient from '@/lib/api-client';
-import { ArrowLeft, Edit, Trash2, Calendar, User, Tag, MessageSquare, Paperclip, Clock, CheckCircle, AlertCircle, Plus, Edit3, AlertTriangle, FileText } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Calendar, User, Tag, MessageSquare, Paperclip, Clock, CheckCircle, AlertCircle, Plus, Edit3, AlertTriangle, FileText, Eye, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 
@@ -23,12 +23,10 @@ interface TaskDetail {
   status?: {
     id: number;
     name: string;
-    color?: string;
   };
   priority?: {
     id: number;
     name: string;
-    color?: string;
   };
   users?: Array<{
     id: number;
@@ -42,7 +40,7 @@ interface TaskDetail {
   }>;
   project?: {
     id: number;
-    name: string;
+    title: string;
   };
   start_date?: string;
   end_date?: string;
@@ -109,6 +107,8 @@ export default function TaskDetailPage() {
   const [checklistItems, setChecklistItems] = useState<string[]>([]);
   const [checklistCompleted, setChecklistCompleted] = useState<Record<number, boolean>>({});
   const [showDeliverableForm, setShowDeliverableForm] = useState(false);
+  const [showDeliverableModal, setShowDeliverableModal] = useState(false);
+  const [selectedDeliverable, setSelectedDeliverable] = useState<any>(null);
   const [deliverableForm, setDeliverableForm] = useState({
     title: '',
     description: '',
@@ -447,6 +447,11 @@ export default function TaskDetailPage() {
     }
   };
 
+  const handleViewDeliverable = (deliverable: any) => {
+    setSelectedDeliverable(deliverable);
+    setShowDeliverableModal(true);
+  };
+
   const getStatusIcon = (statusName?: string) => {
     if (!statusName) return <Clock className="h-5 w-5 text-gray-500" />;
     
@@ -728,108 +733,7 @@ export default function TaskDetailPage() {
               </Card>
             )}
 
-            {/* Deliverables */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Deliverables</CardTitle>
-                <CardDescription>Add deliverables for this task</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {deliverables.length > 0 ? (
-                  <div className="space-y-4">
-                    {deliverables.map((deliverable) => (
-                      <div key={deliverable.id} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <h4 className="font-medium">{deliverable.title}</h4>
-                            <Badge variant="secondary">
-                              {deliverable.type}
-                            </Badge>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteDeliverable(deliverable.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        
-                        {deliverable.description && (
-                          <p className="text-sm text-muted-foreground">
-                            {deliverable.description}
-                          </p>
-                        )}
 
-                        {/* Links */}
-                        {(deliverable.google_link || deliverable.external_link) && (
-                          <div className="space-y-2">
-                            {deliverable.google_link && (
-                              <a
-                                href={deliverable.google_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 text-sm flex items-center space-x-1"
-                              >
-                                <span>🔗 Google Drive Link</span>
-                              </a>
-                            )}
-                            {deliverable.external_link && (
-                              <a
-                                href={deliverable.external_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 text-sm flex items-center space-x-1"
-                              >
-                                <span>🔗 External Link</span>
-                              </a>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Files */}
-                        {deliverable.media && deliverable.media.length > 0 && (
-                          <div className="space-y-2">
-                            <p className="text-sm font-medium">Files:</p>
-                            <div className="space-y-1">
-                              {deliverable.media.map((file: any) => (
-                                <a
-                                  key={file.id}
-                                  href={file.original_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800 text-sm flex items-center space-x-1"
-                                >
-                                  <span>📎 {file.file_name}</span>
-                                </a>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {deliverable.completed_at && (
-                          <p className="text-xs text-green-600">
-                            Completed: {new Date(deliverable.completed_at).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-sm text-muted-foreground mb-4">No deliverables added yet</p>
-                    <Button
-                      onClick={() => setShowDeliverableForm(true)}
-                      size="sm"
-                      disabled={isTaskPastDue()}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      {isTaskPastDue() ? 'Deliverables Disabled' : 'Add Deliverable'}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
 
             {/* Comments */}
             <Card>
@@ -876,13 +780,16 @@ export default function TaskDetailPage() {
                               </p>
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteComment(comment.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {(comment.sender?.id === user?.id || 
+                            user?.roles?.some(role => ['admin', 'sub_admin', 'requester'].includes(role.name.toLowerCase()))) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteComment(comment.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                         <p className="text-sm text-gray-700 ml-10">
                           {comment.message_text}
@@ -954,12 +861,7 @@ export default function TaskDetailPage() {
                   ) : (
                     <div className="flex items-center gap-2">
                       {getStatusIcon(task.status?.name)}
-                      <Badge
-                        style={{
-                          backgroundColor: task.status?.color ? `${task.status.color}20` : undefined,
-                          color: task.status?.color || undefined,
-                        }}
-                      >
+                      <Badge className="bg-green-100 text-green-800">
                         {task.status?.name || 'No Status'}
                       </Badge>
                     </div>
@@ -1007,12 +909,7 @@ export default function TaskDetailPage() {
                       </div>
                     </div>
                   ) : (
-                    <Badge
-                      style={{
-                        backgroundColor: task.priority?.color ? `${task.priority.color}20` : undefined,
-                        color: task.priority?.color || undefined,
-                      }}
-                    >
+                    <Badge className="bg-blue-100 text-blue-800">
                       {task.priority?.name || 'No Priority'}
                     </Badge>
                   )}
@@ -1021,7 +918,7 @@ export default function TaskDetailPage() {
                 {task.project && (
                   <div>
                     <p className="text-sm font-medium mb-2">Project</p>
-                    <p className="text-sm">{task.project.name}</p>
+                    <p className="text-sm">{task.project.title}</p>
                   </div>
                 )}
 
@@ -1098,6 +995,81 @@ export default function TaskDetailPage() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Deliverables */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Deliverables</CardTitle>
+                <CardDescription>Add deliverables for this task</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {deliverables.length > 0 ? (
+                  <div className="space-y-2">
+                    {deliverables.map((deliverable) => (
+                      <div key={deliverable.id} className="border rounded-lg p-2 hover:bg-gray-50 cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2 flex-1 min-w-0">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm truncate">{deliverable.title}</h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="secondary" className="text-xs">
+                                  {deliverable.type}
+                                </Badge>
+                                {deliverable.media && deliverable.media.length > 0 && (
+                                  <span className="text-xs text-muted-foreground">
+                                    📎 {deliverable.media.length} file{deliverable.media.length > 1 ? 's' : ''}
+                                  </span>
+                                )}
+                                {(deliverable.google_link || deliverable.external_link) && (
+                                  <span className="text-xs text-muted-foreground">🔗</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewDeliverable(deliverable);
+                              }}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteDeliverable(deliverable.id);
+                              }}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-xs text-muted-foreground mb-3">No deliverables added yet</p>
+                    <Button
+                      onClick={() => setShowDeliverableForm(true)}
+                      size="sm"
+                      disabled={isTaskPastDue()}
+                      className="w-full"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      {isTaskPastDue() ? 'Deliverables Disabled' : 'Add Deliverable'}
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Tags */}
             {task.tags && task.tags.length > 0 && (
@@ -1238,6 +1210,113 @@ export default function TaskDetailPage() {
                   {submittingDeliverable ? 'Adding...' : 'Add Deliverable'}
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Deliverable View Modal */}
+      {showDeliverableModal && selectedDeliverable && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">{selectedDeliverable.title}</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowDeliverableModal(false);
+                  setSelectedDeliverable(null);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Type Badge */}
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">
+                  {selectedDeliverable.type}
+                </Badge>
+                {selectedDeliverable.completed_at && (
+                  <Badge variant="default" className="bg-green-100 text-green-800">
+                    Completed
+                  </Badge>
+                )}
+              </div>
+
+              {/* Description */}
+              {selectedDeliverable.description && (
+                <div>
+                  <h3 className="font-medium mb-2">Description</h3>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {selectedDeliverable.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Links */}
+              {(selectedDeliverable.google_link || selectedDeliverable.external_link) && (
+                <div>
+                  <h3 className="font-medium mb-2">Links</h3>
+                  <div className="space-y-2">
+                    {selectedDeliverable.google_link && (
+                      <a
+                        href={selectedDeliverable.google_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm"
+                      >
+                        <span>🔗</span>
+                        <span>Google Drive</span>
+                      </a>
+                    )}
+                    {selectedDeliverable.external_link && (
+                      <a
+                        href={selectedDeliverable.external_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm"
+                      >
+                        <span>🔗</span>
+                        <span>External Link</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Files */}
+              {selectedDeliverable.media && selectedDeliverable.media.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Files</h3>
+                  <div className="space-y-2">
+                    {selectedDeliverable.media.map((file: any) => (
+                      <a
+                        key={file.id}
+                        href={file.original_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm"
+                      >
+                        <span>📎</span>
+                        <span>{file.file_name}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Completion Date */}
+              {selectedDeliverable.completed_at && (
+                <div>
+                  <h3 className="font-medium mb-2">Completed</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(selectedDeliverable.completed_at).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
