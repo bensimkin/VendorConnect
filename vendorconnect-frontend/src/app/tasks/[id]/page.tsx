@@ -15,6 +15,7 @@ import apiClient from '@/lib/api-client';
 import { ArrowLeft, Edit, Trash2, Calendar, User, Tag, MessageSquare, Paperclip, Clock, CheckCircle, AlertCircle, Plus, Edit3, AlertTriangle, FileText, Eye, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
+import { useAuthStore } from '@/lib/auth-store';
 
 interface TaskDetail {
   id: number;
@@ -98,6 +99,7 @@ interface QuestionAnswer {
 export default function TaskDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuthStore();
   const [task, setTask] = useState<TaskDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState('');
