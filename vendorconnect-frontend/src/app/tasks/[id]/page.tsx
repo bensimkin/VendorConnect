@@ -52,6 +52,8 @@ interface TaskDetail {
   note?: string;
   deliverable_quantity?: number;
   template_id?: number;
+  template_questions?: any[];
+  template_checklist?: any[];
   template?: {
     id: number;
     title: string;
@@ -189,42 +191,56 @@ export default function TaskDetailPage() {
         setQuestionAnswers(answers);
       }
 
-      // Load checklist items from saved answers
-      try {
-        console.log('Loading checklist from saved answers');
-        
-        // Fetch saved checklist answers
-        const checklistStatusResponse = await apiClient.get(`/tasks/${id}/checklist-status`);
-        console.log('Checklist status response:', checklistStatusResponse.data);
-        
-        const savedAnswers = checklistStatusResponse.data.data;
-        
-        if (savedAnswers && savedAnswers.length > 0) {
-          // Extract checklist items from the notes field of saved answers
-          const checklistItems: string[] = [];
-          const completedMap: Record<number, boolean> = {};
-          
-          console.log('Processing saved answers:', savedAnswers);
-          
-          savedAnswers.forEach((answer: any, index: number) => {
-            // The checklist item text is stored in the notes field
-            const itemText = answer.notes || `Checklist item ${index + 1}`;
-            checklistItems.push(itemText);
-            completedMap[index] = answer.completed || false;
-            console.log(`Item ${index}: "${itemText}" - completed: ${answer.completed}`);
-          });
-          
-          console.log('Setting checklist items:', checklistItems);
-          console.log('Setting completed map:', completedMap);
-          
-          setChecklistItems(checklistItems);
-          setChecklistCompleted(completedMap);
-        } else {
-          console.log('No saved checklist answers found');
-        }
-      } catch (error) {
-        console.error('Failed to load checklist data:', error);
-      }
+                   // Load checklist items from task template data
+             if (task?.template_checklist && task.template_checklist.length > 0) {
+               console.log('Loading checklist from task template data:', task.template_checklist);
+               
+               const checklistItems: string[] = [];
+               const completedMap: Record<number, boolean> = {};
+               
+               // Parse checklist items from the first checklist object
+               const checklistData = task.template_checklist[0];
+               if (checklistData && checklistData.checklist) {
+                 try {
+                   const parsedChecklist = JSON.parse(checklistData.checklist);
+                   if (Array.isArray(parsedChecklist)) {
+                     parsedChecklist.forEach((item: any, index: number) => {
+                       checklistItems.push(item.text || item || `Checklist item ${index + 1}`);
+                       completedMap[index] = false; // Default to unchecked
+                     });
+                   }
+                 } catch (e) {
+                   console.error('Failed to parse checklist data:', e);
+                 }
+               }
+               
+               console.log('Setting checklist items:', checklistItems);
+               console.log('Setting completed map:', completedMap);
+               
+               setChecklistItems(checklistItems);
+               setChecklistCompleted(completedMap);
+               
+               // Load saved checklist states
+               try {
+                 const checklistStatusResponse = await apiClient.get(`/tasks/${id}/checklist-status`);
+                 console.log('Checklist status response:', checklistStatusResponse.data);
+                 
+                 const savedAnswers = checklistStatusResponse.data.data;
+                 if (savedAnswers && savedAnswers.length > 0) {
+                   savedAnswers.forEach((answer: any) => {
+                     const itemIndex = answer.item_index || 0;
+                     if (completedMap.hasOwnProperty(itemIndex)) {
+                       completedMap[itemIndex] = answer.completed || false;
+                     }
+                   });
+                   setChecklistCompleted({...completedMap});
+                 }
+               } catch (error) {
+                 console.error('Failed to load checklist states:', error);
+               }
+             } else {
+               console.log('No template checklist data found in task');
+             }
 
       // Load deliverables
       if (taskData.deliverables) {
