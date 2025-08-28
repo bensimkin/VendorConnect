@@ -458,7 +458,7 @@ class TaskController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $task = Task::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $task = Task::find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -482,7 +482,6 @@ class TaskController extends BaseController
                 'users', 'clients', 'status', 'priority', 'project', 'tags',
                 'questionAnswers', 'checklistAnswers'
             ])
-            ->where('workspace_id', Auth::user()->workspace_id)
             ->find($id);
 
             if (!$task) {
@@ -503,7 +502,7 @@ class TaskController extends BaseController
     public function uploadMedia(Request $request, $id)
     {
         try {
-            $task = Task::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $task = Task::find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -561,7 +560,7 @@ class TaskController extends BaseController
     public function getMedia($id)
     {
         try {
-            $task = Task::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $task = Task::find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -588,9 +587,8 @@ class TaskController extends BaseController
                 return $this->sendNotFound('Media not found');
             }
 
-            // Ensure the media belongs to a task in the user's workspace
-            $task = Task::where('workspace_id', Auth::user()->workspace_id)
-                ->where('id', $media->model_id)
+            // Ensure the media belongs to a task
+            $task = Task::where('id', $media->model_id)
                 ->first();
 
             if (!$task) {
@@ -624,10 +622,9 @@ class TaskController extends BaseController
             // Find media by IDs using Spatie Media Library
             $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::whereIn('id', $request->media_ids)->get();
 
-            // Filter media that belongs to tasks in the user's workspace
+            // Filter media that belongs to tasks
             $validMedia = $media->filter(function ($mediaItem) {
-                $task = Task::where('workspace_id', Auth::user()->workspace_id)
-                    ->where('id', $mediaItem->model_id)
+                $task = Task::where('id', $mediaItem->model_id)
                     ->first();
                 return $task !== null;
             });
@@ -762,11 +759,7 @@ class TaskController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $messages = TaskMessage::whereIn('id', $request->message_ids)
-                ->whereHas('task', function ($query) {
-                    $query->where('workspace_id', Auth::user()->workspace_id);
-                })
-                ->get();
+            $messages = TaskMessage::whereIn('id', $request->message_ids)->get();
 
             foreach ($messages as $message) {
                 // Allow user to delete their own messages, or admin/sub_admin/requester to delete any message
@@ -793,7 +786,6 @@ class TaskController extends BaseController
     {
         try {
             $task = Task::with(['questionAnswers.briefQuestions'])
-                ->where('workspace_id', Auth::user()->workspace_id)
                 ->find($id);
 
             if (!$task) {
@@ -860,7 +852,6 @@ class TaskController extends BaseController
     {
         try {
             $task = Task::with(['checklistAnswers.briefChecklist'])
-                ->where('workspace_id', Auth::user()->workspace_id)
                 ->find($id);
 
             if (!$task) {
