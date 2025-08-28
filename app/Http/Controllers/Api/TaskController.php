@@ -787,6 +787,26 @@ class TaskController extends BaseController
     }
 
     /**
+     * Get question answers for a task
+     */
+    public function getQuestionAnswers($id)
+    {
+        try {
+            $task = Task::with(['questionAnswers.briefQuestions'])
+                ->where('workspace_id', Auth::user()->workspace_id)
+                ->find($id);
+
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+
+            return $this->sendResponse($task->questionAnswers, 'Question answers retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving question answers: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Submit question answer
      */
     public function submitQuestionAnswer(Request $request, $id)
@@ -830,6 +850,26 @@ class TaskController extends BaseController
             return $this->sendResponse($answer, 'Question answer submitted successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error submitting question answer: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get checklist answers for a task
+     */
+    public function getChecklistAnswers($id)
+    {
+        try {
+            $task = Task::with(['checklistAnswers.briefChecklist'])
+                ->where('workspace_id', Auth::user()->workspace_id)
+                ->find($id);
+
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+
+            return $this->sendResponse($task->checklistAnswers, 'Checklist answers retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving checklist answers: ' . $e->getMessage());
         }
     }
 
