@@ -188,15 +188,23 @@ export default function TaskDetailPage() {
       // Load template checklist items and saved answers
       if (taskData.task_brief_templates_id) {
         try {
+          console.log('Loading checklist for template ID:', taskData.task_brief_templates_id);
+          
           // Fetch template checklist items
           const checklistResponse = await apiClient.get(`/task-brief-checklists?template_id=${taskData.task_brief_templates_id}`);
+          console.log('Template checklist response:', checklistResponse.data);
+          
           const templateChecklist = checklistResponse.data.data[0];
+          console.log('Template checklist:', templateChecklist);
           
           if (templateChecklist && templateChecklist.checklist) {
+            console.log('Setting checklist items:', templateChecklist.checklist);
             setChecklistItems(templateChecklist.checklist);
             
             // Fetch saved checklist answers
             const checklistStatusResponse = await apiClient.get(`/tasks/${id}/checklist-status`);
+            console.log('Checklist status response:', checklistStatusResponse.data);
+            
             const savedAnswers = checklistStatusResponse.data.data;
             
             // Create a map of item_index to completed status
@@ -216,10 +224,14 @@ export default function TaskDetailPage() {
             console.log('Final completed map:', completedMap);
             
             setChecklistCompleted(completedMap);
+          } else {
+            console.log('No template checklist found or no checklist items');
           }
         } catch (error) {
           console.error('Failed to load checklist data:', error);
         }
+      } else {
+        console.log('No task_brief_templates_id found in task data');
       }
 
       // Load deliverables
