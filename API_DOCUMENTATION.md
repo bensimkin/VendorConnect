@@ -3583,3 +3583,786 @@ multipart/form-data with media files
 - `/templates/{id}` - Template detail page
 - `/templates` - Template list page (redirects after deletion)
 
+---
+
+## ❓ Task Brief Question APIs
+
+### GET `/task-brief-questions`
+**Purpose**: Get all task brief questions
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "template_id": 1,
+      "question_text": "What is your target audience?",
+      "question_type": "text",
+      "required": true,
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `task_brief_questions` table (question data)
+
+**Frontend Pages**:
+- `/templates/{id}` - Template detail page
+- Task creation forms
+
+---
+
+### POST `/task-brief-questions`
+**Purpose**: Create a new task brief question
+
+**Request Body**:
+```json
+{
+  "template_id": 1,
+  "question_text": "What is your brand color?",
+  "question_type": "text",
+  "required": false
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Question created successfully",
+  "data": {
+    "id": 2,
+    "question_text": "What is your brand color?",
+    "created_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `task_brief_questions` table (question data)
+
+**Frontend Pages**:
+- `/templates/{id}/edit` - Template edit page
+
+---
+
+## ✅ Task Brief Checklist APIs
+
+### GET `/task-brief-checklists`
+**Purpose**: Get all task brief checklists
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "template_id": 1,
+      "checklist": [
+        {
+          "id": 1,
+          "text": "Design mockups completed"
+        },
+        {
+          "id": 2,
+          "text": "Client feedback received"
+        }
+      ],
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `task_brief_checklists` table (checklist data)
+
+**Frontend Pages**:
+- `/templates/{id}` - Template detail page
+- Task creation forms
+
+---
+
+### POST `/task-brief-checklists`
+**Purpose**: Create a new task brief checklist
+
+**Request Body**:
+```json
+{
+  "template_id": 1,
+  "checklist": [
+    {
+      "text": "Content approved"
+    },
+    {
+      "text": "Design finalized"
+    }
+  ]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Checklist created successfully",
+  "data": {
+    "id": 2,
+    "created_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `task_brief_checklists` table (checklist data)
+
+**Frontend Pages**:
+- `/templates/{id}/edit` - Template edit page
+
+---
+
+## 🎨 Portfolio APIs
+
+### GET `/portfolios`
+**Purpose**: Get all portfolios
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "title": "Web Design Portfolio",
+      "description": "Showcase of web design projects",
+      "user_id": 1,
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z",
+      "projects_count": 5
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `portfolios` table (portfolio data)
+- **Read**: `projects` table (project counts)
+
+**Frontend Pages**:
+- `/portfolios` - Portfolio list page
+
+---
+
+### POST `/portfolios`
+**Purpose**: Create a new portfolio
+
+**Request Body**:
+```json
+{
+  "title": "Graphic Design Portfolio",
+  "description": "Showcase of graphic design work"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Portfolio created successfully",
+  "data": {
+    "id": 2,
+    "title": "Graphic Design Portfolio",
+    "created_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `portfolios` table (portfolio data)
+
+**Frontend Pages**:
+- `/portfolios/create` - Create portfolio page
+
+---
+
+## ⚙️ Settings APIs
+
+### GET `/settings`
+**Purpose**: Get application settings
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "app_name": "VendorConnect",
+    "app_description": "Project management platform",
+    "app_logo": "logo.png",
+    "app_favicon": "favicon.ico",
+    "timezone": "UTC",
+    "date_format": "Y-m-d",
+    "time_format": "H:i:s",
+    "currency": "USD",
+    "language": "en"
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `settings` table (application settings)
+
+**Frontend Pages**:
+- `/settings` - Settings page
+- All pages (app configuration)
+
+---
+
+### PUT `/settings`
+**Purpose**: Update application settings
+
+**Request Body**:
+```json
+{
+  "app_name": "VendorConnect Updated",
+  "timezone": "America/New_York",
+  "currency": "EUR"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Settings updated successfully"
+}
+```
+
+**Database Operations**:
+- **Update**: `settings` table (settings data)
+
+**Frontend Pages**:
+- `/settings` - Settings page
+
+---
+
+## 🏷️ Tag Management APIs
+
+### GET `/tags`
+**Purpose**: Get all tags
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "urgent",
+      "color": "#EF4444",
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `tags` table (tag data)
+
+**Frontend Pages**:
+- `/tags` - Tag management page
+- Task and project creation/edit forms
+
+---
+
+### POST `/tags`
+**Purpose**: Create a new tag
+
+**Request Body**:
+```json
+{
+  "name": "feature",
+  "color": "#3B82F6"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Tag created successfully",
+  "data": {
+    "id": 2,
+    "name": "feature",
+    "color": "#3B82F6",
+    "created_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `tags` table (tag data)
+
+**Frontend Pages**:
+- `/tags` - Tag management page
+
+---
+
+## 🔍 Search APIs
+
+### GET `/search`
+**Purpose**: Global search across tasks, projects, clients, and users
+
+**Query Parameters**:
+- `q` (required): Search query
+- `type` (optional): Filter by type (tasks, projects, clients, users)
+- `page` (optional): Page number for pagination
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Website Design",
+        "type": "task"
+      }
+    ],
+    "projects": [
+      {
+        "id": 1,
+        "title": "E-commerce Platform",
+        "type": "project"
+      }
+    ],
+    "clients": [
+      {
+        "id": 1,
+        "name": "ABC Company",
+        "type": "client"
+      }
+    ],
+    "users": [
+      {
+        "id": 1,
+        "name": "John Doe",
+        "type": "user"
+      }
+    ]
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `tasks` table (task search)
+- **Read**: `projects` table (project search)
+- **Read**: `clients` table (client search)
+- **Read**: `users` table (user search)
+
+**Frontend Pages**:
+- Global search component
+- Search results page
+
+---
+
+## 📊 Analytics APIs
+
+### GET `/analytics/dashboard`
+**Purpose**: Get dashboard analytics
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "tasks": {
+      "total": 150,
+      "completed": 120,
+      "pending": 25,
+      "overdue": 5
+    },
+    "projects": {
+      "total": 25,
+      "active": 18,
+      "completed": 7
+    },
+    "clients": {
+      "total": 45,
+      "active": 40
+    },
+    "users": {
+      "total": 12,
+      "active": 10
+    },
+    "revenue": {
+      "total": 125000,
+      "this_month": 15000
+    }
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `tasks` table (task statistics)
+- **Read**: `projects` table (project statistics)
+- **Read**: `clients` table (client statistics)
+- **Read**: `users` table (user statistics)
+
+**Frontend Pages**:
+- `/dashboard` - Main dashboard
+- Analytics dashboard
+
+---
+
+### GET `/analytics/tasks`
+**Purpose**: Get task analytics
+
+**Query Parameters**:
+- `period` (optional): Time period (week, month, year)
+- `user_id` (optional): Filter by user
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "completion_rate": 85.5,
+    "average_duration": 4.2,
+    "overdue_rate": 8.3,
+    "by_status": [
+      {
+        "status": "Completed",
+        "count": 120
+      },
+      {
+        "status": "In Progress",
+        "count": 25
+      }
+    ],
+    "by_priority": [
+      {
+        "priority": "High",
+        "count": 45
+      },
+      {
+        "priority": "Medium",
+        "count": 80
+      }
+    ]
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `tasks` table (task analytics)
+- **Read**: `statuses` table (status information)
+- **Read**: `priorities` table (priority information)
+
+**Frontend Pages**:
+- `/analytics` - Analytics page
+- Task management dashboard
+
+---
+
+## 🔄 Import/Export APIs
+
+### POST `/import/tasks`
+**Purpose**: Import tasks from CSV/Excel
+
+**Request Body**:
+```
+multipart/form-data with CSV/Excel file
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Tasks imported successfully",
+  "data": {
+    "imported": 25,
+    "failed": 2,
+    "errors": [
+      "Row 3: Invalid status",
+      "Row 7: Missing required field"
+    ]
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `tasks` table (imported tasks)
+
+**Frontend Pages**:
+- `/import` - Import page
+
+---
+
+### GET `/export/tasks`
+**Purpose**: Export tasks to CSV/Excel
+
+**Query Parameters**:
+- `format` (optional): Export format (csv, excel)
+- `filters` (optional): Apply filters
+
+**Response**:
+```
+CSV/Excel file download
+```
+
+**Database Operations**:
+- **Read**: `tasks` table (task data for export)
+
+**Frontend Pages**:
+- `/tasks` - Task list page (export button)
+
+---
+
+## 🔐 Role & Permission APIs
+
+### GET `/roles`
+**Purpose**: Get all roles
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "admin",
+      "guard_name": "web",
+      "permissions": [
+        {
+          "id": 1,
+          "name": "view_tasks"
+        }
+      ],
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `roles` table (role data)
+- **Read**: `role_has_permissions` table (role permissions)
+- **Read**: `permissions` table (permission information)
+
+**Frontend Pages**:
+- `/roles` - Role management page
+- User creation/edit forms
+
+---
+
+### POST `/roles`
+**Purpose**: Create a new role
+
+**Request Body**:
+```json
+{
+  "name": "manager",
+  "permission_ids": [1, 2, 3]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Role created successfully",
+  "data": {
+    "id": 2,
+    "name": "manager",
+    "created_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `roles` table (role data)
+- **Create**: `role_has_permissions` table (role permissions)
+
+**Frontend Pages**:
+- `/roles/create` - Create role page
+
+---
+
+### GET `/permissions`
+**Purpose**: Get all permissions
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "view_tasks",
+      "guard_name": "web",
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `permissions` table (permission data)
+
+**Frontend Pages**:
+- `/permissions` - Permission management page
+- Role creation/edit forms
+
+---
+
+## 📱 Mobile APIs
+
+### GET `/mobile/dashboard`
+**Purpose**: Get mobile-optimized dashboard data
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "quick_stats": {
+      "tasks_today": 5,
+      "overdue_tasks": 2,
+      "notifications": 3
+    },
+    "recent_tasks": [
+      {
+        "id": 1,
+        "title": "Website Design",
+        "status": "In Progress",
+        "priority": "High"
+      }
+    ],
+    "upcoming_deadlines": [
+      {
+        "id": 2,
+        "title": "Logo Design",
+        "deadline": "2025-08-30"
+      }
+    ]
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `tasks` table (task data)
+- **Read**: `notifications` table (notification data)
+
+**Frontend Pages**:
+- Mobile dashboard
+- Mobile app
+
+---
+
+## 🔗 Webhook APIs
+
+### POST `/webhooks/task-created`
+**Purpose**: Webhook for task creation events
+
+**Request Body**:
+```json
+{
+  "event": "task.created",
+  "data": {
+    "task_id": 1,
+    "task_title": "New Task",
+    "created_by": 1,
+    "created_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Webhook processed successfully"
+}
+```
+
+**Database Operations**:
+- **Read**: `tasks` table (task data)
+- **Create**: `webhook_logs` table (webhook logs)
+
+**Frontend Pages**:
+- Webhook management
+- Integration settings
+
+---
+
+## 📈 Reporting APIs
+
+### GET `/reports/task-performance`
+**Purpose**: Generate task performance report
+
+**Query Parameters**:
+- `start_date` (optional): Report start date
+- `end_date` (optional): Report end date
+- `user_id` (optional): Filter by user
+- `format` (optional): Report format (pdf, excel)
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "report_data": {
+      "total_tasks": 150,
+      "completed_tasks": 120,
+      "completion_rate": 80.0,
+      "average_duration": 4.2,
+      "user_performance": [
+        {
+          "user": "John Doe",
+          "tasks_completed": 25,
+          "completion_rate": 85.0
+        }
+      ]
+    },
+    "download_url": "https://example.com/reports/task-performance.pdf"
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `tasks` table (task performance data)
+- **Read**: `users` table (user information)
+- **Read**: `time_trackers` table (time tracking data)
+
+**Frontend Pages**:
+- `/reports` - Reports page
+- Task management dashboard
+
+---
+
+## 🎯 Conclusion
+
+This comprehensive API documentation covers all VendorConnect endpoints, providing developers with:
+
+- **Complete endpoint coverage** for all system functionality
+- **Detailed request/response examples** with realistic data
+- **Database operation mapping** showing which tables and columns are affected
+- **Frontend page associations** linking APIs to user interface components
+- **Authentication requirements** and security considerations
+- **Error handling patterns** and response formats
+
+The API follows RESTful conventions and provides consistent response formats across all endpoints. All endpoints return JSON responses with a standard structure including success status, messages, and data payloads.
+
+For integration questions or additional endpoint documentation, please refer to the development team or consult the internal API testing tools.
+
