@@ -486,3 +486,638 @@ multipart/form-data with photo file
 
 **Frontend Pages**:
 - `/dashboard/requester` - Requester dashboard page
+
+---
+
+## 🔔 Notification APIs
+
+### GET `/notifications`
+**Purpose**: Get user's notifications
+
+**Query Parameters**:
+- `page` (optional): Page number for pagination
+- `per_page` (optional): Items per page (default: 15)
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "user_id": 1,
+        "type": "task_assigned",
+        "title": "New Task Assigned",
+        "message": "You have been assigned to 'Logo Design' task",
+        "data": {
+          "task_id": 1,
+          "task_title": "Logo Design"
+        },
+        "read_at": null,
+        "created_at": "2025-08-28T06:00:00.000000Z"
+      }
+    ],
+    "current_page": 1,
+    "last_page": 3,
+    "per_page": 15,
+    "total": 45
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `notifications` table (user's notifications)
+
+**Frontend Pages**:
+- `/dashboard` - Notification bell in navigation
+- Notification components throughout the app
+
+---
+
+### GET `/notifications/unread-count`
+**Purpose**: Get count of unread notifications
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "count": 5
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `notifications` table (count where read_at is null)
+
+**Frontend Pages**:
+- Navigation components (notification badge)
+- All pages with notification indicators
+
+---
+
+### POST `/notifications/{id}/read`
+**Purpose**: Mark notification as read
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Notification marked as read"
+}
+```
+
+**Database Operations**:
+- **Update**: `notifications.read_at` (sets timestamp)
+
+**Frontend Pages**:
+- Notification components
+- Notification list pages
+
+---
+
+### POST `/notifications/mark-all-read`
+**Purpose**: Mark all notifications as read
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "All notifications marked as read"
+}
+```
+
+**Database Operations**:
+- **Update**: `notifications.read_at` (sets timestamp for all user's unread notifications)
+
+**Frontend Pages**:
+- Notification list pages
+- Notification management components
+
+---
+
+### DELETE `/notifications/{id}`
+**Purpose**: Delete specific notification
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Notification deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `notifications` table (removes notification)
+
+**Frontend Pages**:
+- Notification list pages
+- Notification management components
+
+---
+
+### DELETE `/notifications/read`
+**Purpose**: Delete all read notifications
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Read notifications deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `notifications` table (removes all read notifications for user)
+
+**Frontend Pages**:
+- Notification management pages
+
+---
+
+### GET `/notifications/types`
+**Purpose**: Get available notification types
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    "task_assigned",
+    "task_completed",
+    "project_created",
+    "deadline_approaching",
+    "comment_added"
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `notifications` table (distinct types)
+
+**Frontend Pages**:
+- Notification settings pages
+- Notification management components
+
+---
+
+### GET `/notifications/priorities`
+**Purpose**: Get notification priority levels
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    "low",
+    "medium",
+    "high",
+    "urgent"
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `notifications` table (distinct priorities)
+
+**Frontend Pages**:
+- Notification settings pages
+- Notification management components
+
+---
+
+## 📋 Task Management APIs
+
+### GET `/tasks`
+**Purpose**: Get all tasks with filtering and pagination
+
+**Query Parameters**:
+- `page` (optional): Page number for pagination
+- `per_page` (optional): Items per page (default: 15)
+- `status_id` (optional): Filter by status
+- `priority_id` (optional): Filter by priority
+- `user_id` (optional): Filter by assigned user
+- `client_id` (optional): Filter by client
+- `project_id` (optional): Filter by project
+- `search` (optional): Search in title and description
+- `sort_by` (optional): Sort field (default: created_at)
+- `sort_order` (optional): Sort order (asc/desc, default: desc)
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Tasks retrieved successfully",
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "title": "Website Redesign",
+        "description": "Complete website redesign for client",
+        "note": "High priority project",
+        "status_id": 1,
+        "priority_id": 2,
+        "project_id": 1,
+        "task_type_id": 1,
+        "template_id": 1,
+        "start_date": "2025-08-01",
+        "end_date": "2025-08-31",
+        "close_deadline": 0,
+        "deliverable_quantity": 1,
+        "standard_brief": "Create modern, responsive website",
+        "repetition_type": null,
+        "repetition_interval": null,
+        "repetition_end_date": null,
+        "is_repeating": 0,
+        "created_at": "2025-08-28T06:00:00.000000Z",
+        "updated_at": "2025-08-28T06:00:00.000000Z",
+        "status": {
+          "id": 1,
+          "name": "In Progress",
+          "slug": "in-progress",
+          "color": "#3B82F6"
+        },
+        "priority": {
+          "id": 2,
+          "name": "High",
+          "slug": "high",
+          "color": "#EF4444",
+          "level": 4
+        },
+        "project": {
+          "id": 1,
+          "title": "E-commerce Platform",
+          "description": "Modern e-commerce solution"
+        },
+        "task_type": {
+          "id": 1,
+          "task_type": "Web Development",
+          "description": "Website development tasks"
+        },
+        "users": [
+          {
+            "id": 2,
+            "first_name": "Jane",
+            "last_name": "Smith",
+            "email": "jane@example.com"
+          }
+        ],
+        "clients": [
+          {
+            "id": 1,
+            "name": "ABC Company",
+            "company": "ABC Corp"
+          }
+        ]
+      }
+    ],
+    "current_page": 1,
+    "last_page": 5,
+    "per_page": 15,
+    "total": 75,
+    "from": 1,
+    "to": 15
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `tasks` table (main task data)
+- **Read**: `statuses` table (status information)
+- **Read**: `priorities` table (priority information)
+- **Read**: `projects` table (project information)
+- **Read**: `task_types` table (task type information)
+- **Read**: `task_brief_templates` table (template information)
+- **Read**: `task_user` table (user assignments)
+- **Read**: `task_client` table (client assignments)
+- **Read**: `users` table (assigned users)
+- **Read**: `clients` table (assigned clients)
+
+**Frontend Pages**:
+- `/tasks` - Task list page
+- `/project-management` - Project management page
+- `/dashboard` - Dashboard (recent tasks)
+
+---
+
+### POST `/tasks`
+**Purpose**: Create a new task
+
+**Request Body**:
+```json
+{
+  "title": "New Task",
+  "description": "Task description",
+  "note": "Additional notes",
+  "status_id": 1,
+  "priority_id": 2,
+  "project_id": 1,
+  "task_type_id": 1,
+  "template_id": 1,
+  "start_date": "2025-08-01",
+  "end_date": "2025-08-31",
+  "close_deadline": 0,
+  "deliverable_quantity": 1,
+  "standard_brief": "Task brief description",
+  "repetition_type": "weekly",
+  "repetition_interval": 1,
+  "repetition_end_date": "2025-12-31",
+  "is_repeating": 1,
+  "user_ids": [1, 2],
+  "client_ids": [1, 2]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Task created successfully",
+  "data": {
+    "id": 1,
+    "title": "New Task",
+    "description": "Task description",
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `tasks` table (main task data)
+- **Create**: `task_user` table (user assignments)
+- **Create**: `task_client` table (client assignments)
+
+**Frontend Pages**:
+- `/tasks/create` - Create task page
+- `/tasks` - Task list page (redirects after creation)
+
+---
+
+### GET `/tasks/{id}`
+**Purpose**: Get specific task details
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "Website Redesign",
+    "description": "Complete website redesign for client",
+    "note": "High priority project",
+    "status_id": 1,
+    "priority_id": 2,
+    "project_id": 1,
+    "task_type_id": 1,
+    "template_id": 1,
+    "start_date": "2025-08-01",
+    "end_date": "2025-08-31",
+    "close_deadline": 0,
+    "deliverable_quantity": 1,
+    "standard_brief": "Create modern, responsive website",
+    "repetition_type": null,
+    "repetition_interval": null,
+    "repetition_end_date": null,
+    "is_repeating": 0,
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z",
+    "status": {
+      "id": 1,
+      "name": "In Progress",
+      "slug": "in-progress",
+      "color": "#3B82F6"
+    },
+    "priority": {
+      "id": 2,
+      "name": "High",
+      "slug": "high",
+      "color": "#EF4444",
+      "level": 4
+    },
+    "project": {
+      "id": 1,
+      "title": "E-commerce Platform",
+      "description": "Modern e-commerce solution"
+    },
+    "task_type": {
+      "id": 1,
+      "task_type": "Web Development",
+      "description": "Website development tasks"
+    },
+    "template": {
+      "id": 1,
+      "title": "Web Development Template",
+      "description": "Standard web development brief"
+    },
+    "users": [
+      {
+        "id": 2,
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "email": "jane@example.com"
+      }
+    ],
+    "clients": [
+      {
+        "id": 1,
+        "name": "ABC Company",
+        "company": "ABC Corp"
+      }
+    ],
+    "deliverables": [
+      {
+        "id": 1,
+        "title": "Website Design",
+        "description": "Complete website design",
+        "type": "design",
+        "quantity": 1,
+        "completed_at": null
+      }
+    ],
+    "media": [
+      {
+        "id": 1,
+        "name": "design-mockup.jpg",
+        "file_name": "design-mockup_123.jpg",
+        "mime_type": "image/jpeg",
+        "size": 1024000
+      }
+    ]
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `tasks` table (task data)
+- **Read**: `statuses` table (status information)
+- **Read**: `priorities` table (priority information)
+- **Read**: `projects` table (project information)
+- **Read**: `task_types` table (task type information)
+- **Read**: `task_brief_templates` table (template information)
+- **Read**: `task_user` table (user assignments)
+- **Read**: `task_client` table (client assignments)
+- **Read**: `users` table (assigned users)
+- **Read**: `clients` table (assigned clients)
+- **Read**: `task_deliverables` table (deliverables)
+- **Read**: `media` table (attached files)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page
+- `/tasks/{id}/edit` - Task edit page
+
+---
+
+### PUT `/tasks/{id}`
+**Purpose**: Update existing task
+
+**Request Body**:
+```json
+{
+  "title": "Updated Task Title",
+  "description": "Updated description",
+  "status_id": 2,
+  "priority_id": 1,
+  "user_ids": [1, 3],
+  "client_ids": [1]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Task updated successfully",
+  "data": {
+    "id": 1,
+    "title": "Updated Task Title",
+    "updated_at": "2025-08-28T06:30:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `tasks` table (task data)
+- **Delete/Create**: `task_user` table (user assignments)
+- **Delete/Create**: `task_client` table (client assignments)
+
+**Frontend Pages**:
+- `/tasks/{id}/edit` - Task edit page
+- `/tasks/{id}` - Task detail page (redirects after update)
+
+---
+
+### DELETE `/tasks/{id}`
+**Purpose**: Delete specific task
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Task deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `tasks` table (cascades to related tables)
+- **Delete**: `task_user` table (user assignments)
+- **Delete**: `task_client` table (client assignments)
+- **Delete**: `task_deliverables` table (deliverables)
+- **Delete**: `media` table (attached files)
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page
+- `/tasks` - Task list page (redirects after deletion)
+
+---
+
+### DELETE `/tasks/multiple`
+**Purpose**: Delete multiple tasks
+
+**Request Body**:
+```json
+{
+  "task_ids": [1, 2, 3]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Tasks deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `tasks` table (multiple records)
+- **Delete**: Related pivot tables and media
+
+**Frontend Pages**:
+- `/tasks` - Task list page (bulk actions)
+
+---
+
+### PUT `/tasks/{id}/status`
+**Purpose**: Update task status
+
+**Request Body**:
+```json
+{
+  "status_id": 2
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Task status updated successfully",
+  "data": {
+    "status": {
+      "id": 2,
+      "name": "Completed",
+      "slug": "completed",
+      "color": "#10B981"
+    }
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `tasks.status_id`
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page
+- `/tasks` - Task list page (status updates)
+
+---
+
+### PUT `/tasks/{id}/deadline`
+**Purpose**: Update task deadline
+
+**Request Body**:
+```json
+{
+  "end_date": "2025-09-15"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Task deadline updated successfully",
+  "data": {
+    "end_date": "2025-09-15"
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `tasks.end_date`
+
+**Frontend Pages**:
+- `/tasks/{id}` - Task detail page
+- `/tasks/{id}/edit` - Task edit page
