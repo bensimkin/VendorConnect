@@ -82,7 +82,7 @@ class Task extends Model implements HasMedia
     }
     public function clients()
     {
-        return $this->belongsToMany(Client::class, 'task_client');
+        return $this->belongsToMany(Client::class, 'client_task');
     }
 
     public function taskUsers()
