@@ -160,7 +160,7 @@ class TaskController extends BaseController
                 
                 if ($template) {
                     // Get template questions
-                    $questions = \App\Models\TaskBriefQuestions::where('task_brief_templates_id', $template->id)->get();
+                    $questions = \App\Models\TaskBriefQuestion::where('task_brief_templates_id', $template->id)->get();
                     $templateQuestions = $questions->map(function($question) {
                         return [
                             'id' => $question->id,
