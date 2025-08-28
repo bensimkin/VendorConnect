@@ -190,10 +190,12 @@ export default function TaskDetailPage() {
         const completedMap: Record<number, boolean> = {};
         
         taskData.checklist_answers.forEach((ca: any, index: number) => {
-          if (ca.notes) {
-            checklistItems.push(ca.notes);
-            completedMap[index] = ca.completed || false;
-          }
+          // Extract the completed status from the checklist_answer array
+          const completed = ca.checklist_answer?.completed || false;
+          const notes = ca.checklist_answer?.notes || ca.notes || `Checklist item ${index + 1}`;
+          
+          checklistItems.push(notes);
+          completedMap[index] = completed;
         });
         
         setChecklistItems(checklistItems);
@@ -246,21 +248,18 @@ export default function TaskDetailPage() {
     if (!task) return;
     
     try {
-      // Find the checklist answer ID for this item
-      const checklistAnswer = task.checklist_answers?.[index];
-      if (!checklistAnswer) return;
+      // Use the index + 1 as checklist_id since we don't have proper checklist_id mapping
+      // This is a temporary fix - ideally we should have proper checklist_id from the template
+      const checklist_id = index + 1;
       
       await apiClient.post(`/tasks/${task.id}/checklist-answer`, {
-        checklist_id: checklistAnswer.checklist_id || 1,
+        checklist_id: checklist_id,
         completed: completed,
-        notes: checklistItems[index],
+        notes: checklistItems[index] || `Checklist item ${index + 1}`,
       });
       
-      // Update local state
-      setChecklistCompleted(prev => ({
-        ...prev,
-        [index]: completed
-      }));
+      // Refresh the task data to get the updated checklist answers
+      await fetchTaskDetail(task.id.toString());
       
       toast.success('Checklist updated successfully');
     } catch (error) {
