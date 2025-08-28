@@ -2126,3 +2126,1460 @@ multipart/form-data with media files
 - `/projects/{id}` - Project detail page (tasks tab)
 - `/project-management` - Project management page
 
+---
+
+## 👥 Client Management APIs
+
+### GET `/clients`
+**Purpose**: Get all clients with filtering and pagination
+
+**Query Parameters**:
+- `page` (optional): Page number for pagination
+- `per_page` (optional): Items per page (default: 15)
+- `search` (optional): Search in name and company
+- `sort_by` (optional): Sort field (default: created_at)
+- `sort_order` (optional): Sort order (asc/desc, default: desc)
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Clients retrieved successfully",
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "name": "John Smith",
+        "company": "ABC Corp",
+        "email": "john@abccorp.com",
+        "phone": "+1234567890",
+        "address": "123 Main St, City, State",
+        "website": "https://abccorp.com",
+        "notes": "Important client",
+        "status": 1,
+        "created_at": "2025-08-28T06:00:00.000000Z",
+        "updated_at": "2025-08-28T06:00:00.000000Z",
+        "projects_count": 5,
+        "tasks_count": 12
+      }
+    ],
+    "current_page": 1,
+    "last_page": 3,
+    "per_page": 15,
+    "total": 45,
+    "from": 1,
+    "to": 15
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `clients` table (client data)
+- **Read**: `projects` table (project counts)
+- **Read**: `tasks` table (task counts)
+
+**Frontend Pages**:
+- `/clients` - Client list page
+- `/dashboard` - Dashboard (recent clients)
+
+---
+
+### POST `/clients`
+**Purpose**: Create a new client
+
+**Request Body**:
+```json
+{
+  "name": "Jane Doe",
+  "company": "XYZ Inc",
+  "email": "jane@xyzinc.com",
+  "phone": "+1234567890",
+  "address": "456 Oak St, City, State",
+  "website": "https://xyzinc.com",
+  "notes": "New client"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Client created successfully",
+  "data": {
+    "id": 2,
+    "name": "Jane Doe",
+    "company": "XYZ Inc",
+    "email": "jane@xyzinc.com",
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `clients` table (client data)
+
+**Frontend Pages**:
+- `/clients/create` - Create client page
+- `/clients` - Client list page (redirects after creation)
+
+---
+
+### GET `/clients/{id}`
+**Purpose**: Get specific client details
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "John Smith",
+    "company": "ABC Corp",
+    "email": "john@abccorp.com",
+    "phone": "+1234567890",
+    "address": "123 Main St, City, State",
+    "website": "https://abccorp.com",
+    "notes": "Important client",
+    "status": 1,
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z",
+    "projects": [
+      {
+        "id": 1,
+        "title": "E-commerce Platform",
+        "status": {
+          "id": 1,
+          "name": "Active"
+        }
+      }
+    ],
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Website Design",
+        "status": {
+          "id": 1,
+          "name": "In Progress"
+        }
+      }
+    ],
+    "credentials": [
+      {
+        "id": 1,
+        "platform": "WordPress",
+        "username": "admin",
+        "url": "https://abccorp.com/wp-admin"
+      }
+    ]
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `clients` table (client data)
+- **Read**: `projects` table (client projects)
+- **Read**: `tasks` table (client tasks)
+- **Read**: `client_credentials` table (client credentials)
+- **Read**: `project_statuses` table (project status)
+- **Read**: `statuses` table (task status)
+
+**Frontend Pages**:
+- `/clients/{id}` - Client detail page
+- `/clients/{id}/edit` - Client edit page
+
+---
+
+### PUT `/clients/{id}`
+**Purpose**: Update existing client
+
+**Request Body**:
+```json
+{
+  "name": "John Smith Updated",
+  "company": "ABC Corp Updated",
+  "email": "john.updated@abccorp.com",
+  "phone": "+1234567890",
+  "address": "Updated address",
+  "website": "https://abccorp-updated.com",
+  "notes": "Updated notes"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Client updated successfully",
+  "data": {
+    "id": 1,
+    "name": "John Smith Updated",
+    "updated_at": "2025-08-28T06:30:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `clients` table (client data)
+
+**Frontend Pages**:
+- `/clients/{id}/edit` - Client edit page
+- `/clients/{id}` - Client detail page (redirects after update)
+
+---
+
+### DELETE `/clients/{id}`
+**Purpose**: Delete specific client
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Client deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `clients` table (cascades to related tables)
+- **Delete**: `project_client` table (project assignments)
+- **Delete**: `task_client` table (task assignments)
+- **Delete**: `client_credentials` table (client credentials)
+
+**Frontend Pages**:
+- `/clients/{id}` - Client detail page
+- `/clients` - Client list page (redirects after deletion)
+
+---
+
+### GET `/clients/{id}/projects`
+**Purpose**: Get client projects
+
+**Query Parameters**:
+- `page` (optional): Page number for pagination
+- `per_page` (optional): Items per page (default: 15)
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "title": "E-commerce Platform",
+        "description": "Modern e-commerce solution",
+        "status_id": 1,
+        "start_date": "2025-08-01",
+        "end_date": "2025-12-31",
+        "created_at": "2025-08-28T06:00:00.000000Z",
+        "status": {
+          "id": 1,
+          "name": "Active",
+          "color": "#3B82F6"
+        }
+      }
+    ],
+    "current_page": 1,
+    "last_page": 2,
+    "per_page": 15,
+    "total": 25,
+    "from": 1,
+    "to": 15
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `projects` table (client projects)
+- **Read**: `project_statuses` table (project status)
+
+**Frontend Pages**:
+- `/clients/{id}` - Client detail page (projects tab)
+
+---
+
+### GET `/clients/{id}/tasks`
+**Purpose**: Get client tasks
+
+**Query Parameters**:
+- `page` (optional): Page number for pagination
+- `per_page` (optional): Items per page (default: 15)
+- `status_id` (optional): Filter by status
+- `priority_id` (optional): Filter by priority
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "title": "Website Design",
+        "description": "Complete website design",
+        "status_id": 1,
+        "priority_id": 2,
+        "start_date": "2025-08-01",
+        "end_date": "2025-08-31",
+        "created_at": "2025-08-28T06:00:00.000000Z",
+        "status": {
+          "id": 1,
+          "name": "In Progress",
+          "color": "#3B82F6"
+        },
+        "priority": {
+          "id": 2,
+          "name": "High",
+          "color": "#EF4444"
+        }
+      }
+    ],
+    "current_page": 1,
+    "last_page": 2,
+    "per_page": 15,
+    "total": 25,
+    "from": 1,
+    "to": 15
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `tasks` table (client tasks)
+- **Read**: `statuses` table (task status)
+- **Read**: `priorities` table (task priority)
+
+**Frontend Pages**:
+- `/clients/{id}` - Client detail page (tasks tab)
+
+---
+
+## 🔐 Client Credential APIs
+
+### GET `/clients/{clientId}/credentials`
+**Purpose**: Get client credentials
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "client_id": 1,
+      "platform": "WordPress",
+      "username": "admin",
+      "password": "encrypted_password",
+      "url": "https://abccorp.com/wp-admin",
+      "notes": "Main website credentials",
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `client_credentials` table (credential data)
+
+**Frontend Pages**:
+- `/clients/{id}` - Client detail page (credentials tab)
+
+---
+
+### POST `/clients/{clientId}/credentials`
+**Purpose**: Create client credential
+
+**Request Body**:
+```json
+{
+  "platform": "WordPress",
+  "username": "admin",
+  "password": "password123",
+  "url": "https://abccorp.com/wp-admin",
+  "notes": "Main website credentials"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Credential created successfully",
+  "data": {
+    "id": 1,
+    "platform": "WordPress",
+    "username": "admin",
+    "created_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `client_credentials` table (credential data)
+
+**Frontend Pages**:
+- `/clients/{id}` - Client detail page (credentials tab)
+
+---
+
+### GET `/clients/{clientId}/credentials/{credentialId}`
+**Purpose**: Get specific credential
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "client_id": 1,
+    "platform": "WordPress",
+    "username": "admin",
+    "password": "encrypted_password",
+    "url": "https://abccorp.com/wp-admin",
+    "notes": "Main website credentials",
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `client_credentials` table (credential data)
+
+**Frontend Pages**:
+- `/clients/{id}` - Client detail page (credentials tab)
+
+---
+
+### PUT `/clients/{clientId}/credentials/{credentialId}`
+**Purpose**: Update credential
+
+**Request Body**:
+```json
+{
+  "platform": "WordPress Updated",
+  "username": "admin_updated",
+  "password": "new_password123",
+  "url": "https://abccorp-updated.com/wp-admin",
+  "notes": "Updated credentials"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Credential updated successfully",
+  "data": {
+    "id": 1,
+    "platform": "WordPress Updated",
+    "updated_at": "2025-08-28T06:30:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `client_credentials` table (credential data)
+
+**Frontend Pages**:
+- `/clients/{id}` - Client detail page (credentials tab)
+
+---
+
+### DELETE `/clients/{clientId}/credentials/{credentialId}`
+**Purpose**: Delete credential
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Credential deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `client_credentials` table (removes credential)
+
+**Frontend Pages**:
+- `/clients/{id}` - Client detail page (credentials tab)
+
+---
+
+## 👤 User Management APIs
+
+### GET `/users`
+**Purpose**: Get all users with filtering and pagination
+
+**Query Parameters**:
+- `page` (optional): Page number for pagination
+- `per_page` (optional): Items per page (default: 15)
+- `search` (optional): Search in name and email
+- `role_id` (optional): Filter by role
+- `status` (optional): Filter by status (1=active, 0=inactive)
+- `sort_by` (optional): Sort field (default: created_at)
+- `sort_order` (optional): Sort order (asc/desc, default: desc)
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Users retrieved successfully",
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john@example.com",
+        "photo": "user_photo.jpg",
+        "status": 1,
+        "dark_mode": 0,
+        "country_code": "AU",
+        "last_login_at": "2025-08-28T06:00:00.000000Z",
+        "created_at": "2025-08-28T06:00:00.000000Z",
+        "updated_at": "2025-08-28T06:00:00.000000Z",
+        "roles": [
+          {
+            "id": 1,
+            "name": "admin"
+          }
+        ],
+        "tasks_count": 15,
+        "projects_count": 8
+      }
+    ],
+    "current_page": 1,
+    "last_page": 3,
+    "per_page": 15,
+    "total": 45,
+    "from": 1,
+    "to": 15
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `users` table (user data)
+- **Read**: `model_has_roles` table (role assignments)
+- **Read**: `roles` table (role information)
+- **Read**: `model_has_permissions` table (permissions)
+- **Read**: `permissions` table (permission information)
+- **Read**: `tasks` table (user tasks)
+- **Read**: `projects` table (user projects)
+- **Read**: `statuses` table (task status)
+- **Read**: `project_statuses` table (project status)
+
+**Frontend Pages**:
+- `/users` - User list page
+- `/dashboard` - Dashboard (team members)
+
+---
+
+### POST `/users`
+**Purpose**: Create a new user
+
+**Request Body**:
+```json
+{
+  "first_name": "Jane",
+  "last_name": "Smith",
+  "email": "jane@example.com",
+  "password": "password123",
+  "password_confirmation": "password123",
+  "role_ids": [1, 2],
+  "status": 1,
+  "country_code": "AU"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "User created successfully",
+  "data": {
+    "id": 2,
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "email": "jane@example.com",
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `users` table (user data)
+- **Create**: `model_has_roles` table (role assignments)
+
+**Frontend Pages**:
+- `/users/create` - Create user page
+- `/users` - User list page (redirects after creation)
+
+---
+
+### GET `/users/{id}`
+**Purpose**: Get specific user details
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john@example.com",
+    "photo": "user_photo.jpg",
+    "status": 1,
+    "dark_mode": 0,
+    "country_code": "AU",
+    "last_login_at": "2025-08-28T06:00:00.000000Z",
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z",
+    "roles": [
+      {
+        "id": 1,
+        "name": "admin",
+        "permissions": [
+          {
+            "id": 1,
+            "name": "view_tasks"
+          }
+        ]
+      }
+    ],
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Website Design",
+        "status": {
+          "id": 1,
+          "name": "In Progress"
+        }
+      }
+    ],
+    "projects": [
+      {
+        "id": 1,
+        "title": "E-commerce Platform",
+        "status": {
+          "id": 1,
+          "name": "Active"
+        }
+      }
+    ],
+    "statistics": {
+      "total_tasks": 15,
+      "completed_tasks": 12,
+      "total_projects": 8,
+      "active_projects": 6
+    }
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `users` table (user data)
+- **Read**: `model_has_roles` table (role assignments)
+- **Read**: `roles` table (role information)
+- **Read**: `model_has_permissions` table (permissions)
+- **Read**: `permissions` table (permission information)
+- **Read**: `tasks` table (user tasks)
+- **Read**: `projects` table (user projects)
+- **Read**: `statuses` table (task status)
+- **Read**: `project_statuses` table (project status)
+
+**Frontend Pages**:
+- `/users/{id}` - User detail page
+- `/users/{id}/edit` - User edit page
+
+---
+
+### PUT `/users/{id}`
+**Purpose**: Update existing user
+
+**Request Body**:
+```json
+{
+  "first_name": "John Updated",
+  "last_name": "Doe Updated",
+  "email": "john.updated@example.com",
+  "role_ids": [1, 3],
+  "status": 1,
+  "country_code": "US"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "User updated successfully",
+  "data": {
+    "id": 1,
+    "first_name": "John Updated",
+    "last_name": "Doe Updated",
+    "updated_at": "2025-08-28T06:30:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `users` table (user data)
+- **Delete/Create**: `model_has_roles` table (role assignments)
+
+**Frontend Pages**:
+- `/users/{id}/edit` - User edit page
+- `/users/{id}` - User detail page (redirects after update)
+
+---
+
+### DELETE `/users/{id}`
+**Purpose**: Delete specific user
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "User deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `users` table (cascades to related tables)
+- **Delete**: `model_has_roles` table (role assignments)
+- **Delete**: `task_user` table (task assignments)
+- **Delete**: `project_user` table (project assignments)
+
+**Frontend Pages**:
+- `/users/{id}` - User detail page
+- `/users` - User list page (redirects after deletion)
+
+---
+
+### PUT `/users/{id}/password`
+**Purpose**: Update user password
+
+**Request Body**:
+```json
+{
+  "current_password": "old_password",
+  "password": "new_password123",
+  "password_confirmation": "new_password123"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Password updated successfully"
+}
+```
+
+**Database Operations**:
+- **Update**: `users.password` (hashed password)
+
+**Frontend Pages**:
+- `/users/{id}/edit` - User edit page
+- `/profile` - User profile page
+
+---
+
+### PUT `/users/{id}/status`
+**Purpose**: Update user status (activate/deactivate)
+
+**Request Body**:
+```json
+{
+  "status": 0
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "User status updated successfully",
+  "data": {
+    "status": 0
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `users.status`
+
+**Frontend Pages**:
+- `/users/{id}` - User detail page
+- `/users` - User list page
+
+---
+
+## 🏷️ Status Management APIs
+
+### GET `/statuses`
+**Purpose**: Get all statuses
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "In Progress",
+      "slug": "in-progress",
+      "color": "#3B82F6",
+      "type": "task",
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z"
+    },
+    {
+      "id": 2,
+      "name": "Completed",
+      "slug": "completed",
+      "color": "#10B981",
+      "type": "task",
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `statuses` table (status data)
+
+**Frontend Pages**:
+- `/tasks` - Task list page (status filter)
+- `/projects` - Project list page (status filter)
+- Task and project creation/edit forms
+
+---
+
+### POST `/statuses`
+**Purpose**: Create a new status
+
+**Request Body**:
+```json
+{
+  "name": "On Hold",
+  "slug": "on-hold",
+  "color": "#F59E0B",
+  "type": "task"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Status created successfully",
+  "data": {
+    "id": 3,
+    "name": "On Hold",
+    "slug": "on-hold",
+    "color": "#F59E0B",
+    "type": "task",
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `statuses` table (status data)
+
+**Frontend Pages**:
+- Status management pages
+- Task and project creation/edit forms
+
+---
+
+### GET `/statuses/{id}`
+**Purpose**: Get specific status
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "In Progress",
+    "slug": "in-progress",
+    "color": "#3B82F6",
+    "type": "task",
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `statuses` table (status data)
+
+**Frontend Pages**:
+- Status management pages
+
+---
+
+### PUT `/statuses/{id}`
+**Purpose**: Update existing status
+
+**Request Body**:
+```json
+{
+  "name": "In Progress Updated",
+  "slug": "in-progress-updated",
+  "color": "#1D4ED8",
+  "type": "task"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Status updated successfully",
+  "data": {
+    "id": 1,
+    "name": "In Progress Updated",
+    "slug": "in-progress-updated",
+    "color": "#1D4ED8",
+    "updated_at": "2025-08-28T06:30:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `statuses` table (status data)
+
+**Frontend Pages**:
+- Status management pages
+
+---
+
+### DELETE `/statuses/{id}`
+**Purpose**: Delete specific status
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Status deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `statuses` table (removes status)
+
+**Frontend Pages**:
+- Status management pages
+
+---
+
+## ⚡ Priority Management APIs
+
+### GET `/priorities`
+**Purpose**: Get all priorities
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "Low",
+      "slug": "low",
+      "color": "#6B7280",
+      "level": 1,
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z"
+    },
+    {
+      "id": 2,
+      "name": "High",
+      "slug": "high",
+      "color": "#EF4444",
+      "level": 4,
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `priorities` table (priority data)
+
+**Frontend Pages**:
+- `/tasks` - Task list page (priority filter)
+- `/projects` - Project list page (priority filter)
+- Task and project creation/edit forms
+
+---
+
+### POST `/priorities`
+**Purpose**: Create a new priority
+
+**Request Body**:
+```json
+{
+  "name": "Critical",
+  "slug": "critical",
+  "color": "#DC2626",
+  "level": 5
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Priority created successfully",
+  "data": {
+    "id": 3,
+    "name": "Critical",
+    "slug": "critical",
+    "color": "#DC2626",
+    "level": 5,
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `priorities` table (priority data)
+
+**Frontend Pages**:
+- Priority management pages
+- Task and project creation/edit forms
+
+---
+
+### GET `/priorities/{id}`
+**Purpose**: Get specific priority
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 2,
+    "name": "High",
+    "slug": "high",
+    "color": "#EF4444",
+    "level": 4,
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `priorities` table (priority data)
+
+**Frontend Pages**:
+- Priority management pages
+
+---
+
+### PUT `/priorities/{id}`
+**Purpose**: Update existing priority
+
+**Request Body**:
+```json
+{
+  "name": "High Updated",
+  "slug": "high-updated",
+  "color": "#DC2626",
+  "level": 4
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Priority updated successfully",
+  "data": {
+    "id": 2,
+    "name": "High Updated",
+    "slug": "high-updated",
+    "color": "#DC2626",
+    "level": 4,
+    "updated_at": "2025-08-28T06:30:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `priorities` table (priority data)
+
+**Frontend Pages**:
+- Priority management pages
+
+---
+
+### DELETE `/priorities/{id}`
+**Purpose**: Delete specific priority
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Priority deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `priorities` table (removes priority)
+
+**Frontend Pages**:
+- Priority management pages
+
+---
+
+## 📝 Task Type Management APIs
+
+### GET `/task-types`
+**Purpose**: Get all task types
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "task_type": "Web Development",
+      "description": "Website development tasks",
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z"
+    },
+    {
+      "id": 2,
+      "task_type": "Graphic Design",
+      "description": "Graphic design tasks",
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z"
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `task_types` table (task type data)
+
+**Frontend Pages**:
+- `/tasks` - Task list page (type filter)
+- Task creation/edit forms
+
+---
+
+### POST `/task-types`
+**Purpose**: Create a new task type
+
+**Request Body**:
+```json
+{
+  "task_type": "Content Writing",
+  "description": "Content writing tasks"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Task type created successfully",
+  "data": {
+    "id": 3,
+    "task_type": "Content Writing",
+    "description": "Content writing tasks",
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `task_types` table (task type data)
+
+**Frontend Pages**:
+- Task type management pages
+- Task creation/edit forms
+
+---
+
+### GET `/task-types/{id}`
+**Purpose**: Get specific task type
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "task_type": "Web Development",
+    "description": "Website development tasks",
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `task_types` table (task type data)
+
+**Frontend Pages**:
+- Task type management pages
+
+---
+
+### PUT `/task-types/{id}`
+**Purpose**: Update existing task type
+
+**Request Body**:
+```json
+{
+  "task_type": "Web Development Updated",
+  "description": "Updated website development tasks"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Task type updated successfully",
+  "data": {
+    "id": 1,
+    "task_type": "Web Development Updated",
+    "description": "Updated website development tasks",
+    "updated_at": "2025-08-28T06:30:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `task_types` table (task type data)
+
+**Frontend Pages**:
+- Task type management pages
+
+---
+
+### DELETE `/task-types/{id}`
+**Purpose**: Delete specific task type
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Task type deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `task_types` table (removes task type)
+
+**Frontend Pages**:
+- Task type management pages
+
+---
+
+## 📋 Task Brief Template APIs
+
+### GET `/task-brief-templates`
+**Purpose**: Get all task brief templates
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "title": "Web Development Template",
+      "description": "Standard web development brief",
+      "task_type_id": 1,
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z",
+      "task_type": {
+        "id": 1,
+        "task_type": "Web Development"
+      },
+      "questions_count": 5,
+      "checklists_count": 2
+    }
+  ]
+}
+```
+
+**Database Operations**:
+- **Read**: `task_brief_templates` table (template data)
+- **Read**: `task_types` table (task type information)
+- **Read**: `task_brief_questions` table (question counts)
+- **Read**: `task_brief_checklists` table (checklist counts)
+
+**Frontend Pages**:
+- `/templates` - Template list page
+- Task creation forms (template selection)
+
+---
+
+### POST `/task-brief-templates`
+**Purpose**: Create a new task brief template
+
+**Request Body**:
+```json
+{
+  "title": "Graphic Design Template",
+  "description": "Standard graphic design brief",
+  "task_type_id": 2
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Template created successfully",
+  "data": {
+    "id": 2,
+    "title": "Graphic Design Template",
+    "description": "Standard graphic design brief",
+    "task_type_id": 2,
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Create**: `task_brief_templates` table (template data)
+
+**Frontend Pages**:
+- `/templates/create` - Create template page
+- `/templates` - Template list page (redirects after creation)
+
+---
+
+### GET `/task-brief-templates/{id}`
+**Purpose**: Get specific task brief template
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "Web Development Template",
+    "description": "Standard web development brief",
+    "task_type_id": 1,
+    "created_at": "2025-08-28T06:00:00.000000Z",
+    "updated_at": "2025-08-28T06:00:00.000000Z",
+    "task_type": {
+      "id": 1,
+      "task_type": "Web Development"
+    },
+    "questions": [
+      {
+        "id": 1,
+        "question_text": "What is your target audience?",
+        "question_type": "text",
+        "required": true
+      }
+    ],
+    "checklists": [
+      {
+        "id": 1,
+        "checklist": [
+          {
+            "id": 1,
+            "text": "Design mockups completed"
+          },
+          {
+            "id": 2,
+            "text": "Client feedback received"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `task_brief_templates` table (template data)
+- **Read**: `task_types` table (task type information)
+- **Read**: `task_brief_questions` table (template questions)
+- **Read**: `task_brief_checklists` table (template checklists)
+
+**Frontend Pages**:
+- `/templates/{id}` - Template detail page
+- `/templates/{id}/edit` - Template edit page
+
+---
+
+### PUT `/task-brief-templates/{id}`
+**Purpose**: Update existing task brief template
+
+**Request Body**:
+```json
+{
+  "title": "Web Development Template Updated",
+  "description": "Updated web development brief",
+  "task_type_id": 1
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Template updated successfully",
+  "data": {
+    "id": 1,
+    "title": "Web Development Template Updated",
+    "description": "Updated web development brief",
+    "updated_at": "2025-08-28T06:30:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Update**: `task_brief_templates` table (template data)
+
+**Frontend Pages**:
+- `/templates/{id}/edit` - Template edit page
+- `/templates/{id}` - Template detail page (redirects after update)
+
+---
+
+### DELETE `/task-brief-templates/{id}`
+**Purpose**: Delete specific task brief template
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Template deleted successfully"
+}
+```
+
+**Database Operations**:
+- **Delete**: `task_brief_templates` table (cascades to related tables)
+- **Delete**: `task_brief_questions` table (template questions)
+- **Delete**: `task_brief_checklists` table (template checklists)
+
+**Frontend Pages**:
+- `/templates/{id}` - Template detail page
+- `/templates` - Template list page (redirects after deletion)
+
