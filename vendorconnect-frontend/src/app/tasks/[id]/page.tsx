@@ -51,6 +51,7 @@ interface TaskDetail {
   tags?: Array<{ id: number; name: string }>;
   note?: string;
   deliverable_quantity?: number;
+  task_brief_templates_id?: number;
   template?: {
     id: number;
     title: string;
