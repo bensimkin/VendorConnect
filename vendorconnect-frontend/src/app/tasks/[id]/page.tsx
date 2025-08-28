@@ -781,7 +781,7 @@ export default function TaskDetailPage() {
               <CardContent>
                 <p>Checklist items count: {checklistItems.length}</p>
                 <p>Checklist completed state: {JSON.stringify(checklistCompleted)}</p>
-                <p>Task template ID: {task?.task_brief_templates_id}</p>
+                <p>Task template ID: {task?.template_id}</p>
               </CardContent>
             </Card>
 
