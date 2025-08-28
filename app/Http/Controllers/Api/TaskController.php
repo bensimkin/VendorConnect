@@ -521,18 +521,10 @@ class TaskController extends BaseController
                     return $this->sendValidationError($validator->errors());
                 }
 
-                // Store the media file
-                $mediaPath = $request->file('media')->store('task-media', 'public');
-                
-                // Create media record
-                $media = $task->media()->create([
-                    'file_path' => $mediaPath,
-                    'file_name' => $request->file('media')->getClientOriginalName(),
-                    'file_size' => $request->file('media')->getSize(),
-                    'mime_type' => $request->file('media')->getMimeType(),
-                    'description' => $request->description,
-                    'uploaded_by' => Auth::user()->id,
-                ]);
+                // Use Spatie Media Library to add the file
+                $media = $task->addMedia($request->file('media'))
+                    ->withCustomProperties(['description' => $request->description])
+                    ->toMediaCollection('task-media', 'public');
 
                 return $this->sendResponse($media, 'Media uploaded successfully');
             } elseif ($request->hasFile('files')) {
@@ -547,18 +539,10 @@ class TaskController extends BaseController
 
                 $uploadedFiles = [];
                 foreach ($request->file('files') as $file) {
-                    // Store the media file
-                    $mediaPath = $file->store('task-media', 'public');
+                    // Use Spatie Media Library to add the file
+                    $media = $task->addMedia($file)
+                        ->toMediaCollection('task-media', 'public');
                     
-                    // Create media record
-                    $media = $task->media()->create([
-                        'file_path' => $mediaPath,
-                        'file_name' => $file->getClientOriginalName(),
-                        'file_size' => $file->getSize(),
-                        'mime_type' => $file->getMimeType(),
-                        'uploaded_by' => Auth::user()->id,
-                    ]);
-
                     $uploadedFiles[] = $media;
                 }
 
@@ -583,7 +567,7 @@ class TaskController extends BaseController
                 return $this->sendNotFound('Task not found');
             }
 
-            $media = $task->media()->orderBy('created_at', 'desc')->get();
+            $media = $task->getMedia('task-media')->sortByDesc('created_at');
 
             return $this->sendResponse($media, 'Task media retrieved successfully');
         } catch (\Exception $e) {
@@ -597,20 +581,23 @@ class TaskController extends BaseController
     public function deleteMedia($mediaId)
     {
         try {
-            // Find media by ID and ensure it belongs to a task in the user's workspace
-            $media = TaskMedia::whereHas('task', function ($query) {
-                $query->where('workspace_id', Auth::user()->workspace_id);
-            })->find($mediaId);
-
+            // Find media by ID using Spatie Media Library
+            $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
+            
             if (!$media) {
                 return $this->sendNotFound('Media not found');
             }
 
-            // Delete file from storage
-            if (Storage::exists($media->file_path)) {
-                Storage::delete($media->file_path);
+            // Ensure the media belongs to a task in the user's workspace
+            $task = Task::where('workspace_id', Auth::user()->workspace_id)
+                ->where('id', $media->model_id)
+                ->first();
+
+            if (!$task) {
+                return $this->sendNotFound('Media not found');
             }
 
+            // Delete the media using Spatie Media Library
             $media->delete();
 
             return $this->sendResponse(null, 'Media deleted successfully');
@@ -627,23 +614,26 @@ class TaskController extends BaseController
         try {
             $validator = Validator::make($request->all(), [
                 'media_ids' => 'required|array',
-                'media_ids.*' => 'exists:task_media,id'
+                'media_ids.*' => 'integer'
             ]);
 
             if ($validator->fails()) {
                 return $this->sendValidationError($validator->errors());
             }
 
-            $media = TaskMedia::whereIn('id', $request->media_ids)
-                ->whereHas('task', function ($query) {
-                    $query->where('workspace_id', Auth::user()->workspace_id);
-                })
-                ->get();
+            // Find media by IDs using Spatie Media Library
+            $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::whereIn('id', $request->media_ids)->get();
 
-            foreach ($media as $item) {
-                if (Storage::exists($item->file_path)) {
-                    Storage::delete($item->file_path);
-                }
+            // Filter media that belongs to tasks in the user's workspace
+            $validMedia = $media->filter(function ($mediaItem) {
+                $task = Task::where('workspace_id', Auth::user()->workspace_id)
+                    ->where('id', $mediaItem->model_id)
+                    ->first();
+                return $task !== null;
+            });
+
+            // Delete the valid media
+            foreach ($validMedia as $item) {
                 $item->delete();
             }
 
@@ -739,8 +729,8 @@ class TaskController extends BaseController
                 return $this->sendNotFound('Message not found');
             }
 
-            // Only allow user to delete their own messages or admin
-            if ($message->sender_id !== Auth::user()->id && !Auth::user()->hasRole('admin')) {
+            // Allow user to delete their own messages, or admin/sub_admin/requester to delete any message
+            if ($message->sender_id !== Auth::user()->id && !Auth::user()->hasRole(['admin', 'sub_admin', 'requester'])) {
                 return $this->sendForbidden('You can only delete your own messages');
             }
 
@@ -779,8 +769,8 @@ class TaskController extends BaseController
                 ->get();
 
             foreach ($messages as $message) {
-                // Only allow user to delete their own messages or admin
-                if ($message->sent_by !== Auth::user()->id && !Auth::user()->hasRole('admin')) {
+                // Allow user to delete their own messages, or admin/sub_admin/requester to delete any message
+                if ($message->sent_by !== Auth::user()->id && !Auth::user()->hasRole(['admin', 'sub_admin', 'requester'])) {
                     continue;
                 }
 

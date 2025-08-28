@@ -68,7 +68,7 @@ interface Client {
 
 interface Project {
   id: number;
-  name: string;
+  title: string;
 }
 
 interface TaskType {
@@ -209,14 +209,14 @@ export default function EditTaskPage() {
         const questions = questionsRes.data.data?.data || questionsRes.data.data || [];
         setTemplateQuestions(questions);
 
-        // Load existing answers
-        const answersRes = await apiClient.get(`/tasks/${taskId}/question-answers`);
-        const answers: QuestionAnswer[] = answersRes.data.data?.data || answersRes.data.data || [];
-        const answersMap: Record<number, string> = {};
-        answers.forEach(answer => {
-          answersMap[answer.question_id] = answer.question_answer;
-        });
-        setQuestionAnswers(answersMap);
+        // Load existing answers from task data
+        if (taskData.question_answers && taskData.question_answers.length > 0) {
+          const answersMap: Record<number, string> = {};
+          taskData.question_answers.forEach((qa: any) => {
+            answersMap[qa.question_id] = qa.question_answer;
+          });
+          setQuestionAnswers(answersMap);
+        }
       }
 
       // Load checklist if template exists
@@ -237,14 +237,14 @@ export default function EditTaskPage() {
           }
         }
 
-        // Load checklist completion status
-        const checklistStatusRes = await apiClient.get(`/tasks/${taskId}/checklist-status`);
-        const checklistStatus = checklistStatusRes.data.data?.data || checklistStatusRes.data.data || [];
-        const completedMap: Record<number, boolean> = {};
-        checklistStatus.forEach((item: any) => {
-          completedMap[item.item_index] = item.completed;
-        });
-        setChecklistCompleted(completedMap);
+        // Load checklist completion status from task data
+        if (taskData.checklist_answers && taskData.checklist_answers.length > 0) {
+          const completedMap: Record<number, boolean> = {};
+          taskData.checklist_answers.forEach((ca: any, index: number) => {
+            completedMap[index] = ca.completed || false;
+          });
+          setChecklistCompleted(completedMap);
+        }
       }
 
     } catch (error: any) {
@@ -468,7 +468,7 @@ export default function EditTaskPage() {
                     <option value="">Select Project</option>
                     {projects.map((project) => (
                       <option key={project.id} value={project.id}>
-                        {project.name}
+                        {project.title}
                       </option>
                     ))}
                   </select>

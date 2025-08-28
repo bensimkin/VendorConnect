@@ -69,6 +69,23 @@ class Project extends Model implements HasMedia
             ->distinct();
     }
 
+    /**
+     * Get all team members including direct project users and task users
+     */
+    public function getAllTeamMembers()
+    {
+        // Get direct project users
+        $directUsers = $this->users;
+        
+        // Get users assigned to tasks within this project
+        $taskUsers = User::whereHas('tasks', function($query) {
+            $query->where('project_id', $this->id);
+        })->get();
+        
+        // Merge and return unique users
+        return $directUsers->merge($taskUsers)->unique('id');
+    }
+
     public function clients()
     {
         return $this->belongsToMany(Client::class);
