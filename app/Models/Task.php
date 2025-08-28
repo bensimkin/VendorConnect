@@ -37,6 +37,9 @@ class Task extends Model implements HasMedia
         'last_repeated_at',
         'template_questions',
         'template_checklist',
+        'template_standard_brief',
+        'template_description',
+        'template_deliverable_quantity',
     ];
 
     protected $casts = [
