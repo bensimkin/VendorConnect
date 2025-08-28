@@ -8,6 +8,16 @@
 -- Generated: August 28, 2025
 -- Database: vendorconnect
 -- 
+-- ⚠️ CRITICAL: Field Naming Inconsistencies
+-- IMPORTANT: The following tables have field naming inconsistencies between database and API:
+-- 
+-- 1. statuses table: Uses 'title' field, but API also returns 'name' (duplicate)
+-- 2. priorities table: Uses 'title' field, but API also returns 'name' (duplicate)  
+-- 3. task_types table: Uses 'task_type' field, but API also returns 'name' (duplicate)
+-- 4. projects table: Uses 'title' field, API returns 'title' (correct)
+--
+-- Frontend should use the primary database field names for consistency.
+-- 
 -- API Endpoints:
 -- - /api/v1/auth/* - Authentication (login, logout, password reset)
 -- - /api/v1/users/* - User management
