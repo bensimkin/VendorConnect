@@ -138,9 +138,13 @@ export default function TaskDetailPage() {
 
   const fetchTaskDetail = async (id: string) => {
     try {
+      console.log('Fetching task details for ID:', id);
+      
       // Fetch task details
       const response = await apiClient.get(`/tasks/${id}`);
       const taskData = response.data.data;
+      console.log('Task data received:', taskData);
+      console.log('Task template ID:', taskData.task_brief_templates_id);
       setTask(taskData);
 
       // Fetch statuses and priorities for inline editing (only once)
