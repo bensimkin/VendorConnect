@@ -35,6 +35,8 @@ class Task extends Model implements HasMedia
         'repeat_active',
         'parent_task_id',
         'last_repeated_at',
+        'template_questions',
+        'template_checklist',
     ];
 
     protected $casts = [
@@ -42,6 +44,8 @@ class Task extends Model implements HasMedia
         'repeat_active' => 'boolean',
         'repeat_until' => 'date',
         'last_repeated_at' => 'datetime',
+        'template_questions' => 'array',
+        'template_checklist' => 'array',
     ];
 
     public function registerMediaCollections(): void

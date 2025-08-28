@@ -152,8 +152,33 @@ class TaskController extends BaseController
 
             // Get template data if template_id is provided
             $template = null;
+            $templateQuestions = null;
+            $templateChecklist = null;
+            
             if ($request->has('template_id') && $request->template_id) {
                 $template = \App\Models\TaskBriefTemplates::find($request->template_id);
+                
+                if ($template) {
+                    // Get template questions
+                    $questions = \App\Models\TaskBriefQuestions::where('task_brief_templates_id', $template->id)->get();
+                    $templateQuestions = $questions->map(function($question) {
+                        return [
+                            'id' => $question->id,
+                            'question_text' => $question->question_text,
+                            'question_type' => $question->question_type,
+                            'options' => $question->options,
+                        ];
+                    })->toArray();
+                    
+                    // Get template checklist items
+                    $checklists = \App\Models\TaskBriefChecklist::where('task_brief_templates_id', $template->id)->get();
+                    $templateChecklist = $checklists->map(function($checklist) {
+                        return [
+                            'id' => $checklist->id,
+                            'checklist' => $checklist->checklist,
+                        ];
+                    })->toArray();
+                }
             }
 
             $task = Task::create([
@@ -175,6 +200,8 @@ class TaskController extends BaseController
                 'repeat_until' => $request->get('repeat_until'),
                 'repeat_active' => $request->get('is_repeating', false),
                 'created_by' => $request->user()->id,
+                'template_questions' => $templateQuestions,
+                'template_checklist' => $templateChecklist,
             ]);
 
             // Attach users
