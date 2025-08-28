@@ -27,10 +27,9 @@ class ClientController extends BaseController
             if ($request->has('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search, $user) {
-                    $q->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%")
+                    $q->where('name', 'like', "%{$search}%")
                       ->orWhere('company', 'like', "%{$search}%");
-                    
+
                     // Only admins and sub-admins can search by email
                     if ($user->hasRole(['admin', 'sub_admin'])) {
                         $q->orWhere('email', 'like', "%{$search}%");
@@ -72,6 +71,7 @@ class ClientController extends BaseController
                     unset($client->country);
                     unset($client->zip);
                     unset($client->dob);
+                    unset($client->notes);
                     return $client;
                 });
             }
@@ -110,19 +110,13 @@ class ClientController extends BaseController
 
             DB::beginTransaction();
 
-            // Split name into first_name and last_name
-            $nameParts = explode(' ', trim($request->name), 2);
-            $firstName = $nameParts[0];
-            $lastName = isset($nameParts[1]) ? $nameParts[1] : '';
-
             $client = Client::create([
-                'first_name' => $firstName,
-                'last_name' => $lastName,
+                'name' => $request->name,
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'company' => $request->company,
                 'address' => $request->address,
-                'client_note' => $request->notes,
+                'notes' => $request->notes,
                 'admin_id' => $request->user()->id,
                 'status' => $request->get('status', 1),
                 'city' => $request->city,
@@ -193,6 +187,7 @@ class ClientController extends BaseController
                 unset($client->country);
                 unset($client->zip);
                 unset($client->dob);
+                unset($client->notes);
             }
 
             \Log::info('Client data: ' . json_encode($client->toArray()));
@@ -243,22 +238,13 @@ class ClientController extends BaseController
 
             DB::beginTransaction();
 
-            // Split name into first_name and last_name if name is provided
-            $updateData = $request->only(['email', 'phone', 'company', 'address', 'status', 'city', 'state', 'country', 'zip', 'dob']);
-            
-            if ($request->has('name')) {
-                $nameParts = explode(' ', trim($request->name), 2);
-                $updateData['first_name'] = $nameParts[0];
-                $updateData['last_name'] = isset($nameParts[1]) ? $nameParts[1] : '';
-            }
-            
+            $updateData = $request->only(['name', 'email', 'phone', 'company', 'address', 'status', 'city', 'state', 'country', 'zip', 'dob']);
+
             if ($request->has('notes')) {
-                $updateData['client_note'] = $request->notes;
+                $updateData['notes'] = $request->notes;
             }
 
             $client->update($updateData);
-
-
 
             DB::commit();
 
