@@ -189,53 +189,41 @@ export default function TaskDetailPage() {
         setQuestionAnswers(answers);
       }
 
-      // Load template checklist items and saved answers
-      if (taskData.template_id) {
-        try {
-          console.log('Loading checklist for template ID:', taskData.template_id);
+      // Load checklist items from saved answers
+      try {
+        console.log('Loading checklist from saved answers');
+        
+        // Fetch saved checklist answers
+        const checklistStatusResponse = await apiClient.get(`/tasks/${id}/checklist-status`);
+        console.log('Checklist status response:', checklistStatusResponse.data);
+        
+        const savedAnswers = checklistStatusResponse.data.data;
+        
+        if (savedAnswers && savedAnswers.length > 0) {
+          // Extract checklist items from the notes field of saved answers
+          const checklistItems: string[] = [];
+          const completedMap: Record<number, boolean> = {};
           
-          // Fetch template checklist items
-          const checklistResponse = await apiClient.get(`/task-brief-checklists?template_id=${taskData.template_id}`);
-          console.log('Template checklist response:', checklistResponse.data);
+          console.log('Processing saved answers:', savedAnswers);
           
-          const templateChecklist = checklistResponse.data.data[0];
-          console.log('Template checklist:', templateChecklist);
+          savedAnswers.forEach((answer: any, index: number) => {
+            // The checklist item text is stored in the notes field
+            const itemText = answer.notes || `Checklist item ${index + 1}`;
+            checklistItems.push(itemText);
+            completedMap[index] = answer.completed || false;
+            console.log(`Item ${index}: "${itemText}" - completed: ${answer.completed}`);
+          });
           
-          if (templateChecklist && templateChecklist.checklist) {
-            console.log('Setting checklist items:', templateChecklist.checklist);
-            setChecklistItems(templateChecklist.checklist);
-            
-            // Fetch saved checklist answers
-            const checklistStatusResponse = await apiClient.get(`/tasks/${id}/checklist-status`);
-            console.log('Checklist status response:', checklistStatusResponse.data);
-            
-            const savedAnswers = checklistStatusResponse.data.data;
-            
-            // Create a map of item_index to completed status
-            const completedMap: Record<number, boolean> = {};
-            console.log('Loading checklist data:', { templateChecklist, savedAnswers });
-            
-            savedAnswers.forEach((answer: any) => {
-              // Use the item_index to map to the correct template item
-              const itemIndex = answer.item_index || 0;
-              console.log('Processing answer:', { answer, itemIndex, templateLength: templateChecklist.checklist.length });
-              if (itemIndex >= 0 && itemIndex < templateChecklist.checklist.length) {
-                completedMap[itemIndex] = answer.completed;
-                console.log(`Setting item ${itemIndex} to completed: ${answer.completed}`);
-              }
-            });
-            
-            console.log('Final completed map:', completedMap);
-            
-            setChecklistCompleted(completedMap);
-          } else {
-            console.log('No template checklist found or no checklist items');
-          }
-        } catch (error) {
-          console.error('Failed to load checklist data:', error);
+          console.log('Setting checklist items:', checklistItems);
+          console.log('Setting completed map:', completedMap);
+          
+          setChecklistItems(checklistItems);
+          setChecklistCompleted(completedMap);
+        } else {
+          console.log('No saved checklist answers found');
         }
-      } else {
-        console.log('No task_brief_templates_id found in task data');
+      } catch (error) {
+        console.error('Failed to load checklist data:', error);
       }
 
       // Load deliverables
@@ -286,25 +274,17 @@ export default function TaskDetailPage() {
     try {
       console.log('Checklist toggle called:', { index, completed, task_id: task.id });
       
-      // Get the template checklist to find the correct checklist_id
-      const checklistResponse = await apiClient.get(`/task-brief-checklists?template_id=${task.template_id}`);
-      const templateChecklist = checklistResponse.data.data[0];
+      // Get the current checklist item text
+      const itemText = checklistItems[index] || `Checklist item ${index + 1}`;
       
-      if (!templateChecklist) {
-        toast.error('Template checklist not found');
-        return;
-      }
-      
-      console.log('Template checklist:', templateChecklist);
-      
-      // Use the template checklist ID and item index
-      const checklist_id = templateChecklist.id;
+      // Use a simple checklist_id since we're working with saved answers
+      const checklist_id = 1;
       
       const requestData = {
         checklist_id: checklist_id,
         item_index: index,
         completed: completed,
-        notes: checklistItems[index] || `Checklist item ${index + 1}`,
+        notes: itemText,
       };
       
       console.log('Sending checklist answer request:', requestData);
