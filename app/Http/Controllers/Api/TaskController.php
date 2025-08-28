@@ -183,7 +183,7 @@ class TaskController extends BaseController
 
             $task = Task::create([
                 'title' => $template ? $template->title : $request->title,
-                'description' => $template ? ($template->standard_brief ?: $request->description) : $request->description,
+                'description' => $template ? ($template->standard_brief : $request->description) : $request->description,
                 'status_id' => $request->status_id,
                 'priority_id' => $request->priority_id,
                 'task_type_id' => $request->task_type_id,
@@ -191,8 +191,8 @@ class TaskController extends BaseController
                 'project_id' => $request->project_id,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
-                'note' => $template ? ($template->description ?: $request->note) : $request->note,
-                'deliverable_quantity' => $template ? ($template->deliverable_quantity ?: $request->get('deliverable_quantity', 1)) : $request->get('deliverable_quantity', 1),
+                'note' => $template ? ($template->description : $request->note) : $request->note,
+                'deliverable_quantity' => $template ? ($template->deliverable_quantity : $request->get('deliverable_quantity', 1)) : $request->get('deliverable_quantity', 1),
                 'close_deadline' => $request->get('close_deadline', 0),
                 'is_repeating' => $request->get('is_repeating', false),
                 'repeat_frequency' => $request->get('repeat_frequency'),
@@ -202,6 +202,9 @@ class TaskController extends BaseController
                 'created_by' => $request->user()->id,
                 'template_questions' => $templateQuestions,
                 'template_checklist' => $templateChecklist,
+                'template_standard_brief' => $template ? $template->standard_brief : null,
+                'template_description' => $template ? $template->description : null,
+                'template_deliverable_quantity' => $template ? $template->deliverable_quantity : null,
             ]);
 
             // Attach users

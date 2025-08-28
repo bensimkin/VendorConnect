@@ -54,6 +54,9 @@ interface TaskDetail {
   template_id?: number;
   template_questions?: any[];
   template_checklist?: any[];
+  template_standard_brief?: string;
+  template_description?: string;
+  template_deliverable_quantity?: number;
   template?: {
     id: number;
     title: string;
@@ -160,35 +163,48 @@ export default function TaskDetailPage() {
         setPriorities(prioritiesRes.data.data || []);
       }
 
-      // Load template questions and checklists from task data
-      if (taskData.question_answers && taskData.question_answers.length > 0) {
-        const questions: TemplateQuestion[] = [];
-        const answers: QuestionAnswer[] = [];
+      // Load template questions from task data
+      if (taskData.template_questions && taskData.template_questions.length > 0) {
+        console.log('Loading template questions from task data:', taskData.template_questions);
         
-        taskData.question_answers.forEach((qa: any) => {
-          if (qa.brief_questions) {
-            questions.push({
-              id: qa.brief_questions.id,
-              question_text: qa.brief_questions.question_text,
-              question_type: qa.brief_questions.question_type,
-              options: qa.brief_questions.options,
-            });
-            answers.push({
-              id: qa.id,
-              question_id: qa.question_id,
-              question_answer: qa.question_answer,
-              briefQuestions: {
-                id: qa.brief_questions.id,
-                question_text: qa.brief_questions.question_text,
-                question_type: qa.brief_questions.question_type,
-                options: qa.brief_questions.options,
-              },
-            });
-          }
+        const questions: TemplateQuestion[] = [];
+        taskData.template_questions.forEach((q: any) => {
+          questions.push({
+            id: q.id,
+            question_text: q.question_text,
+            question_type: q.question_type,
+            options: q.options,
+          });
         });
         
         setTemplateQuestions(questions);
-        setQuestionAnswers(answers);
+        
+        // Load saved question answers
+        try {
+          const questionAnswersResponse = await apiClient.get(`/tasks/${id}/question-answers`);
+          console.log('Question answers response:', questionAnswersResponse.data);
+          
+          const savedAnswers = questionAnswersResponse.data.data;
+          if (savedAnswers && savedAnswers.length > 0) {
+            const answers: QuestionAnswer[] = [];
+            savedAnswers.forEach((qa: any) => {
+              const question = questions.find(q => q.id === qa.question_id);
+              if (question) {
+                answers.push({
+                  id: qa.id,
+                  question_id: qa.question_id,
+                  question_answer: qa.question_answer,
+                  briefQuestions: question,
+                });
+              }
+            });
+            setQuestionAnswers(answers);
+          }
+        } catch (error) {
+          console.error('Failed to load question answers:', error);
+        }
+      } else {
+        console.log('No template questions found in task data');
       }
 
                    // Load checklist items from task template data
@@ -628,7 +644,7 @@ export default function TaskDetailPage() {
             </Card>
 
             {/* Template Information */}
-            {task.template && (
+            {task.template_id && (
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
@@ -639,31 +655,33 @@ export default function TaskDetailPage() {
                 <CardContent className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium">Template Name</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {task.template.title}
-                      </p>
-                    </div>
-                    <div className="space-y-2">
                       <Label className="text-sm font-medium">Template ID</Label>
                       <p className="text-sm text-muted-foreground">
-                        #{task.template.id}
+                        #{task.template_id}
                       </p>
                     </div>
+                    {task.template_deliverable_quantity && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Deliverable Quantity</Label>
+                        <p className="text-sm text-muted-foreground">
+                          {task.template_deliverable_quantity}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  {task.template.standard_brief && (
+                  {task.template_standard_brief && (
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Standard Brief</Label>
                       <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {task.template.standard_brief}
+                        {task.template_standard_brief}
                       </p>
                     </div>
                   )}
-                  {task.template.description && (
+                  {task.template_description && (
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Template Description</Label>
                       <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {task.template.description}
+                        {task.template_description}
                       </p>
                     </div>
                   )}
