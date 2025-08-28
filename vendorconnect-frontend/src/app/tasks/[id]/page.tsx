@@ -51,7 +51,7 @@ interface TaskDetail {
   tags?: Array<{ id: number; name: string }>;
   note?: string;
   deliverable_quantity?: number;
-  task_brief_templates_id?: number;
+  template_id?: number;
   template?: {
     id: number;
     title: string;
@@ -190,12 +190,12 @@ export default function TaskDetailPage() {
       }
 
       // Load template checklist items and saved answers
-      if (taskData.task_brief_templates_id) {
+      if (taskData.template_id) {
         try {
-          console.log('Loading checklist for template ID:', taskData.task_brief_templates_id);
+          console.log('Loading checklist for template ID:', taskData.template_id);
           
           // Fetch template checklist items
-          const checklistResponse = await apiClient.get(`/task-brief-checklists?template_id=${taskData.task_brief_templates_id}`);
+          const checklistResponse = await apiClient.get(`/task-brief-checklists?template_id=${taskData.template_id}`);
           console.log('Template checklist response:', checklistResponse.data);
           
           const templateChecklist = checklistResponse.data.data[0];
@@ -287,7 +287,7 @@ export default function TaskDetailPage() {
       console.log('Checklist toggle called:', { index, completed, task_id: task.id });
       
       // Get the template checklist to find the correct checklist_id
-      const checklistResponse = await apiClient.get(`/task-brief-checklists?template_id=${task.task_brief_templates_id}`);
+      const checklistResponse = await apiClient.get(`/task-brief-checklists?template_id=${task.template_id}`);
       const templateChecklist = checklistResponse.data.data[0];
       
       if (!templateChecklist) {
