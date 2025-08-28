@@ -7,6 +7,34 @@ This document provides comprehensive documentation for all VendorConnect API end
 
 ---
 
+## ⚠️ CRITICAL: Field Naming Inconsistencies
+
+**IMPORTANT**: This API has field naming inconsistencies that affect frontend development. The following models return duplicate fields due to Laravel model `$appends` attributes:
+
+### **Status Model**
+- **Database Field**: `statuses.title`
+- **API Response**: Both `status.title` AND `status.name` (duplicate)
+- **Recommended Usage**: Use `status.title` for consistency
+
+### **Priority Model** 
+- **Database Field**: `priorities.title`
+- **API Response**: Both `priority.title` AND `priority.name` (duplicate)
+- **Recommended Usage**: Use `priority.title` for consistency
+
+### **TaskType Model**
+- **Database Field**: `task_types.task_type`
+- **API Response**: Both `task_type.task_type` AND `task_type.name` (duplicate)
+- **Recommended Usage**: Use `task_type.task_type` for consistency
+
+### **Project Model**
+- **Database Field**: `projects.title`
+- **API Response**: `project.title` (correct)
+- **Frontend Usage**: Use `project.title` (correct)
+
+**Impact**: Frontend interfaces should use the primary database field names (`title`, `task_type`) rather than the appended `name` fields to maintain consistency with the database schema.
+
+---
+
 ## 🔐 Authentication APIs
 
 ### POST `/auth/login`
