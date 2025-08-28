@@ -38,7 +38,7 @@ interface Task {
   };
   project?: {
     id: number;
-    name: string;
+    title: string;
   };
   due_date?: string;
   task_type?: {
