@@ -53,6 +53,13 @@ interface Task {
     deliverable_quantity?: number;
   };
   close_deadline?: boolean;
+  question_answers?: Array<{
+    question_id: number;
+    question_answer: string;
+  }>;
+  checklist_answers?: Array<{
+    completed: boolean;
+  }>;
 }
 
 interface User {
