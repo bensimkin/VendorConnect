@@ -31,8 +31,7 @@ class ProjectController extends BaseController
                     $q->where('title', 'like', "%{$search}%")
                       ->orWhere('description', 'like', "%{$search}%")
                       ->orWhereHas('clients', function ($clientQuery) use ($search) {
-                          $clientQuery->where('first_name', 'like', "%{$search}%")
-                                     ->orWhere('last_name', 'like', "%{$search}%")
+                          $clientQuery->where('name', 'like', "%{$search}%")
                                      ->orWhere('company', 'like', "%{$search}%");
                       });
                 });
