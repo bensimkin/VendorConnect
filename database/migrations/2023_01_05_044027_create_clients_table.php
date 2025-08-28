@@ -15,17 +15,27 @@ return new class extends Migration
     {
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
-            $table->string('first_name');
-            $table->string('last_name');
-            $table->string('company');
-            $table->string('email')->unique();
-            $table->bigInteger('phone');
-            $table->string('password');
-            $table->string('address');
-            $table->string('city');
-            $table->string('state');
-            $table->string('country');
-            $table->integer('zip');
+            $table->string('name');
+            $table->string('email')->nullable()->unique();
+            $table->string('password')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('country_code')->nullable();
+            $table->text('address')->nullable();
+            $table->string('company')->nullable();
+            $table->string('website')->nullable();
+            $table->text('notes')->nullable();
+            $table->tinyInteger('status')->default(1);
+            $table->string('city')->nullable();
+            $table->string('state')->nullable();
+            $table->string('country')->nullable();
+            $table->string('zip')->nullable();
+            $table->date('dob')->nullable();
+            $table->date('doj')->nullable();
+            $table->text('internal_purpose')->nullable();
+            $table->string('acc_mail')->nullable();
+            $table->string('photo')->nullable();
+            $table->unsignedBigInteger('admin_id')->nullable();
+            $table->foreign('admin_id')->references('id')->on('admins')->onDelete('set null');
             $table->timestamps();
         });
     }
