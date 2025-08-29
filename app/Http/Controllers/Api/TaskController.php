@@ -35,7 +35,7 @@ class TaskController extends BaseController
             $query = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'project.clients']);
             
             // Role-based filtering
-            if ($user->hasRole('requester')) {
+            if ($user->hasRole('Requester')) {
                 // Requesters only see tasks they created
                 $query->where('created_by', $user->id);
             } elseif ($user->hasRole('tasker')) {
@@ -272,7 +272,7 @@ class TaskController extends BaseController
             }
 
             // Role-based access control
-            if ($user->hasRole('requester')) {
+            if ($user->hasRole('Requester')) {
                 // Requesters can only access tasks they created
                 if ($task->created_by !== $user->id) {
                     return $this->sendError('Access denied', [], 403);
@@ -339,7 +339,7 @@ class TaskController extends BaseController
             }
 
             // Role-based access control
-            if ($user->hasRole('requester')) {
+            if ($user->hasRole('Requester')) {
                 // Requesters can only update tasks they created
                 if ($task->created_by !== $user->id) {
                     return $this->sendError('Access denied', [], 403);
