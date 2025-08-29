@@ -350,7 +350,12 @@ export default function PortfolioPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => window.open(getFileUrl(portfolio.main_file?.original_url), '_blank')}
+                          onClick={() => {
+                          const url = portfolio.main_file?.original_url;
+                          if (url) {
+                            window.open(getFileUrl(url), '_blank');
+                          }
+                        }}
                         >
                           <Download className="h-4 w-4" />
                         </Button>
