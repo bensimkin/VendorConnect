@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -76,6 +76,8 @@ interface TemplateChecklist {
 
 export default function NewTaskPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const clientId = searchParams.get('client_id');
   const [loading, setLoading] = useState(false);
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [priorities, setPriorities] = useState<Priority[]>([]);
@@ -117,6 +119,16 @@ export default function NewTaskPage() {
   useEffect(() => {
     fetchFormData();
   }, []);
+
+  // Set client_id from query parameter if available
+  useEffect(() => {
+    if (clientId) {
+      setFormData(prev => ({ 
+        ...prev, 
+        client_ids: [parseInt(clientId)]
+      }));
+    }
+  }, [clientId]);
 
   const fetchFormData = async () => {
     try {
