@@ -2590,12 +2590,18 @@ multipart/form-data with media files
 
 **Database Operations**:
 - **Read**: `tasks` table (client tasks)
-- **Read**: `task_client` table (task assignments)
+- **Read**: `projects` table (via project relationship)
+- **Read**: `client_project` table (project-client pivot)
 - **Read**: `statuses` table (task status)
 - **Read**: `priorities` table (task priority)
 
 **Frontend Pages**:
 - `/clients/{id}` - Client detail page (tasks tab)
+
+**Recent Fix (2025-08-29)**:
+- **Issue**: API was failing with 500 error due to invalid `client_id` query on projects table
+- **Fix**: Updated to use correct `client_project` pivot table relationship
+- **Impact**: Client detail pages now load successfully without server errors
 
 ---
 
