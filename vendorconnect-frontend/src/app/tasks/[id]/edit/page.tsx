@@ -520,7 +520,7 @@ export default function EditTaskPage() {
                   <select
                     id="task_type"
                     value={formData.task_type_id}
-                    onChange={(e) => setFormData({ ...formData, task_type_id: parseInt(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, task_type_id: e.target.value })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
                     <option value="">Select Task Type</option>
