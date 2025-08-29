@@ -655,7 +655,7 @@ export default function EditTaskPage() {
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Template Name</Label>
+                    <Label className="text-sm font-medium">Template Name boy</Label>
                     <p className="text-sm text-muted-foreground">
                                               {task.template.title}
                     </p>
