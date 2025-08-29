@@ -895,7 +895,7 @@ export default function NewTaskPage() {
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Task Type</Label>
                     <p className="text-sm text-muted-foreground">
-                      {taskTypes.find(t => t.id.toString() === formData.task_type_id)?.name}
+                      {taskTypes.find(t => t.id.toString() === formData.task_type_id)?.task_type}
                     </p>
                   </div>
                 </div>
