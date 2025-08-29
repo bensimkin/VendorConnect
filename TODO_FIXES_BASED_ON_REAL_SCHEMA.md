@@ -903,6 +903,81 @@ There is a fundamental mismatch between what the API returns and what the fronte
 - Task management was severely impaired
 - The fix resolves the core data mapping problem
 
+---
+
+### **8. TASK UPDATE 422 VALIDATION ERROR (HIGH PRIORITY)**
+
+#### **Problem Explanation:**
+When users try to update a task, they get a 422 validation error. This happens because there's a mismatch between the API validation rules and the frontend payload handling, combined with database field requirements.
+
+**What's happening:**
+- **Database Reality**: `status_id` and `priority_id` are NOT NULL fields (required)
+- **API Validation**: Uses `sometimes|required` which means "if present, must be valid"
+- **Frontend Logic**: Only sends fields if they have truthy values
+- **Result**: When users clear dropdowns, required fields are missing, causing 422 errors
+
+**Specific Issues:**
+- **Validation Rule Problem**: `sometimes|required` doesn't match database NOT NULL requirements
+- **Frontend Payload Problem**: Conditional field inclusion means required fields can be missing
+- **Default Value Problem**: No fallback values for required fields when users clear selections
+
+**Why this matters:**
+- Users can't update tasks without getting validation errors
+- Task management is completely broken
+- The system is unusable for task editing
+
+#### **Step-by-Step Fix:**
+
+**Step 8.1: Fix API Validation Rules**
+```bash
+# File: app/Http/Controllers/Api/TaskController.php
+# Change from:
+'status_id' => 'sometimes|required|exists:statuses,id',
+'priority_id' => 'sometimes|required|exists:priorities,id',
+'project_id' => 'sometimes|required|exists:projects,id',
+
+# To:
+'status_id' => 'required|exists:statuses,id',
+'priority_id' => 'required|exists:priorities,id',
+'project_id' => 'nullable|exists:projects,id',
+```
+
+**What this fixes:**
+The validation rules now match the database schema. `status_id` and `priority_id` are always required (matching NOT NULL), while `project_id` is optional (matching NULL).
+
+**Step 8.2: Fix Frontend Payload Construction**
+```bash
+# File: vendorconnect-frontend/src/app/tasks/[id]/edit/page.tsx
+# Change from:
+const payload: Record<string, any> = {
+  title: formData.title,
+  // ... other fields
+};
+if (formData.status_id) payload.status_id = formData.status_id;
+if (formData.priority_id) payload.priority_id = formData.priority_id;
+
+# To:
+const payload: Record<string, any> = {
+  title: formData.title,
+  status_id: formData.status_id || 15, // Default to "Pending" status
+  priority_id: formData.priority_id || 2, // Default to "Medium" priority
+  // ... other fields
+};
+```
+
+**What this fixes:**
+The frontend now always sends required fields with default values, ensuring the API validation passes even when users clear dropdowns.
+
+**Step 8.3: Verify Database Default Values**
+```bash
+# Check that default values exist:
+# Status ID 15 = "Pending"
+# Priority ID 2 = "Medium"
+```
+
+**What this verifies:**
+Ensures the default values used in the frontend actually exist in the database and are appropriate fallbacks.
+
 #### **Step-by-Step Fix:**
 
 **Step 6.1: Fix TaskController to Load Project Relationships**
