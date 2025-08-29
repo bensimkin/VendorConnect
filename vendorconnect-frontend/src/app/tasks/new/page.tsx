@@ -134,8 +134,8 @@ export default function NewTaskPage() {
       setTemplates(templateRes.data.data || []);
 
       // Set default values
-      const pendingStatus = statusRes.data.data?.find((s: Status) => s.name === 'Pending');
-      const mediumPriority = priorityRes.data.data?.find((p: Priority) => p.name === 'Medium');
+      const pendingStatus = statusRes.data.data?.find((s: Status) => s.title === 'Pending');
+      const mediumPriority = priorityRes.data.data?.find((p: Priority) => p.title === 'Medium');
       
       if (pendingStatus) {
         setFormData(prev => ({ ...prev, status_id: pendingStatus.id.toString() }));
