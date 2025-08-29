@@ -278,8 +278,10 @@ class TaskController extends BaseController
 
             // Role-based access control
             if ($user->hasRole('Requester')) {
-                // Requesters can only access tasks they created
-                if ($task->created_by !== $user->id) {
+                // Requesters can access tasks they created OR are assigned to
+                $isCreated = $task->created_by === $user->id;
+                $isAssigned = $task->users()->where('users.id', $user->id)->exists();
+                if (!$isCreated && !$isAssigned) {
                     return $this->sendError('Access denied', [], 403);
                 }
             } elseif ($user->hasRole('tasker')) {
@@ -345,8 +347,10 @@ class TaskController extends BaseController
 
             // Role-based access control
             if ($user->hasRole('Requester')) {
-                // Requesters can only update tasks they created
-                if ($task->created_by !== $user->id) {
+                // Requesters can update tasks they created OR are assigned to
+                $isCreated = $task->created_by === $user->id;
+                $isAssigned = $task->users()->where('users.id', $user->id)->exists();
+                if (!$isCreated && !$isAssigned) {
                     return $this->sendError('Access denied', [], 403);
                 }
             } elseif ($user->hasRole('tasker')) {
