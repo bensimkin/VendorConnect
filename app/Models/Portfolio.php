@@ -16,6 +16,7 @@ class Portfolio extends Model implements HasMedia
         'client_id',
         'task_id',
         'project_id',
+        'deliverable_id',
         'title',
         'description',
         'deliverable_type', // 'design', 'document', 'presentation', 'other'
@@ -46,6 +47,11 @@ class Portfolio extends Model implements HasMedia
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function deliverable()
+    {
+        return $this->belongsTo(TaskDeliverable::class);
     }
 
     public function createdBy()
