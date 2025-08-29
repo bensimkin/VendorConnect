@@ -14,7 +14,8 @@ import { apiClient } from '@/lib/api-client';
 
 interface Client {
   id: number;
-  name: string;
+  first_name: string;
+  last_name: string;
   email?: string;
   phone?: string;
   address?: string;
@@ -40,7 +41,8 @@ export default function EditClientPage() {
   const [saving, setSaving] = useState(false);
   const [client, setClient] = useState<Client | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
     address: '',
@@ -66,7 +68,8 @@ export default function EditClientPage() {
       
       setClient(clientData);
       setFormData({
-        name: clientData.name,
+        first_name: clientData.first_name,
+        last_name: clientData.last_name,
         email: clientData.email || '',
         phone: clientData.phone || '',
         address: clientData.address || '',
@@ -92,8 +95,8 @@ export default function EditClientPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim()) {
-      toast.error('Client name is required');
+    if (!formData.first_name.trim() || !formData.last_name.trim()) {
+      toast.error('Client first name and last name are required');
       return;
     }
 
@@ -148,11 +151,21 @@ export default function EditClientPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name *</Label>
+                  <Label htmlFor="first_name">First Name *</Label>
                   <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    id="first_name"
+                    value={formData.first_name}
+                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="last_name">Last Name *</Label>
+                  <Input
+                    id="last_name"
+                    value={formData.last_name}
+                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                     required
                   />
                 </div>
