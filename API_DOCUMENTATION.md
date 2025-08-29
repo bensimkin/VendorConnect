@@ -1988,9 +1988,16 @@ multipart/form-data with media files
   "priority_id": 2,
   "workspace_id": 1,
   "user_ids": [1, 2],
+  "client_id": 1,
   "client_ids": [1, 2]
 }
 ```
+
+**Client Assignment Notes**:
+- **Single Client Mode**: Use `client_id` field (default)
+- **Multiple Clients Mode**: Use `client_ids` array (requires setting `allow_multiple_clients_per_project` enabled)
+- **Required Client**: If setting `require_project_client` is enabled, at least one client must be provided
+- **Max Clients**: Controlled by setting `max_clients_per_project` (default: 5)
 
 **Response**:
 ```json
@@ -2010,11 +2017,16 @@ multipart/form-data with media files
 **Database Operations**:
 - **Create**: `projects` table (main project data)
 - **Create**: `project_user` table (user assignments)
-- **Create**: `project_client` table (client assignments)
+- **Create**: `client_project` table (client assignments)
 
 **Frontend Pages**:
 - `/projects/create` - Create project page
 - `/projects` - Project list page (redirects after creation)
+
+**Recent Fixes**:
+- **Fixed "Unnamed Project" Issue**: Project creation now properly attaches clients to projects
+- **Client Relationship**: Projects now include client data in responses
+- **Foreign Key Constraint**: Fixed admin_id foreign key constraint in client_project table
 
 ---
 
@@ -2124,9 +2136,15 @@ multipart/form-data with media files
   "status_id": 2,
   "priority_id": 1,
   "user_ids": [1, 3],
+  "client_id": 1,
   "client_ids": [1]
 }
 ```
+
+**Client Assignment Notes**:
+- **Single Client Mode**: Use `client_id` field to assign/replace single client
+- **Multiple Clients Mode**: Use `client_ids` array to sync multiple clients
+- **Client Sync**: Existing client assignments are replaced with new ones
 
 **Response**:
 ```json
@@ -2144,7 +2162,7 @@ multipart/form-data with media files
 **Database Operations**:
 - **Update**: `projects` table (project data)
 - **Delete/Create**: `project_user` table (user assignments)
-- **Delete/Create**: `project_client` table (client assignments)
+- **Delete/Create**: `client_project` table (client assignments)
 
 **Frontend Pages**:
 - `/projects/{id}/edit` - Project edit page
