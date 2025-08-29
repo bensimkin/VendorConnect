@@ -347,7 +347,67 @@ const getClientDisplayName = (client: Client) => {
 
 **PROBLEM**: The helper function exists but the interface still expects `name` field, and many places directly access `client.name`.
 
-## 8. Dropdown Value Type Mismatch (FIXED)
+## 8. Portfolio Client and CreatedBy Name Field Mismatches
+
+### Portfolio API Response Structure:
+```json
+{
+  "id": 1,
+  "client_id": 83,
+  "task_id": 67,
+  "project_id": 7,
+  "title": "Sample Portfolio",
+  "description": "Portfolio description",
+  "deliverable_type": "design",
+  "status": "completed",
+  "created_by": 1,
+  "completed_at": "2025-08-28T23:17:32.000000Z",
+  "created_at": "2025-08-28T23:17:32.000000Z",
+  "updated_at": "2025-08-28T23:17:32.000000Z",
+  "client": {
+    "id": 83,
+    "first_name": "John",
+    "last_name": "Marketing",
+    "company": "Acme Corporation",
+    // ... other client fields
+  },
+  "createdBy": {
+    "id": 1,
+    "first_name": "Admin",
+    "last_name": "User",
+    // ... other user fields
+  }
+}
+```
+
+### Frontend Interface:
+```typescript
+interface Portfolio {
+  // ... other fields
+  client: {
+    id: number;
+    name: string;  // ❌ MISMATCH: This field doesn't exist in API
+    company?: string;
+  };
+  createdBy: {
+    id: number;
+    name: string;  // ❌ MISMATCH: This field doesn't exist in API
+  };
+}
+```
+
+### Frontend Usage (from portfolio/page.tsx):
+```typescript
+{client.name} {client.company ? `(${client.company})` : ''}
+<span>{portfolio.client.name}</span>
+```
+
+### MISMATCHES:
+1. **Portfolio Client**: Same issue as task clients - frontend expects `client.name` but API has `first_name` + `last_name`
+2. **Portfolio CreatedBy**: Frontend expects `createdBy.name` but API has `first_name` + `last_name`
+3. **Result**: Both show as undefined/empty in the UI
+
+## 9. Dropdown Value Type Mismatch (FIXED)
 
 ### Issue Found:
 - **Form data**: Uses numbers (`status_id: 20`)
@@ -370,6 +430,8 @@ const getClientDisplayName = (client: Client) => {
 8. **❌ UNFIXED**: Missing fields in nested objects (priority, project, task_type)
 9. **❌ UNFIXED**: Client name field mismatch (`name` vs `first_name` + `last_name`)
 10. **❌ UNFIXED**: Frontend accessing non-existent `client.name` field
+11. **❌ UNFIXED**: Portfolio client name field mismatch (same as #9)
+12. **❌ UNFIXED**: Portfolio createdBy name field mismatch (`name` vs `first_name` + `last_name`)
 
 ## Recommendations:
 
@@ -382,4 +444,5 @@ const getClientDisplayName = (client: Client) => {
 7. Add missing fields to nested object interfaces (priority, project, task_type)
 8. Fix client name field mismatch - remove `name` from interfaces, use `first_name` + `last_name`
 9. Update all frontend code to use `getClientDisplayName()` helper instead of `client.name`
-10. Consider adding missing fields to interfaces for completeness
+10. Fix portfolio client and createdBy name field mismatches (same as #8)
+11. Consider adding missing fields to interfaces for completeness
