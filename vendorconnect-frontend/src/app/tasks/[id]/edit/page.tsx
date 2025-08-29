@@ -24,6 +24,10 @@ interface Task {
   description?: string;
   note?: string;
   deliverable_quantity?: number;
+  status_id?: number;
+  priority_id?: number;
+  project_id?: number;
+  task_type_id?: number;
   status?: {
     id: number;
     title: string;  // FIXED: Use primary database field
