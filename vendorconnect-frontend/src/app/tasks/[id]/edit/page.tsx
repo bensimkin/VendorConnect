@@ -219,26 +219,18 @@ export default function EditTaskPage() {
         apiClient.get('/statuses?per_page=all'),
         apiClient.get('/priorities?per_page=all'),
       ]);
-      
-      // Debug API responses
-      console.log('Statuses API Response:', statusesRes.data);
-      console.log('Priorities API Response:', prioritiesRes.data);
-      console.log('Projects API Response:', projectsRes.data);
-      console.log('Clients API Response:', clientsRes.data);
-      
-      const statusesData = statusesRes.data.data || statusesRes.data || [];
-      const prioritiesData = prioritiesRes.data.data || prioritiesRes.data || [];
-      const projectsData = projectsRes.data.data || projectsRes.data || [];
-      const clientsData = clientsRes.data.data || clientsRes.data || [];
-      const usersData = usersRes.data.data || usersRes.data || [];
-      const taskTypesData = taskTypesRes.data.data || taskTypesRes.data || [];
-      const templatesData = templatesRes.data.data || templatesRes.data || [];
-      
-      console.log('Processed Statuses Data:', statusesData);
-      console.log('Processed Priorities Data:', prioritiesData);
-      console.log('Processed Projects Data:', projectsData);
-      console.log('Processed Clients Data:', clientsData);
-      
+
+      // Helper to consistently extract array data from API responses
+      const extractData = (res: any) => res?.data?.data?.data || res?.data?.data || res?.data || [];
+
+      const statusesData = extractData(statusesRes);
+      const prioritiesData = extractData(prioritiesRes);
+      const projectsData = extractData(projectsRes);
+      const clientsData = extractData(clientsRes);
+      const usersData = extractData(usersRes);
+      const taskTypesData = extractData(taskTypesRes);
+      const templatesData = extractData(templatesRes);
+
       setUsers(usersData);
       setClients(clientsData);
       setProjects(projectsData);
