@@ -13,6 +13,11 @@ import { ArrowLeft, Save, Trash2, Plus, X, FileText } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'react-hot-toast';
 
+// Helper function to get client display name
+const getClientDisplayName = (client: { first_name: string; last_name: string; name?: string }) => {
+  return client.name || `${client.first_name} ${client.last_name}`.trim();
+};
+
 interface Task {
   id: number;
   title: string;
@@ -70,7 +75,10 @@ interface User {
 
 interface Client {
   id: number;
-  name: string;
+  first_name: string;
+  last_name: string;
+  name?: string; // For backward compatibility
+  company?: string;
 }
 
 interface Project {
@@ -202,13 +210,13 @@ export default function EditTaskPage() {
         apiClient.get('/priorities'),
       ]);
 
-      setUsers(usersRes.data.data?.data || usersRes.data.data || []);
-      setClients(clientsRes.data.data?.data || clientsRes.data.data || []);
-      setProjects(projectsRes.data.data?.data || projectsRes.data.data || []);
-      setTaskTypes(taskTypesRes.data.data?.data || taskTypesRes.data.data || []);
+      setUsers(usersRes.data.data || []);
+      setClients(clientsRes.data.data || []);
+      setProjects(projectsRes.data.data || []);
+      setTaskTypes(taskTypesRes.data.data || []);
       setTemplates(templatesRes.data.data || []);
-      setStatuses(statusesRes.data.data?.data || statusesRes.data.data || []);
-      setPriorities(prioritiesRes.data.data?.data || prioritiesRes.data.data || []);
+      setStatuses(statusesRes.data.data || []);
+      setPriorities(prioritiesRes.data.data || []);
 
       // Load template questions if template exists
       if (taskData.template?.id) {
@@ -458,7 +466,7 @@ export default function EditTaskPage() {
                     <option value="">Select Client</option>
                     {clients.map((client) => (
                       <option key={client.id} value={client.id}>
-                        {client.name}
+                        {getClientDisplayName(client)}
                       </option>
                     ))}
                   </select>
