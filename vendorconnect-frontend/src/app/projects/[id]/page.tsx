@@ -24,7 +24,7 @@ interface Project {
   status?: { id: number; title: string };
   clients?: Array<{ id: number; name: string; company?: string }>;
   users?: Array<{ id: number; first_name: string; last_name: string; email: string }>;
-  tasks?: Array<{ id: number; title: string; status: { name: string; title: string } }>;
+  tasks?: Array<{ id: number; title: string; status: { title: string } }>;  // FIXED: Use only primary field
 }
 
 export default function ProjectDetailPage() {
@@ -119,8 +119,7 @@ export default function ProjectDetailPage() {
   const calculateProgress = () => {
     if (!project?.tasks || project.tasks.length === 0) return 0;
     const completedTasks = project.tasks.filter(task => 
-      task.status?.title?.toLowerCase() === 'completed' || 
-      task.status?.name?.toLowerCase() === 'completed'
+      task.status?.title?.toLowerCase() === 'completed'
     ).length;
     return Math.round((completedTasks / project.tasks.length) * 100);
   };
