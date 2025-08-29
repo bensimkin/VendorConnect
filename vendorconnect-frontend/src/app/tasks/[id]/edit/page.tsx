@@ -661,7 +661,7 @@ export default function EditTaskPage() {
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Template ID</Label>
+                    <Label className="text-sm font-medium">Template ID fuck</Label>
                     <p className="text-sm text-muted-foreground">
                       #{task.template.id}
                     </p>
