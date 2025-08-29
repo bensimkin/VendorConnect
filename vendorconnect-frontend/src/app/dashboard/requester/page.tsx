@@ -120,6 +120,7 @@ export default function RequesterDashboardPage() {
           completed_this_week: 0,
           overdue: 0,
         },
+        task_trend: [],
         recent_deliverables: [],
       });
     } finally {
