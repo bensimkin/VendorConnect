@@ -71,6 +71,9 @@ class DashboardController extends BaseController
             // Get project management data
             $projectManagement = $this->getProjectManagementData($user);
 
+            // Get overdue tasks
+            $overdueTasks = $this->getOverdueTasks($user);
+
             // Get all statuses for frontend mapping
             $statuses = Status::select('id', 'title')->get();
 
@@ -83,6 +86,7 @@ class DashboardController extends BaseController
                 ],
                 'task_statistics' => $taskStats,
                 'recent_tasks' => $recentTasks,
+                'overdue_tasks' => $overdueTasks,
                 'user_activity' => $userActivity,
                 'task_trend' => $taskTrend,
                 'project_management' => $projectManagement,
@@ -548,5 +552,80 @@ class DashboardController extends BaseController
         }
 
         return $trend;
+    }
+
+    /**
+     * Get overdue tasks
+     */
+    private function getOverdueTasks($user)
+    {
+        // Get completed status ID
+        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatusId = $completedStatus ? $completedStatus->id : null;
+        
+        // Base query for overdue tasks
+        $overdueQuery = Task::with(['users', 'status', 'priority', 'project', 'clients'])
+            ->where('end_date', '<', Carbon::now())
+            ->where('status_id', '!=', $completedStatusId);
+        
+        // Apply role-based filtering
+        if ($user->hasRole('Requester')) {
+            // Requesters only see overdue tasks they created OR are assigned to
+            $overdueQuery->where(function($query) use ($user) {
+                $query->where('created_by', $user->id)
+                      ->orWhereHas('users', function($q) use ($user) {
+                          $q->where('users.id', $user->id);
+                      });
+            });
+        } elseif ($user->hasRole('tasker')) {
+            // Taskers only see overdue tasks they're assigned to
+            $overdueQuery->whereHas('users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            });
+        }
+        // Admins and sub-admins see all overdue tasks (no additional filtering)
+        
+        $overdueTasks = $overdueQuery
+            ->orderBy('end_date', 'asc') // Most overdue first
+            ->limit(10)
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'description' => $task->description,
+                    'end_date' => $task->end_date,
+                    'status' => $task->status ? [
+                        'id' => $task->status->id,
+                        'title' => $task->status->title,
+                    ] : null,
+                    'priority' => $task->priority ? [
+                        'id' => $task->priority->id,
+                        'title' => $task->priority->title,
+                    ] : null,
+                    'project' => $task->project ? [
+                        'id' => $task->project->id,
+                        'title' => $task->project->title,
+                    ] : null,
+                    'clients' => $task->clients ? $task->clients->map(function ($client) {
+                        return [
+                            'id' => $client->id,
+                            'first_name' => $client->first_name,
+                            'last_name' => $client->last_name,
+                            'name' => $client->name,
+                        ];
+                    }) : [],
+                    'users' => $task->users ? $task->users->map(function ($user) {
+                        return [
+                            'id' => $user->id,
+                            'first_name' => $user->first_name,
+                            'last_name' => $user->last_name,
+                        ];
+                    }) : [],
+                    'created_at' => $task->created_at,
+                ];
+            });
+
+        return $overdueTasks;
     }
 }
