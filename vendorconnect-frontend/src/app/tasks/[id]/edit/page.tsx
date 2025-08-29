@@ -151,14 +151,14 @@ export default function EditTaskPage() {
     title: '',
     description: '',
     note: '',
-    status_id: 0,
-    priority_id: 0,
+    status_id: null as number | null,
+    priority_id: null as number | null,
     user_ids: [] as number[],
     client_ids: [] as number[],
-    project_id: 0,
+    project_id: null as number | null,
     end_date: '',
-    task_type_id: 0,
-    close_deadline: false,
+    task_type_id: null as number | null,
+    close_deadline: 0,
     deliverable_quantity: 1,
   });
 
@@ -194,14 +194,14 @@ export default function EditTaskPage() {
            title: taskData?.title || '',
            description: taskData?.description || '',
            note: taskData?.note || '',
-           status_id: taskData?.status_id || 0,
-           priority_id: taskData?.priority_id || 0,
+           status_id: taskData?.status_id || null,
+           priority_id: taskData?.priority_id || null,
            user_ids: taskData?.assigned_to?.id ? [taskData.assigned_to.id] : [],
            client_ids: taskData?.client?.id ? [taskData.client.id] : [],
-           project_id: taskData?.project_id || 0,
+           project_id: taskData?.project_id || null,
            end_date: taskData?.due_date ? taskData.due_date.split('T')[0] : '',
-           task_type_id: taskData?.task_type_id || 0,
-           close_deadline: taskData?.close_deadline || false,
+           task_type_id: taskData?.task_type_id || null,
+           close_deadline: taskData?.close_deadline || 0,
            deliverable_quantity: taskData?.deliverable_quantity || 1,
          });
          
@@ -434,11 +434,11 @@ export default function EditTaskPage() {
                   <Label htmlFor="status">Status</Label>
                   <select
                     id="status"
-                    value={formData.status_id}
-                    onChange={(e) => setFormData({ ...formData, status_id: parseInt(e.target.value) || 0 })}
+                    value={formData.status_id || ''}
+                    onChange={(e) => setFormData({ ...formData, status_id: parseInt(e.target.value) || null })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
-                    <option value="0">Select Status</option>
+                    <option value="">Select Status</option>
                     {statuses.map((status) => (
                       <option key={status.id} value={status.id}>
                         {status.title}
@@ -451,11 +451,11 @@ export default function EditTaskPage() {
                   <Label htmlFor="priority">Priority</Label>
                   <select
                     id="priority"
-                    value={formData.priority_id}
-                    onChange={(e) => setFormData({ ...formData, priority_id: parseInt(e.target.value) || 0 })}
+                    value={formData.priority_id || ''}
+                    onChange={(e) => setFormData({ ...formData, priority_id: parseInt(e.target.value) || null })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
-                    <option value="0">Select Priority</option>
+                    <option value="">Select Priority</option>
                     {priorities.map((priority) => (
                       <option key={priority.id} value={priority.id}>
                         {priority.title}
@@ -508,11 +508,11 @@ export default function EditTaskPage() {
                   <Label htmlFor="project">Project</Label>
                   <select
                     id="project"
-                    value={formData.project_id}
-                    onChange={(e) => setFormData({ ...formData, project_id: parseInt(e.target.value) || 0 })}
+                    value={formData.project_id || ''}
+                    onChange={(e) => setFormData({ ...formData, project_id: parseInt(e.target.value) || null })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
-                    <option value="0">Select Project</option>
+                    <option value="">Select Project</option>
                     {projects.map((project) => (
                       <option key={project.id} value={project.id}>
                         {project.title}
@@ -537,8 +537,8 @@ export default function EditTaskPage() {
                     <input
                       id="close_deadline"
                       type="checkbox"
-                      checked={formData.close_deadline}
-                      onChange={(e) => setFormData({ ...formData, close_deadline: e.target.checked })}
+                      checked={formData.close_deadline === 1}
+                      onChange={(e) => setFormData({ ...formData, close_deadline: e.target.checked ? 1 : 0 })}
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                     />
                     <span className="text-sm text-muted-foreground">
@@ -551,8 +551,8 @@ export default function EditTaskPage() {
                   <Label htmlFor="task_type">Task Type</Label>
                   <select
                     id="task_type"
-                    value={formData.task_type_id}
-                    onChange={(e) => setFormData({ ...formData, task_type_id: parseInt(e.target.value) || 0 })}
+                    value={formData.task_type_id || ''}
+                    onChange={(e) => setFormData({ ...formData, task_type_id: parseInt(e.target.value) || null })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
                     <option value="">Select Task Type</option>
