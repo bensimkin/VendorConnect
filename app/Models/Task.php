@@ -87,12 +87,10 @@ class Task extends Model implements HasMedia
     {
         return $this->belongsToMany(User::class, 'task_user');
     }
-    // public function clients()
-    // {
-    //     return $this->belongsToMany(Client::class, 'client_task');
-    // }
-    // NOTE: client_task table doesn't exist in real database schema
-    // Tasks are not directly related to clients in the current schema
+    public function clients()
+    {
+        return $this->project ? $this->project->clients : collect();
+    }
 
     public function taskUsers()
     {

@@ -5,6 +5,89 @@ This document provides comprehensive documentation for all VendorConnect API end
 
 **Base URL**: `https://vc.themastermind.com.au/api/v1`
 
+**Last Updated**: August 29, 2025
+
+## ⚠️ CRITICAL: Field Naming Inconsistencies
+
+**IMPORTANT**: This API has field naming inconsistencies that affect frontend development. The following models return duplicate fields due to Laravel model `$appends` attributes:
+
+### **Status Model**
+- **Database Field**: `statuses.title`
+- **API Response**: Both `status.title` AND `status.name` (duplicate)
+- **Recommended Usage**: Use `status.title` for consistency
+
+### **Priority Model** 
+- **Database Field**: `priorities.title`
+- **API Response**: Both `priority.title` AND `priority.name` (duplicate)
+- **Recommended Usage**: Use `priority.title` for consistency
+
+### **TaskType Model**
+- **Database Field**: `task_types.task_type`
+- **API Response**: Both `task_type.task_type` AND `task_type.name` (duplicate)
+- **Recommended Usage**: Use `task_type.task_type` for consistency
+
+### **Project Model**
+- **Database Field**: `projects.title`
+- **API Response**: `project.title` (correct)
+- **Frontend Usage**: Use `project.title` (correct)
+
+**Impact**: Frontend interfaces should use the primary database field names (`title`, `task_type`) rather than the appended `name` fields to maintain consistency with the database schema.
+
+## 🔐 Authentication APIs
+
+### POST `/auth/login`
+**Purpose**: Authenticate user and generate access token
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "user@example.com",
+      "photo": null,
+      "status": 1,
+      "dark_mode": 0,
+      "country_code": "AU",
+      "last_login_at": "2025-08-28T06:30:00.000000Z",
+      "roles": [
+        {
+          "id": 1,
+          "name": "admin"
+        }
+      ]
+    },
+    "permissions": ["view_tasks", "create_tasks", "edit_tasks"],
+    "token": "1|abc123...",
+    "token_type": "Bearer",
+    "expires_at": "2025-09-04T06:30:00.000000Z"
+  }
+}
+```
+
+**Database Operations**:
+- **Read**: `users` table (id, first_name, last_name, email, photo, status, dark_mode, country_code, last_login_at)
+- **Read**: `model_has_roles` table (role assignments)
+- **Read**: `roles` table (role names)
+- **Update**: `users.last_login_at` (updates login timestamp)
+- **Create**: `personal_access_tokens` table (creates new token)
+
+**Frontend Pages**:
+- `/login` - Login page
+- All authenticated pages (redirects to login if not authenticated)
+
 ---
 
 ## ⚠️ CRITICAL: Field Naming Inconsistencies
@@ -363,41 +446,68 @@ multipart/form-data with photo file
 ### GET `/dashboard`
 **Purpose**: Get main dashboard data and statistics
 
+**Role-Based Access**:
+- **Admin/Sub-Admin**: Full dashboard with all data
+- **Requester**: Dashboard filtered to show only their created tasks
+- **Tasker**: Dashboard filtered to show only their assigned tasks
+
 **Response**:
 ```json
 {
   "success": true,
+  "message": "Dashboard data retrieved successfully",
   "data": {
-    "total_tasks": 150,
-    "completed_tasks": 120,
-    "pending_tasks": 30,
-    "total_projects": 25,
-    "active_projects": 20,
-    "total_clients": 45,
+    "overview": {
+      "total_tasks": 150,
+      "total_users": 25,
+      "total_clients": 45,
+      "total_projects": 25
+    },
+    "task_statistics": {
+      "completed": 120,
+      "pending": 25,
+      "overdue": 5,
+      "completion_rate": 80.0
+    },
     "recent_tasks": [
       {
         "id": 1,
         "title": "Website Redesign",
         "status": {
           "id": 1,
-          "name": "In Progress"
+          "title": "In Progress"
         },
         "priority": {
           "id": 2,
-          "name": "High"
+          "title": "High"
         },
         "created_at": "2025-08-28T06:00:00.000000Z"
       }
     ],
-    "recent_projects": [
+    "user_activity": [
+      {
+        "user": "John Doe",
+        "tasks_completed": 15,
+        "last_activity": "2025-08-28T06:00:00.000000Z"
+      }
+    ],
+    "task_trend": {
+      "daily_completions": [5, 8, 12, 6, 9, 11, 7],
+      "weekly_average": 8.3
+    },
+    "project_management": {
+      "active_projects": 20,
+      "completed_projects": 5,
+      "project_completion_rate": 80.0
+    },
+    "statuses": [
       {
         "id": 1,
-        "title": "E-commerce Platform",
-        "status": {
-          "id": 1,
-          "name": "Active"
-        },
-        "created_at": "2025-08-28T06:00:00.000000Z"
+        "title": "In Progress"
+      },
+      {
+        "id": 2,
+        "title": "Completed"
       }
     ]
   }
@@ -728,80 +838,86 @@ multipart/form-data with photo file
 - `status_id` (optional): Filter by status
 - `priority_id` (optional): Filter by priority
 - `user_id` (optional): Filter by assigned user
-- `client_id` (optional): Filter by client
 - `project_id` (optional): Filter by project
 - `search` (optional): Search in title and description
 - `sort_by` (optional): Sort field (default: created_at)
 - `sort_order` (optional): Sort order (asc/desc, default: desc)
+
+**Role-Based Access**:
+- **Admin/Sub-Admin**: Can see all tasks
+- **Requester**: Only sees tasks they created
+- **Tasker**: Only sees tasks they're assigned to
 
 **Response**:
 ```json
 {
   "success": true,
   "message": "Tasks retrieved successfully",
-  "data": {
-    "data": [
-      {
+  "data": [
+    {
+      "id": 1,
+      "title": "Website Redesign",
+      "description": "Complete website redesign for client",
+      "note": "High priority project",
+      "status_id": 1,
+      "priority_id": 2,
+      "project_id": 1,
+      "task_type_id": 1,
+      "template_id": 1,
+      "start_date": "2025-08-01",
+      "end_date": "2025-08-31",
+      "close_deadline": 0,
+      "deliverable_quantity": 1,
+      "standard_brief": "Create modern, responsive website",
+      "is_repeating": false,
+      "repeat_frequency": null,
+      "repeat_interval": null,
+      "repeat_until": null,
+      "repeat_active": true,
+      "parent_task_id": null,
+      "last_repeated_at": null,
+      "created_by": 1,
+      "created_at": "2025-08-28T06:00:00.000000Z",
+      "updated_at": "2025-08-28T06:00:00.000000Z",
+      "status": {
         "id": 1,
-        "title": "Website Redesign",
-        "description": "Complete website redesign for client",
-        "note": "High priority project",
-        "status_id": 1,
-        "priority_id": 2,
-        "project_id": 1,
-        "task_type_id": 1,
-        "template_id": 1,
-        "start_date": "2025-08-01",
-        "end_date": "2025-08-31",
-        "close_deadline": 0,
-        "deliverable_quantity": 1,
-        "standard_brief": "Create modern, responsive website",
-        "repeat_frequency": null,
-        "repetition_interval": null,
-        "repeat_until": null,
-        "is_repeating": 0,
-        "created_at": "2025-08-28T06:00:00.000000Z",
-        "updated_at": "2025-08-28T06:00:00.000000Z",
-        "status": {
-          "id": 1,
-          "name": "In Progress",
-          "slug": "in-progress",
-          "color": "#3B82F6"
-        },
-        "priority": {
+        "title": "In Progress",
+        "description": "Task is currently being worked on",
+        "color": "#3B82F6",
+        "slug": "in-progress"
+      },
+      "priority": {
+        "id": 2,
+        "title": "High",
+        "description": "High priority task",
+        "color": "#EF4444",
+        "level": 4
+      },
+      "project": {
+        "id": 1,
+        "title": "E-commerce Platform",
+        "description": "Modern e-commerce solution"
+      },
+      "task_type": {
+        "id": 1,
+        "task_type": "Web Development",
+        "description": "Website development tasks"
+      },
+      "template": {
+        "id": 1,
+        "title": "Web Development Template",
+        "description": "Standard web development brief"
+      },
+      "users": [
+        {
           "id": 2,
-          "name": "High",
-          "slug": "high",
-          "color": "#EF4444",
-          "level": 4
-        },
-        "project": {
-          "id": 1,
-          "title": "E-commerce Platform",
-          "description": "Modern e-commerce solution"
-        },
-        "task_type": {
-          "id": 1,
-          "task_type": "Web Development",
-          "description": "Website development tasks"
-        },
-        "users": [
-          {
-            "id": 2,
-            "first_name": "Jane",
-            "last_name": "Smith",
-            "email": "jane@example.com"
-          }
-        ],
-        "clients": [
-          {
-            "id": 1,
-            "name": "ABC Company",
-            "company": "ABC Corp"
-          }
-        ]
-      }
-    ],
+          "first_name": "Jane",
+          "last_name": "Smith"
+        }
+      ]
+    }
+  ],
+  "pagination": {
     "current_page": 1,
     "last_page": 5,
     "per_page": 15,
@@ -850,14 +966,21 @@ multipart/form-data with photo file
   "close_deadline": 0,
   "deliverable_quantity": 1,
   "standard_brief": "Task brief description",
+  "is_repeating": false,
   "repeat_frequency": "weekly",
-  "repetition_interval": 1,
+  "repeat_interval": 1,
   "repeat_until": "2025-12-31",
-  "is_repeating": 1,
   "user_ids": [1, 2],
-  "client_ids": [1, 2]
+  "tag_ids": [1, 2]
 }
 ```
+
+**Template Integration**:
+- If `template_id` is provided, the task will inherit:
+  - Template title and description
+  - Template questions and checklist
+  - Template deliverable quantity
+  - Template standard brief
 
 **Response**:
 ```json
@@ -877,7 +1000,7 @@ multipart/form-data with photo file
 **Database Operations**:
 - **Create**: `tasks` table (main task data)
 - **Create**: `task_user` table (user assignments)
-- **Create**: `task_client` table (client assignments)
+- **Create**: Template questions and checklist data stored in JSON fields
 
 **Frontend Pages**:
 - `/tasks/create` - Create task page
@@ -4355,18 +4478,50 @@ CSV/Excel file download
 
 ---
 
+## 🔍 Implementation Notes
+
+### Database Schema Differences
+The actual database schema differs from the original documentation in several key ways:
+
+1. **No Client-Task Relationship**: The `client_task` table does not exist in the actual database. Tasks are not directly related to clients.
+
+2. **Task Template Integration**: Tasks can inherit data from templates, with template questions and checklists stored as JSON in the task record.
+
+3. **Role-Based Access Control**: The API implements strict role-based filtering:
+   - **Admins/Sub-Admins**: Can see all data
+   - **Requesters**: Only see tasks they created
+   - **Taskers**: Only see tasks they're assigned to
+
+4. **Field Naming**: The actual database uses `title` fields instead of `name` fields for statuses, priorities, and task types.
+
+### Missing Endpoints
+The following endpoints mentioned in the original documentation are not implemented:
+
+1. **Client-Task Relationships**: No direct client assignment to tasks
+2. **Task-Client APIs**: No endpoints for managing client-task relationships
+3. **Some Analytics Endpoints**: Limited analytics implementation
+4. **Webhook APIs**: Not implemented
+5. **Mobile-Specific APIs**: Not implemented
+6. **Import/Export APIs**: Not implemented
+
+### Response Format Changes
+The actual API uses a different response format:
+- Success responses include `success`, `message`, and `data` fields
+- Pagination is handled differently with separate `pagination` object
+- Error responses include `success: false` and error details
+
 ## 🎯 Conclusion
 
-This comprehensive API documentation covers all VendorConnect endpoints, providing developers with:
+This updated API documentation reflects the actual VendorConnect implementation, providing developers with:
 
-- **Complete endpoint coverage** for all system functionality
-- **Detailed request/response examples** with realistic data
-- **Database operation mapping** showing which tables and columns are affected
-- **Frontend page associations** linking APIs to user interface components
-- **Authentication requirements** and security considerations
-- **Error handling patterns** and response formats
+- **Accurate endpoint coverage** based on real implementation
+- **Correct request/response examples** with actual data structures
+- **Real database operation mapping** showing actual table relationships
+- **Role-based access control** documentation
+- **Template integration** details
+- **Field naming consistency** guidance
 
 The API follows RESTful conventions and provides consistent response formats across all endpoints. All endpoints return JSON responses with a standard structure including success status, messages, and data payloads.
 
-For integration questions or additional endpoint documentation, please refer to the development team or consult the internal API testing tools.
+**Important**: This documentation has been updated to reflect the actual implementation as of August 29, 2025. For the most current information, please refer to the development team or consult the internal API testing tools.
 
