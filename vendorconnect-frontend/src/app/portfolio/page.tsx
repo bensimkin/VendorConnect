@@ -35,6 +35,8 @@ interface Portfolio {
   client: {
     id: number;
     name: string;
+    first_name?: string;
+    last_name?: string;
     company?: string;
   };
   task?: {
@@ -65,6 +67,8 @@ interface Portfolio {
 interface Client {
   id: number;
   name: string;
+  first_name?: string;
+  last_name?: string;
   company?: string;
 }
 

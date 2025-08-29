@@ -24,13 +24,15 @@ interface Project {
   status_id: number;
   budget?: number;
   client_id?: number;
-  clients?: Array<{ id: number; name: string; company?: string }>;
+  clients?: Array<{ id: number; name: string; first_name?: string; last_name?: string; company?: string }>;
   status?: { id: number; title: string };
 }
 
 interface Client {
   id: number;
   name: string;
+  first_name?: string;
+  last_name?: string;
   company?: string;
 }
 
