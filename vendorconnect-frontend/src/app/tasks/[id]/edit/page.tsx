@@ -201,7 +201,7 @@ export default function EditTaskPage() {
            project_id: taskData?.project_id || null,
            end_date: taskData?.due_date ? taskData.due_date.split('T')[0] : '',
            task_type_id: taskData?.task_type_id || null,
-           close_deadline: taskData?.close_deadline || 0,
+           close_deadline: taskData?.close_deadline === true ? 1 : 0,
            deliverable_quantity: taskData?.deliverable_quantity || 1,
          });
          
