@@ -266,6 +266,20 @@ export default function ClientDetailPage() {
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"
+              onClick={() => router.push(`/projects/new?client_id=${clientId}`)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              New Project
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/tasks/new?client_id=${clientId}`)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              New Task
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => router.push(`/clients/${clientId}/edit`)}
             >
               <Edit className="h-4 w-4 mr-2" />
