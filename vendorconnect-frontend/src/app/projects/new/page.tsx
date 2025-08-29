@@ -113,6 +113,9 @@ function NewProjectPageContent() {
         end_date: formData.end_date || null, // Set to null if empty
       };
 
+      console.log('Project creation payload:', payload);
+      console.log('Settings:', settings);
+
       await apiClient.post('/projects', payload);
       toast.success('Project created successfully');
       router.push('/projects');
