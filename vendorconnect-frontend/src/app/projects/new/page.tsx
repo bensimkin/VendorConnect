@@ -23,6 +23,12 @@ interface Client {
   company?: string;
 }
 
+interface Status {
+  id: number;
+  title: string;
+  color?: string;
+}
+
 function NewProjectPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,6 +38,7 @@ function NewProjectPageContent() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
+  const [statuses, setStatuses] = useState<Status[]>([]);
   
 
   
@@ -40,6 +47,7 @@ function NewProjectPageContent() {
     description: '',
     client_id: clientId || '',
     client_ids: clientId ? [parseInt(clientId)] : [],
+    status_id: '',
     start_date: new Date().toISOString().split('T')[0], // Default to today
     end_date: '',
     budget: '',
@@ -47,6 +55,7 @@ function NewProjectPageContent() {
 
   useEffect(() => {
     fetchClients();
+    fetchStatuses();
   }, []);
 
   const fetchClients = async () => {
@@ -57,6 +66,17 @@ function NewProjectPageContent() {
     } catch (error) {
       console.error('Failed to fetch clients:', error);
       toast.error('Failed to load clients');
+    }
+  };
+
+  const fetchStatuses = async () => {
+    try {
+      const response = await apiClient.get('/statuses');
+      const statusData = response.data.data || [];
+      setStatuses(statusData);
+    } catch (error) {
+      console.error('Failed to fetch statuses:', error);
+      toast.error('Failed to load statuses');
     }
   };
 
@@ -88,6 +108,7 @@ function NewProjectPageContent() {
         ...formData,
         client_id: settings.allow_multiple_clients_per_project ? null : parseInt(formData.client_id),
         client_ids: settings.allow_multiple_clients_per_project ? formData.client_ids : [],
+        status_id: formData.status_id ? parseInt(formData.status_id) : null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
         end_date: formData.end_date || null, // Set to null if empty
       };
@@ -147,6 +168,25 @@ function NewProjectPageContent() {
                   placeholder="Enter project description"
                   rows={4}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status_id">Status</Label>
+                <Select
+                  value={formData.status_id}
+                  onValueChange={(value) => setFormData({ ...formData, status_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statuses.map((status) => (
+                      <SelectItem key={status.id} value={status.id.toString()}>
+                        {status.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
