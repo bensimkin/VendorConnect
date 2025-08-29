@@ -396,6 +396,29 @@ export default function EditTaskPage() {
   console.log('projects.length:', projects.length);
   console.log('formData.project_id:', formData.project_id);
 
+  // Test API calls
+  const testAPIs = async () => {
+    try {
+      console.log('Testing API calls...');
+      const token = localStorage.getItem('auth_token');
+      console.log('Auth token:', token ? 'Present' : 'Missing');
+      
+      const taskRes = await apiClient.get(`/tasks/${taskId}`);
+      console.log('Task API response:', taskRes.data);
+      
+      const statusesRes = await apiClient.get('/statuses');
+      console.log('Statuses API response:', statusesRes.data);
+      
+      const prioritiesRes = await apiClient.get('/priorities');
+      console.log('Priorities API response:', prioritiesRes.data);
+      
+      const projectsRes = await apiClient.get('/projects');
+      console.log('Projects API response:', projectsRes.data);
+    } catch (error) {
+      console.error('API test error:', error);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -410,6 +433,9 @@ export default function EditTaskPage() {
               Back to Task
             </Button>
             <h1 className="text-2xl font-bold">Edit Task</h1>
+            <Button onClick={testAPIs} variant="outline" size="sm">
+              Test APIs
+            </Button>
           </div>
         </div>
 
