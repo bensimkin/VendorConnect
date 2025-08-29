@@ -88,33 +88,30 @@ class TaskDeliverableController extends BaseController
                 }
             }
 
-            // Create portfolio item automatically when deliverable is uploaded
+            // Create portfolio item automatically for each deliverable
             $task = Task::find($taskId);
             if ($task && $task->project && $task->project->clients->count() > 0) {
                 $client = $task->project->clients->first();
                 
-                // Check if portfolio item already exists for this task
-                $existingPortfolio = Portfolio::where('task_id', $taskId)->first();
-                
-                if (!$existingPortfolio) {
-                    $portfolio = Portfolio::create([
-                        'client_id' => $client->id,
-                        'task_id' => $taskId,
-                        'project_id' => $task->project_id,
-                        'title' => $deliverable->title,
-                        'description' => $deliverable->description,
-                        'deliverable_type' => $deliverable->type,
-                        'status' => 'completed',
-                        'completed_at' => now(),
-                        'created_by' => Auth::user()->id,
-                    ]);
+                // Create a unique portfolio item for this specific deliverable
+                $portfolio = Portfolio::create([
+                    'client_id' => $client->id,
+                    'task_id' => $taskId,
+                    'project_id' => $task->project_id,
+                    'deliverable_id' => $deliverable->id,
+                    'title' => $deliverable->title,
+                    'description' => $deliverable->description,
+                    'deliverable_type' => $deliverable->type,
+                    'status' => 'completed',
+                    'completed_at' => now(),
+                    'created_by' => Auth::user()->id,
+                ]);
 
-                    // Copy media files from deliverable to portfolio
-                    $deliverableMedia = $deliverable->getMedia('deliverable-files');
-                    foreach ($deliverableMedia as $media) {
-                        $portfolio->addMedia($media->getPath())
-                            ->toMediaCollection('portfolio-media');
-                    }
+                // Copy media files from deliverable to portfolio
+                $deliverableMedia = $deliverable->getMedia('deliverable-files');
+                foreach ($deliverableMedia as $media) {
+                    $portfolio->addMedia($media->getPath())
+                        ->toMediaCollection('portfolio-media');
                 }
             }
 
@@ -203,7 +200,7 @@ class TaskDeliverableController extends BaseController
             }
 
             // Update portfolio item if it exists
-            $existingPortfolio = Portfolio::where('task_id', $taskId)->first();
+            $existingPortfolio = Portfolio::where('deliverable_id', $deliverableId)->first();
             if ($existingPortfolio) {
                 $existingPortfolio->update([
                     'title' => $deliverable->title,
