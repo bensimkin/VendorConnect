@@ -298,17 +298,16 @@ export default function EditTaskPage() {
         title: formData.title,
         description: formData.description,
         note: formData.note,
+        status_id: formData.status_id || 15, // Default to "Pending" status
+        priority_id: formData.priority_id || 2, // Default to "Medium" priority
+        project_id: formData.project_id,
+        task_type_id: formData.task_type_id,
         user_ids: formData.user_ids,
         client_ids: formData.client_ids,
         end_date: formData.end_date,
         close_deadline: formData.close_deadline,
         deliverable_quantity: formData.deliverable_quantity,
       };
-
-      if (formData.status_id) payload.status_id = formData.status_id;
-      if (formData.priority_id) payload.priority_id = formData.priority_id;
-      if (formData.project_id) payload.project_id = formData.project_id;
-      if (formData.task_type_id) payload.task_type_id = formData.task_type_id;
 
       await apiClient.put(`/tasks/${taskId}`, payload);
       toast.success('Task updated successfully');
