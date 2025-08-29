@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import apiClient from '@/lib/api-client';
+import getFileUrl from '@/lib/file-utils';
 import { ArrowLeft, Edit, Trash2, Calendar, User, Tag, MessageSquare, Paperclip, Clock, CheckCircle, AlertCircle, Plus, Edit3, AlertTriangle, FileText, Eye, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
@@ -1383,7 +1384,7 @@ export default function TaskDetailPage() {
                     {selectedDeliverable.media.map((file: any) => (
                       <a
                         key={file.id}
-                        href={file.original_url}
+                        href={getFileUrl(file.original_url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm"

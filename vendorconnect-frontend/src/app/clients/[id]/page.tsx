@@ -107,7 +107,7 @@ export default function ClientDetailPage() {
       setClient(filteredClient);
 
       const projectsData = projectsResponse.data.data?.data || projectsResponse.data.data || [];
-      const tasksData = tasksResponse.data.data || [];
+      const tasksData = tasksResponse.data.data?.data || tasksResponse.data.data || [];
       
       console.log('🔍 [DEBUG] Projects data to set:', projectsData);
       console.log('🔍 [DEBUG] Tasks data to set:', tasksData);
