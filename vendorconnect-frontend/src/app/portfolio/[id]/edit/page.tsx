@@ -376,7 +376,7 @@ export default function EditPortfolioPage() {
                     <SelectContent>
                       {clients.map((client) => (
                         <SelectItem key={client.id} value={client.id.toString()}>
-                          {client.name} {client.company && `(${client.company})`}
+                          {`${client.first_name || ''} ${client.last_name || ''}`.trim()} {client.company && `(${client.company})`}
                         </SelectItem>
                       ))}
                     </SelectContent>
