@@ -161,11 +161,18 @@ class ProjectController extends BaseController
                 $project->users()->attach($request->user_ids);
             }
 
-            // Clients attach removed: no direct project-client relation in current schema
+            // Attach clients
+            if ($request->has('client_ids')) {
+                // Multiple clients mode
+                $project->clients()->attach($request->client_ids, ['admin_id' => 1]);
+            } elseif ($request->has('client_id')) {
+                // Single client mode
+                $project->clients()->attach($request->client_id, ['admin_id' => 1]);
+            }
 
             DB::commit();
 
-            $project->load(['users', 'tasks', 'status']);
+            $project->load(['users', 'tasks', 'status', 'clients']);
 
             return $this->sendResponse($project, 'Project created successfully');
         } catch (\Exception $e) {
@@ -282,7 +289,8 @@ class ProjectController extends BaseController
             }
 
             // Check if multiple clients are allowed
-            // Client assignment not supported in current schema
+            $allowMultipleClients = Setting::isEnabled('allow_multiple_clients_per_project', false);
+            $maxClientsPerProject = Setting::getValue('max_clients_per_project', 5);
 
             $validationRules = [
                 'title' => 'sometimes|required|string|max:255',
@@ -295,7 +303,20 @@ class ProjectController extends BaseController
                 'user_ids.*' => 'exists:users,id',
             ];
 
-            // Remove client validations
+            // Add client validation rules
+            if ($allowMultipleClients) {
+                $validationRules['client_ids'] = 'nullable|array';
+                $validationRules['client_ids.*'] = 'exists:clients,id';
+                $validationRules['client_id'] = 'nullable|exists:clients,id';
+                
+                // Validate max clients if multiple clients are provided
+                if ($request->has('client_ids') && count($request->client_ids) > $maxClientsPerProject) {
+                    return $this->sendValidationError(['client_ids' => ["Maximum {$maxClientsPerProject} clients allowed per project."]]);
+                }
+            } else {
+                $validationRules['client_id'] = 'nullable|exists:clients,id';
+                $validationRules['client_ids'] = 'prohibited';
+            }
 
             $validator = Validator::make($request->all(), $validationRules);
 
@@ -315,11 +336,21 @@ class ProjectController extends BaseController
             }
 
             // Handle client assignment - support both single client_id and client_ids array
-            // Client sync removed
+            if ($request->has('client_ids')) {
+                // Multiple clients mode - sync with admin_id
+                $clientData = [];
+                foreach ($request->client_ids as $clientId) {
+                    $clientData[$clientId] = ['admin_id' => 1];
+                }
+                $project->clients()->sync($clientData);
+            } elseif ($request->has('client_id')) {
+                // Single client mode - sync with admin_id
+                $project->clients()->sync([$request->client_id => ['admin_id' => 1]]);
+            }
 
             DB::commit();
 
-            $project->load(['users', 'tasks', 'status']);
+            $project->load(['users', 'tasks', 'status', 'clients']);
 
             return $this->sendResponse($project, 'Project updated successfully');
         } catch (\Exception $e) {

@@ -95,6 +95,9 @@ export default function TasksPage() {
       const response = await apiClient.get(`/tasks?${params.toString()}`);
       // Handle paginated response
       const taskData = response.data.data || [];
+      console.log('Tasks API Response:', response.data);
+      console.log('Task Data:', taskData);
+      console.log('First task project:', taskData[0]?.project);
       setTasks(Array.isArray(taskData) ? taskData : []);
     } catch (error) {
       console.error('Failed to fetch tasks:', error);
