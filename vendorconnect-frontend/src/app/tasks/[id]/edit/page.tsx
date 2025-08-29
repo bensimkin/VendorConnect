@@ -184,7 +184,13 @@ export default function EditTaskPage() {
       }
 
       setTask(taskData);
-                     setFormData({
+      console.log('Form data being set:');
+      console.log('Task data:', taskData);
+      console.log('Status ID:', taskData?.status?.id);
+      console.log('Priority ID:', taskData?.priority?.id);
+      console.log('Project ID:', taskData?.project?.id);
+      
+      setFormData({
            title: taskData?.title || '',
            description: taskData?.description || '',
            note: taskData?.note || '',
@@ -198,6 +204,12 @@ export default function EditTaskPage() {
            close_deadline: taskData?.close_deadline || false,
            deliverable_quantity: taskData?.deliverable_quantity || 1,
          });
+         
+         console.log('Form data set to:', {
+           status_id: taskData?.status?.id ? taskData.status.id.toString() : '',
+           priority_id: taskData?.priority?.id ? taskData.priority.id.toString() : '',
+           project_id: taskData?.project?.id ? taskData.project.id.toString() : '',
+         });
 
       // Fetch dropdown data
       const [usersRes, clientsRes, projectsRes, taskTypesRes, templatesRes, statusesRes, prioritiesRes] = await Promise.all([
@@ -210,6 +222,11 @@ export default function EditTaskPage() {
         apiClient.get('/priorities'),
       ]);
 
+      console.log('Dropdown data loaded:');
+      console.log('Statuses:', statusesRes.data.data);
+      console.log('Priorities:', prioritiesRes.data.data);
+      console.log('Projects:', projectsRes.data.data);
+      
       setUsers(usersRes.data.data || []);
       setClients(clientsRes.data.data || []);
       setProjects(projectsRes.data.data || []);
