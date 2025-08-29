@@ -29,10 +29,11 @@ interface Task {
     first_name: string;
     last_name: string;
   }>;
-  clients?: Array<{
-    id: number;
-    name: string;
-  }>;
+  // clients?: Array<{
+  //   id: number;
+  //   name: string;
+  // }>;
+  // NOTE: No direct client-task relationship exists in current schema
   project?: {
     id: number;
     title: string;
@@ -222,15 +223,8 @@ export default function TasksPage() {
                       </div>
                     )}
 
-                    {/* Clients */}
-                    {task.clients && task.clients.length > 0 && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="truncate text-green-600">
-                          {task.clients.map(client => client.name || 'Unnamed Client').join(', ')}
-                        </span>
-                      </div>
-                    )}
+                    {/* Clients - Removed: No direct client-task relationship exists */}
+                    {/* Clients are related to projects, not directly to tasks */}
 
                     {/* Assigned Users */}
                     {task.users && task.users.length > 0 && (
