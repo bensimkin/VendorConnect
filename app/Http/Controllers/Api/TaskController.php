@@ -32,7 +32,7 @@ class TaskController extends BaseController
     {
         try {
             $user = Auth::user();
-            $query = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'clients']);
+            $query = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project']);
             
             // Role-based filtering
             if ($user->hasRole('requester')) {
@@ -61,11 +61,12 @@ class TaskController extends BaseController
                 });
             }
 
-            if ($request->has('client_id')) {
-                $query->whereHas('clients', function ($q) use ($request) {
-                    $q->where('client_id', $request->client_id);
-                });
-            }
+            // if ($request->has('client_id')) {
+            //     $query->whereHas('clients', function ($q) use ($request) {
+            //         $q->where('client_id', $request->client_id);
+            //     });
+            // }
+            // NOTE: No direct client-task relationship exists in current schema
 
             if ($request->has('search')) {
                 $search = $request->search;
@@ -132,8 +133,9 @@ class TaskController extends BaseController
                 'project_id' => 'required|exists:projects,id',
                 'user_ids' => 'nullable|array',
                 'user_ids.*' => 'exists:users,id',
-                'client_ids' => 'nullable|array',
-                'client_ids.*' => 'exists:clients,id',
+                // 'client_ids' => 'nullable|array',
+                // 'client_ids.*' => 'exists:clients,id',
+                // NOTE: No direct client-task relationship exists in current schema
                 'tag_ids' => 'nullable|array',
                 'tag_ids.*' => 'exists:tags,id',
                 'start_date' => 'nullable|date',
@@ -213,9 +215,10 @@ class TaskController extends BaseController
             }
 
             // Attach clients
-            if ($request->has('client_ids')) {
-                $task->clients()->attach($request->client_ids);
-            }
+            // if ($request->has('client_ids')) {
+            //     $task->clients()->attach($request->client_ids);
+            // }
+            // NOTE: No direct client-task relationship exists in current schema
 
             // Attach tags
             if ($request->has('tag_ids')) {
@@ -253,7 +256,7 @@ class TaskController extends BaseController
     {
         try {
             $user = Auth::user();
-            $task = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'clients', 'questionAnswers.briefQuestions', 'checklistAnswers', 'deliverables.creator', 'deliverables.media', 'messages.sender'])
+            $task = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'questionAnswers.briefQuestions', 'checklistAnswers', 'deliverables.creator', 'deliverables.media', 'messages.sender'])
                 ->find($id);
 
             if (!$task) {
@@ -344,8 +347,9 @@ class TaskController extends BaseController
                 'project_id' => 'nullable|exists:projects,id',
                 'user_ids' => 'nullable|array',
                 'user_ids.*' => 'exists:users,id',
-                'client_ids' => 'nullable|array',
-                'client_ids.*' => 'exists:clients,id',
+                // 'client_ids' => 'nullable|array',
+                // 'client_ids.*' => 'exists:clients,id',
+                // NOTE: No direct client-task relationship exists in current schema
                 'tag_ids' => 'nullable|array',
                 'tag_ids.*' => 'exists:tags,id',
                 'start_date' => 'nullable|date',
@@ -371,9 +375,10 @@ class TaskController extends BaseController
             }
 
             // Sync clients
-            if ($request->has('client_ids')) {
-                $task->clients()->sync($request->client_ids);
-            }
+            // if ($request->has('client_ids')) {
+            //     $task->clients()->sync($request->client_ids);
+            // }
+            // NOTE: No direct client-task relationship exists in current schema
 
             // Sync tags
             if ($request->has('tag_ids')) {
@@ -382,7 +387,7 @@ class TaskController extends BaseController
 
             DB::commit();
 
-            $task->load(['users', 'status', 'priority', 'taskType', 'project', 'clients']);
+            $task->load(['users', 'status', 'priority', 'taskType', 'project']);
 
             return $this->sendResponse($task, 'Task updated successfully');
         } catch (\Exception $e) {
