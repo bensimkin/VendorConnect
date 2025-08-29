@@ -269,7 +269,7 @@ export default function ProjectDetailPage() {
                   {project.clients.map((client) => (
                     <div key={client.id} className="flex items-center justify-between p-2 bg-secondary rounded-md">
                       <div>
-                        <p className="text-sm font-medium">{client.name}</p>
+                        <p className="text-sm font-medium">{`${client.first_name || ''} ${client.last_name || ''}`.trim()}</p>
                         {client.company && (
                           <p className="text-xs text-muted-foreground">{client.company}</p>
                         )}
