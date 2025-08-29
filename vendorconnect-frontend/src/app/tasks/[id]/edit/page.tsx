@@ -164,10 +164,12 @@ export default function EditTaskPage() {
   }, [formData]);
 
   useEffect(() => {
+    console.log('useEffect triggered with taskId:', taskId);
     fetchData();
   }, [taskId]);
 
   const fetchData = async () => {
+    console.log('fetchData function called');
     try {
       console.log('Starting fetchData for taskId:', taskId);
       console.log('Auth token:', localStorage.getItem('auth_token'));
