@@ -355,27 +355,63 @@ class DashboardController extends BaseController
             $completedStatus = Status::where('title', 'Completed')->first();
             $completedStatusId = $completedStatus ? $completedStatus->id : null;
 
-            // Overview statistics
-            $totalTasks = Task::where('created_by', $user->id)->count();
-            $completedTasks = Task::where('created_by', $user->id)
-                ->where('status_id', $completedStatusId)->count();
-            $pendingTasks = Task::where('created_by', $user->id)
-                ->where('status_id', '!=', $completedStatusId)->count();
-            $overdueTasks = Task::where('created_by', $user->id)
-                ->where('end_date', '<', Carbon::now())
-                ->where('status_id', '!=', $completedStatusId)->count();
-            $totalProjects = Project::where('created_by', $user->id)->count();
+            // Overview statistics - include both created and assigned tasks/projects
+            $totalTasks = Task::where(function($query) use ($user) {
+                $query->where('created_by', $user->id)
+                      ->orWhereHas('users', function($q) use ($user) {
+                          $q->where('users.id', $user->id);
+                      });
+            })->count();
+            
+            $completedTasks = Task::where(function($query) use ($user) {
+                $query->where('created_by', $user->id)
+                      ->orWhereHas('users', function($q) use ($user) {
+                          $q->where('users.id', $user->id);
+                      });
+            })->where('status_id', $completedStatusId)->count();
+            
+            $pendingTasks = Task::where(function($query) use ($user) {
+                $query->where('created_by', $user->id)
+                      ->orWhereHas('users', function($q) use ($user) {
+                          $q->where('users.id', $user->id);
+                      });
+            })->where('status_id', '!=', $completedStatusId)->count();
+            
+            $overdueTasks = Task::where(function($query) use ($user) {
+                $query->where('created_by', $user->id)
+                      ->orWhereHas('users', function($q) use ($user) {
+                          $q->where('users.id', $user->id);
+                      });
+            })->where('end_date', '<', Carbon::now())
+              ->where('status_id', '!=', $completedStatusId)->count();
+            
+            $totalProjects = Project::where(function($query) use ($user) {
+                $query->where('created_by', $user->id)
+                      ->orWhereHas('users', function($q) use ($user) {
+                          $q->where('users.id', $user->id);
+                      });
+            })->count();
 
-            // Recent tasks
+            // Recent tasks - include both created and assigned tasks
             $recentTasks = Task::with(['status', 'priority', 'project', 'users', 'template'])
-                ->where('created_by', $user->id)
+                ->where(function($query) use ($user) {
+                    $query->where('created_by', $user->id)
+                          ->orWhereHas('users', function($q) use ($user) {
+                              $q->where('users.id', $user->id);
+                          });
+                })
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
                 ->get();
 
-            // Recent projects
+            // Recent projects - include both created and assigned projects
             $recentProjects = Project::with(['status'])
-                ->where('created_by', $user->id)
+                ->where(function($query) use ($user) {
+                    $query->where('created_by', $user->id)
+                          ->orWhereHas('users', function($q) use ($user) {
+                              $q->where('users.id', $user->id);
+                          });
+                })
                 ->withCount(['tasks as total_tasks'])
                 ->withCount(['tasks as completed_tasks' => function ($query) use ($completedStatusId) {
                     if ($completedStatusId) {
@@ -386,10 +422,15 @@ class DashboardController extends BaseController
                 ->limit(10)
                 ->get();
 
-            // Recent deliverables from their tasks
+            // Recent deliverables from their tasks (both created and assigned)
             $recentDeliverables = TaskDeliverable::with(['task', 'creator'])
                 ->whereHas('task', function ($q) use ($user) {
-                    $q->where('created_by', $user->id);
+                    $q->where(function($query) use ($user) {
+                        $query->where('created_by', $user->id)
+                              ->orWhereHas('users', function($userQuery) use ($user) {
+                                  $userQuery->where('users.id', $user->id);
+                              });
+                    });
                 })
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
