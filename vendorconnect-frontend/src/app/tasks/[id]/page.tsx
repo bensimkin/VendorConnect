@@ -1,4 +1,5 @@
 'use client';
+// TEST: Deployment verification - this comment should appear after rebuild
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
