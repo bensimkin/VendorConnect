@@ -6,8 +6,10 @@ import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import apiClient from '@/lib/api-client';
-import { Plus, Search, Filter, Calendar, User, Tag, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Plus, Search, Filter, Calendar, User, Tag, CheckCircle, Clock, AlertCircle, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Task {
@@ -65,15 +67,38 @@ interface Task {
   tags?: Array<{ id: number; name: string }>;
 }
 
+interface FilterOption {
+  id: number;
+  title?: string;
+  name?: string;
+}
+
 export default function TasksPage() {
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  
+  // Filter states
+  const [selectedProject, setSelectedProject] = useState<string>('all');
+  const [selectedClient, setSelectedClient] = useState<string>('all');
+  const [selectedTaskType, setSelectedTaskType] = useState<string>('all');
+  const [selectedPriority, setSelectedPriority] = useState<string>('all');
+  
+  // Filter options
+  const [projects, setProjects] = useState<FilterOption[]>([]);
+  const [clients, setClients] = useState<FilterOption[]>([]);
+  const [taskTypes, setTaskTypes] = useState<FilterOption[]>([]);
+  const [statuses, setStatuses] = useState<FilterOption[]>([]);
+  const [priorities, setPriorities] = useState<FilterOption[]>([]);
+  
+  // Filter panel state
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchTasks();
+    fetchFilterOptions();
   }, []);
 
   // Debounced search effect
@@ -85,11 +110,51 @@ export default function TasksPage() {
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
+  // Refetch tasks when filters change
+  useEffect(() => {
+    fetchTasks(searchTerm);
+  }, [selectedStatus, selectedProject, selectedClient, selectedTaskType, selectedPriority]);
+
+  const fetchFilterOptions = async () => {
+    try {
+      const [projectsRes, clientsRes, taskTypesRes, statusesRes, prioritiesRes] = await Promise.all([
+        apiClient.get('/projects?per_page=all'),
+        apiClient.get('/clients?per_page=all'),
+        apiClient.get('/task-types?per_page=all'),
+        apiClient.get('/statuses?per_page=all'),
+        apiClient.get('/priorities?per_page=all')
+      ]);
+
+      setProjects(projectsRes.data?.data || []);
+      setClients(clientsRes.data?.data || []);
+      setTaskTypes(taskTypesRes.data?.data || []);
+      setStatuses(statusesRes.data?.data || []);
+      setPriorities(prioritiesRes.data?.data || []);
+    } catch (error) {
+      console.error('Failed to fetch filter options:', error);
+    }
+  };
+
   const fetchTasks = async (searchQuery = '') => {
     try {
       const params = new URLSearchParams();
       if (searchQuery) {
         params.append('search', searchQuery);
+      }
+      if (selectedStatus !== 'all') {
+        params.append('status_id', selectedStatus);
+      }
+      if (selectedProject !== 'all') {
+        params.append('project_id', selectedProject);
+      }
+      if (selectedClient !== 'all') {
+        params.append('client_id', selectedClient);
+      }
+      if (selectedTaskType !== 'all') {
+        params.append('task_type_id', selectedTaskType);
+      }
+      if (selectedPriority !== 'all') {
+        params.append('priority_id', selectedPriority);
       }
 
       const response = await apiClient.get(`/tasks?${params.toString()}`);
@@ -119,14 +184,24 @@ export default function TasksPage() {
     }
   };
 
-  // Use tasks directly since search is now server-side
-  const filteredTasks = tasks.filter(task => {
-    const matchesStatus = 
-      selectedStatus === 'all' || 
-      task.status?.title === selectedStatus;
-    
-    return matchesStatus;
-  });
+  // Use tasks directly since filtering is now server-side
+  const filteredTasks = tasks;
+
+  const clearAllFilters = () => {
+    setSelectedStatus('all');
+    setSelectedProject('all');
+    setSelectedClient('all');
+    setSelectedTaskType('all');
+    setSelectedPriority('all');
+    setSearchTerm('');
+  };
+
+  const hasActiveFilters = selectedStatus !== 'all' || 
+    selectedProject !== 'all' || 
+    selectedClient !== 'all' || 
+    selectedTaskType !== 'all' || 
+    selectedPriority !== 'all' || 
+    searchTerm !== '';
 
 
 
@@ -169,20 +244,191 @@ export default function TasksPage() {
         {/* Filters */}
         <Card>
           <CardContent className="p-4">
-            <div className="flex gap-4 items-center">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search tasks..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="space-y-4">
+              {/* Search and Filter Toggle */}
+              <div className="flex gap-4 items-center">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search tasks..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filters
+                </Button>
+                {hasActiveFilters && (
+                  <Button 
+                    variant="outline" 
+                    onClick={clearAllFilters}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Clear All
+                  </Button>
+                )}
               </div>
-              <Button variant="outline">
-                <Filter className="mr-2 h-4 w-4" />
-                Filters
-              </Button>
+
+              {/* Filter Options */}
+              {showFilters && (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                  {/* Status Filter */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Status</label>
+                    <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        {statuses.map((status) => (
+                          <SelectItem key={status.id} value={status.id.toString()}>
+                            {status.title || status.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Project Filter */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Project</label>
+                    <Select value={selectedProject} onValueChange={setSelectedProject}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Projects" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Projects</SelectItem>
+                        {projects.map((project) => (
+                          <SelectItem key={project.id} value={project.id.toString()}>
+                            {project.title || project.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Client Filter */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Client</label>
+                    <Select value={selectedClient} onValueChange={setSelectedClient}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Clients" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Clients</SelectItem>
+                        {clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id.toString()}>
+                            {client.title || client.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Task Type Filter */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Task Type</label>
+                    <Select value={selectedTaskType} onValueChange={setSelectedTaskType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Task Types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Task Types</SelectItem>
+                        {taskTypes.map((taskType) => (
+                          <SelectItem key={taskType.id} value={taskType.id.toString()}>
+                            {taskType.title || taskType.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Priority Filter */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Priority</label>
+                    <Select value={selectedPriority} onValueChange={setSelectedPriority}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Priorities" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Priorities</SelectItem>
+                        {priorities.map((priority) => (
+                          <SelectItem key={priority.id} value={priority.id.toString()}>
+                            {priority.title || priority.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
+              {/* Active Filters Display */}
+              {hasActiveFilters && (
+                <div className="flex flex-wrap gap-2">
+                  {selectedStatus !== 'all' && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      Status: {statuses.find(s => s.id.toString() === selectedStatus)?.title || selectedStatus}
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => setSelectedStatus('all')}
+                      />
+                    </Badge>
+                  )}
+                  {selectedProject !== 'all' && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      Project: {projects.find(p => p.id.toString() === selectedProject)?.title || selectedProject}
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => setSelectedProject('all')}
+                      />
+                    </Badge>
+                  )}
+                  {selectedClient !== 'all' && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      Client: {clients.find(c => c.id.toString() === selectedClient)?.title || selectedClient}
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => setSelectedClient('all')}
+                      />
+                    </Badge>
+                  )}
+                  {selectedTaskType !== 'all' && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      Task Type: {taskTypes.find(t => t.id.toString() === selectedTaskType)?.title || selectedTaskType}
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => setSelectedTaskType('all')}
+                      />
+                    </Badge>
+                  )}
+                  {selectedPriority !== 'all' && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      Priority: {priorities.find(p => p.id.toString() === selectedPriority)?.title || selectedPriority}
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => setSelectedPriority('all')}
+                      />
+                    </Badge>
+                  )}
+                  {searchTerm && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      Search: "{searchTerm}"
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => setSearchTerm('')}
+                      />
+                    </Badge>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -66,12 +66,20 @@ class TaskController extends BaseController
                 });
             }
 
-            // if ($request->has('client_id')) {
-            //     $query->whereHas('clients', function ($q) use ($request) {
-            //         $q->where('client_id', $request->client_id);
-            //     });
-            // }
-            // NOTE: No direct client-task relationship exists in current schema
+            if ($request->has('project_id')) {
+                $query->where('project_id', $request->project_id);
+            }
+
+            if ($request->has('task_type_id')) {
+                $query->where('task_type_id', $request->task_type_id);
+            }
+
+            if ($request->has('client_id')) {
+                // Filter by client through project relationship
+                $query->whereHas('project.clients', function ($q) use ($request) {
+                    $q->where('clients.id', $request->client_id);
+                });
+            }
 
             if ($request->has('search')) {
                 $search = $request->search;
