@@ -23,6 +23,7 @@ import {
   Archive
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import getFileUrl from '@/lib/file-utils';
 
 interface Portfolio {
   id: number;
@@ -349,7 +350,7 @@ export default function PortfolioPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => window.open(portfolio.main_file?.original_url, '_blank')}
+                          onClick={() => window.open(getFileUrl(portfolio.main_file?.original_url), '_blank')}
                         >
                           <Download className="h-4 w-4" />
                         </Button>
