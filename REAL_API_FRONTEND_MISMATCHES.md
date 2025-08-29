@@ -407,7 +407,36 @@ interface Portfolio {
 2. **Portfolio CreatedBy**: Frontend expects `createdBy.name` but API has `first_name` + `last_name`
 3. **Result**: Both show as undefined/empty in the UI
 
-## 9. Dropdown Value Type Mismatch (FIXED)
+## 9. Workspace ID Still Appearing in API Responses
+
+### Issue:
+The system has been converted to single tenancy, but `workspace_id` is still appearing in API responses.
+
+### API Response Example:
+```json
+{
+  "id": 7,
+  "admin_id": null,
+  "workspace_id": 1,  // ❌ SHOULD NOT APPEAR: Retired for single tenancy
+  "title": "Summer Marketing Campaign",
+  "description": "Facebook advertising campaign for summer product launch",
+  // ... other fields
+}
+```
+
+### Problem:
+- **System Status**: Single tenant (no multi-tenancy)
+- **API Response**: Still includes `workspace_id: 1` in project objects
+- **Impact**: Unnecessary data being sent to frontend
+- **Consistency**: Should be removed from all API responses
+
+### Files with workspace_id references:
+- **Models**: Many models still have `workspace_id` in `$fillable` arrays
+- **Controllers**: Some controllers still set `workspace_id` to 1
+- **Relationships**: Many model relationships still filter by `workspace_id`
+- **Documentation**: API docs still reference `workspace_id` fields
+
+## 10. Dropdown Value Type Mismatch (FIXED)
 
 ### Issue Found:
 - **Form data**: Uses numbers (`status_id: 20`)
@@ -432,6 +461,7 @@ interface Portfolio {
 10. **❌ UNFIXED**: Frontend accessing non-existent `client.name` field
 11. **❌ UNFIXED**: Portfolio client name field mismatch (same as #9)
 12. **❌ UNFIXED**: Portfolio createdBy name field mismatch (`name` vs `first_name` + `last_name`)
+13. **❌ UNFIXED**: `workspace_id` still appearing in API responses despite being retired for single tenancy
 
 ## Recommendations:
 
@@ -445,4 +475,5 @@ interface Portfolio {
 8. Fix client name field mismatch - remove `name` from interfaces, use `first_name` + `last_name`
 9. Update all frontend code to use `getClientDisplayName()` helper instead of `client.name`
 10. Fix portfolio client and createdBy name field mismatches (same as #8)
-11. Consider adding missing fields to interfaces for completeness
+11. Remove `workspace_id` from all API responses and model relationships (single tenancy)
+12. Consider adding missing fields to interfaces for completeness
