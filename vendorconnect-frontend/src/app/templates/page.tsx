@@ -161,11 +161,12 @@ export default function TemplatesPage() {
                   </div>
                   
                   {/* Actions */}
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 pt-2">
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => router.push(`/templates/${template.id}/edit`)}
+                      className="flex-shrink-0"
                     >
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
@@ -174,6 +175,7 @@ export default function TemplatesPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleDuplicate(template)}
+                      className="flex-shrink-0"
                     >
                       <Copy className="h-4 w-4 mr-1" />
                       Duplicate
@@ -181,7 +183,7 @@ export default function TemplatesPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-destructive"
+                      className="text-destructive flex-shrink-0"
                       onClick={() => handleDelete(template.id)}
                     >
                       <Trash2 className="h-4 w-4 mr-1" />

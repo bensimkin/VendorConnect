@@ -105,6 +105,17 @@ interface QuestionAnswer {
   briefQuestions: TemplateQuestion;
 }
 
+interface Comment {
+  id: number;
+  comment: string;
+  created_at: string;
+  user: {
+    id: number;
+    first_name: string;
+    last_name: string;
+  };
+}
+
 export default function TaskDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -113,6 +124,7 @@ export default function TaskDetailPage() {
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [templateQuestions, setTemplateQuestions] = useState<TemplateQuestion[]>([]);
   const [questionAnswers, setQuestionAnswers] = useState<QuestionAnswer[]>([]);
   const [checklistItems, setChecklistItems] = useState<string[]>([]);
