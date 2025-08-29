@@ -124,7 +124,6 @@ export default function TaskDetailPage() {
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
-  const [comments, setComments] = useState<Comment[]>([]);
   const [templateQuestions, setTemplateQuestions] = useState<TemplateQuestion[]>([]);
   const [questionAnswers, setQuestionAnswers] = useState<QuestionAnswer[]>([]);
   const [checklistItems, setChecklistItems] = useState<string[]>([]);
@@ -142,7 +141,7 @@ export default function TaskDetailPage() {
   const [deliverableFiles, setDeliverableFiles] = useState<File[]>([]);
   const [submittingDeliverable, setSubmittingDeliverable] = useState(false);
   const [deliverables, setDeliverables] = useState<any[]>([]);
-  const [comments, setComments] = useState<any[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [editingStatus, setEditingStatus] = useState(false);
   const [editingPriority, setEditingPriority] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
