@@ -33,6 +33,11 @@ class StatusController extends BaseController
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
+            if ($request->get('per_page') === 'all') {
+                $statuses = $query->get();
+                return $this->sendResponse($statuses, 'Statuses retrieved successfully');
+            }
+
             $statuses = $query->paginate($request->get('per_page', 15));
 
             return $this->sendPaginatedResponse($statuses, 'Statuses retrieved successfully');
@@ -48,10 +53,8 @@ class StatusController extends BaseController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'color' => 'nullable|string|max:7',
-                'status' => 'sometimes|boolean',
+                'title' => 'required|string|max:255',
+                'slug' => 'nullable|string|max:255',
             ]);
 
             if ($validator->fails()) {
@@ -59,11 +62,9 @@ class StatusController extends BaseController
             }
 
             $status = Status::create([
-                'name' => $request->name,
-                'description' => $request->description,
-                'color' => $request->color,
-                'admin_id' => Auth::user()->admin_id,
-                'status' => $request->get('status', 1),
+                'title' => $request->title,
+                'slug' => $request->slug,
+                'admin_id' => Auth::user()->admin_id ?? null,
             ]);
 
             return $this->sendResponse($status, 'Status created successfully');

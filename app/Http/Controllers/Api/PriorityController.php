@@ -16,27 +16,30 @@ class PriorityController extends BaseController
     public function index(Request $request)
     {
         try {
-            // Get admin_id from user, or use a default value
-            $adminId = Auth::user()->admin_id ?? 1;
-            $query = Priority::where('admin_id', $adminId);
+            // Single-tenant: do not filter by admin_id
+            $query = Priority::query();
 
             // Apply filters
             if ($request->has('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('slug', 'like', "%{$search}%");
                 });
             }
 
-            if ($request->has('status')) {
-                $query->where('status', $request->status);
-            }
+            // No status filter on priorities in current schema
 
             // Apply sorting
             $sortBy = $request->get('sort_by', 'created_at');
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
+
+            // Support returning all without pagination
+            if ($request->get('per_page') === 'all') {
+                $priorities = $query->get();
+                return $this->sendResponse($priorities, 'Priorities retrieved successfully');
+            }
 
             $priorities = $query->paginate($request->get('per_page', 15));
 
@@ -53,11 +56,8 @@ class PriorityController extends BaseController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'color' => 'nullable|string|max:7',
-                'level' => 'nullable|integer|min:1|max:10',
-                'status' => 'sometimes|boolean',
+                'title' => 'required|string|max:255',
+                'slug' => 'nullable|string|max:255',
             ]);
 
             if ($validator->fails()) {
@@ -65,12 +65,9 @@ class PriorityController extends BaseController
             }
 
             $priority = Priority::create([
-                'name' => $request->name,
-                'description' => $request->description,
-                'color' => $request->color,
-                'level' => $request->level,
-                'admin_id' => Auth::user()->admin_id ?? 1,
-                'status' => $request->get('status', 1),
+                'title' => $request->title,
+                'slug' => $request->slug,
+                'admin_id' => Auth::user()->admin_id ?? null,
             ]);
 
             return $this->sendResponse($priority, 'Priority created successfully');
@@ -110,18 +107,15 @@ class PriorityController extends BaseController
             }
 
             $validator = Validator::make($request->all(), [
-                'name' => 'sometimes|required|string|max:255',
-                'description' => 'nullable|string',
-                'color' => 'nullable|string|max:7',
-                'level' => 'nullable|integer|min:1|max:10',
-                'status' => 'sometimes|boolean',
+                'title' => 'sometimes|required|string|max:255',
+                'slug' => 'nullable|string|max:255',
             ]);
 
             if ($validator->fails()) {
                 return $this->sendValidationError($validator->errors());
             }
 
-            $priority->update($request->only(['name', 'description', 'color', 'level', 'status']));
+            $priority->update($request->only(['title', 'slug']));
 
             return $this->sendResponse($priority, 'Priority updated successfully');
         } catch (\Exception $e) {
