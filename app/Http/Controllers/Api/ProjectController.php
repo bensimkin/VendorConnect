@@ -51,15 +51,26 @@ class ProjectController extends BaseController
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
-            $projects = $query->withCount(['tasks as tasks_count'])
-                ->withCount(['tasks as completed_tasks' => function($query) {
-                    $query->where('status_id', 17); // Completed status ID
-                }])
-                ->withCount(['users as team_members_count'])
-                ->paginate($request->get('per_page', 15));
+            // Support returning all records without pagination for dropdowns
+            if ($request->get('per_page') === 'all') {
+                $projects = $query->withCount(['tasks as tasks_count'])
+                    ->withCount(['tasks as completed_tasks' => function($q) {
+                        $q->where('status_id', 17);
+                    }])
+                    ->withCount(['users as team_members_count'])
+                    ->get();
+            } else {
+                $projects = $query->withCount(['tasks as tasks_count'])
+                    ->withCount(['tasks as completed_tasks' => function($q) {
+                        $q->where('status_id', 17); // Completed status ID
+                    }])
+                    ->withCount(['users as team_members_count'])
+                    ->paginate($request->get('per_page', 15));
+            }
 
             // Add task users count to each project
-            foreach ($projects->items() as $project) {
+            $projectItems = is_object($projects) && method_exists($projects, 'items') ? $projects->items() : (is_iterable($projects) ? $projects : []);
+            foreach ($projectItems as $project) {
                 $taskUsersCount = User::whereHas('tasks', function($query) use ($project) {
                     $query->where('project_id', $project->id);
                 })->count();
@@ -78,6 +89,9 @@ class ProjectController extends BaseController
                 $project->overdue_tasks = $overdueTasks;
             }
 
+            if ($request->get('per_page') === 'all') {
+                return $this->sendResponse($projects, 'Projects retrieved successfully');
+            }
             return $this->sendPaginatedResponse($projects, 'Projects retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error retrieving projects: ' . $e->getMessage());
