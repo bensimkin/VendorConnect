@@ -14,9 +14,16 @@ import { format } from 'date-fns';
 import { useAuthStore } from '@/lib/auth-store';
 import { filterSensitiveClientDataArray, hasAdminPrivileges } from '@/lib/utils/role-utils';
 
+// Helper function to get client display name
+const getClientDisplayName = (client: { first_name: string; last_name: string; name?: string }) => {
+  return client.name || `${client.first_name} ${client.last_name}`.trim();
+};
+
 interface Client {
   id: number;
-  name: string;
+  first_name: string;
+  last_name: string;
+  name?: string; // For backward compatibility
   email?: string;
   phone?: string;
   address?: string;
@@ -58,7 +65,7 @@ export default function ClientsPage() {
       
       const response = await apiClient.get(`/clients?${params.toString()}`);
       // Handle paginated response
-      const clientData = response.data.data?.data || response.data.data || [];
+      const clientData = response.data.data || [];
       const rawClients = Array.isArray(clientData) ? clientData : [];
       
       // Filter sensitive data based on user role
@@ -163,7 +170,7 @@ export default function ClientsPage() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-xl truncate">{client.name || 'Unnamed Client'}</CardTitle>
+                    <CardTitle className="text-xl truncate">{getClientDisplayName(client) || 'Unnamed Client'}</CardTitle>
                     {client.company && (
                       <CardDescription className="flex items-center mt-1">
                         <Building className="mr-1 h-3 w-3 flex-shrink-0" />
@@ -234,7 +241,7 @@ export default function ClientsPage() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleToggleStatus(client.id, client.status === 1 ? 0 : 1, client.name || '');
+                        handleToggleStatus(client.id, client.status === 1 ? 0 : 1, getClientDisplayName(client) || '');
                       }}
                       className={`text-xs ${
                         client.status === 1
@@ -261,7 +268,7 @@ export default function ClientsPage() {
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteClient(client.id, client.name || '');
+                          handleDeleteClient(client.id, getClientDisplayName(client) || '');
                         }}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 h-8 w-8"
                       >
