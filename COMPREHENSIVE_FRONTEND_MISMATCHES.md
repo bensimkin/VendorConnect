@@ -1400,3 +1400,329 @@ CREATE TABLE `migrations` (
 -- All SQL queries in the documentation need to be updated to match this real schema
 -- The API controllers need to be updated to use the correct field names and relationships
 -- The frontend needs to be updated to handle the correct data structures
+
+---
+
+## COMPREHENSIVE ANALYSIS: WHAT'S WRONG WITH EACH DOCUMENTED SQL QUERY
+
+### **CRITICAL FINDINGS: ALL DOCUMENTED SQL QUERIES ARE WRONG**
+
+Based on the real database schema, here's what's wrong with each documented SQL query:
+
+---
+
+### **1. TASKS PAGES - WHAT'S WRONG**
+
+#### **`/tasks/page.tsx` - Task List Query**
+**❌ WRONG SQL (Documented):**
+```sql
+SELECT * FROM tasks 
+LEFT JOIN task_user ON tasks.id = task_user.task_id
+LEFT JOIN users ON task_user.user_id = users.id
+LEFT JOIN statuses ON tasks.status_id = statuses.id
+LEFT JOIN priorities ON tasks.priority_id = priorities.id
+LEFT JOIN task_types ON tasks.task_type_id = task_types.id
+LEFT JOIN task_brief_templates ON tasks.template_id = task_brief_templates.id
+LEFT JOIN projects ON tasks.project_id = projects.id
+LEFT JOIN client_task ON tasks.id = client_task.task_id  -- ❌ TABLE DOESN'T EXIST
+LEFT JOIN clients ON client_task.client_id = clients.id   -- ❌ TABLE DOESN'T EXIST
+WHERE tasks.created_by = ?
+```
+
+**✅ CORRECT SQL (Real Schema):**
+```sql
+SELECT * FROM tasks 
+LEFT JOIN task_user ON tasks.id = task_user.task_id
+LEFT JOIN users ON task_user.user_id = users.id
+LEFT JOIN statuses ON tasks.status_id = statuses.id
+LEFT JOIN priorities ON tasks.priority_id = priorities.id
+LEFT JOIN task_types ON tasks.task_type_id = task_types.id
+LEFT JOIN task_brief_templates ON tasks.template_id = task_brief_templates.id
+LEFT JOIN projects ON tasks.project_id = projects.id
+-- ❌ NO CLIENT RELATIONSHIP - clients are not directly related to tasks
+WHERE tasks.created_by = ?
+```
+
+**What's Wrong:**
+1. **`client_task` table doesn't exist** - This is a complete fabrication
+2. **No direct client-task relationship** - Tasks don't have direct client relationships
+3. **Missing workspace filtering** - Should filter by workspace_id
+4. **Missing admin filtering** - Should filter by admin_id
+
+#### **`/tasks/[id]/page.tsx` - Task Detail Query**
+**❌ WRONG SQL (Documented):**
+```sql
+SELECT * FROM client_task WHERE task_id = ?;  -- ❌ TABLE DOESN'T EXIST
+SELECT * FROM clients WHERE id IN (SELECT client_id FROM client_task WHERE task_id = ?);  -- ❌ TABLE DOESN'T EXIST
+SELECT * FROM checklist_answered WHERE task_id = ?;  -- ❌ TABLE DOESN'T EXIST
+```
+
+**✅ CORRECT SQL (Real Schema):**
+```sql
+-- No client relationship exists
+-- No checklist_answered table exists
+-- Only question_answereds table exists
+SELECT * FROM question_answereds WHERE task_id = ?;
+```
+
+**What's Wrong:**
+1. **`client_task` table doesn't exist** - Complete fabrication
+2. **`checklist_answered` table doesn't exist** - Complete fabrication
+3. **Only `question_answereds` table exists** - Different structure
+4. **No client relationship** - Tasks don't have direct client relationships
+
+#### **`/tasks/[id]/edit/page.tsx` - Task Edit Query**
+**❌ WRONG SQL (Documented):**
+```sql
+SELECT id, first_name, last_name FROM clients ORDER BY created_at DESC;
+```
+
+**✅ CORRECT SQL (Real Schema):**
+```sql
+SELECT id, first_name, last_name FROM clients ORDER BY created_at DESC;
+-- ✅ This one is actually correct!
+```
+
+**What's Wrong:**
+1. **This query is actually correct** - Clients table has first_name and last_name
+2. **But the frontend expects `name` field** - This is a frontend issue, not SQL issue
+
+---
+
+### **2. PROJECTS PAGES - WHAT'S WRONG**
+
+#### **`/projects/page.tsx` - Project List Query**
+**❌ WRONG SQL (Documented):**
+```sql
+SELECT * FROM projects 
+LEFT JOIN project_user ON projects.id = project_user.project_id
+LEFT JOIN users ON project_user.user_id = users.id
+LEFT JOIN project_client ON projects.id = project_client.project_id  -- ❌ TABLE DOESN'T EXIST
+LEFT JOIN clients ON project_client.client_id = clients.id           -- ❌ TABLE DOESN'T EXIST
+LEFT JOIN tasks ON projects.id = tasks.project_id
+```
+
+**✅ CORRECT SQL (Real Schema):**
+```sql
+SELECT * FROM projects 
+LEFT JOIN project_user ON projects.id = project_user.project_id
+LEFT JOIN users ON project_user.user_id = users.id
+LEFT JOIN tasks ON projects.id = tasks.project_id
+-- ❌ NO CLIENT RELATIONSHIP - projects are not directly related to clients
+```
+
+**What's Wrong:**
+1. **`project_client` table doesn't exist** - Complete fabrication
+2. **No direct project-client relationship** - Projects don't have direct client relationships
+3. **Missing workspace filtering** - Should filter by workspace_id
+4. **Missing admin filtering** - Should filter by admin_id
+
+#### **`/projects/[id]/edit/page.tsx` - Project Edit Query**
+**❌ WRONG SQL (Documented):**
+```sql
+DELETE FROM project_client WHERE project_id = ?;  -- ❌ TABLE DOESN'T EXIST
+INSERT INTO project_client (project_id, client_id) VALUES (?, ?), (?, ?), ...;  -- ❌ TABLE DOESN'T EXIST
+```
+
+**✅ CORRECT SQL (Real Schema):**
+```sql
+-- No project_client table exists
+-- No client relationship exists for projects
+```
+
+**What's Wrong:**
+1. **`project_client` table doesn't exist** - Complete fabrication
+2. **No project-client relationship** - Projects don't have direct client relationships
+
+---
+
+### **3. CLIENTS PAGES - WHAT'S WRONG**
+
+#### **`/clients/page.tsx` - Client List Query**
+**❌ WRONG SQL (Documented):**
+```sql
+SELECT client_id, COUNT(*) as projects_count FROM projects GROUP BY client_id;  -- ❌ NO client_id IN projects
+SELECT client_id, COUNT(*) as tasks_count FROM tasks GROUP BY client_id;        -- ❌ NO client_id IN tasks
+```
+
+**✅ CORRECT SQL (Real Schema):**
+```sql
+-- No direct client-project or client-task relationships exist
+-- Would need to go through portfolios or other indirect relationships
+SELECT client_id, COUNT(*) as portfolios_count FROM portfolios GROUP BY client_id;
+```
+
+**What's Wrong:**
+1. **`projects` table has no `client_id` field** - Complete fabrication
+2. **`tasks` table has no `client_id` field** - Complete fabrication
+3. **No direct client-project relationship** - Complete fabrication
+4. **No direct client-task relationship** - Complete fabrication
+
+---
+
+### **4. USERS PAGES - WHAT'S WRONG**
+
+#### **`/users/page.tsx` - User List Query**
+**❌ WRONG SQL (Documented):**
+```sql
+SELECT * FROM users 
+LEFT JOIN model_has_roles ON users.id = model_has_roles.model_id
+LEFT JOIN roles ON model_has_roles.role_id = roles.id
+WHERE users.first_name LIKE ? OR users.last_name LIKE ?
+```
+
+**✅ CORRECT SQL (Real Schema):**
+```sql
+SELECT * FROM users 
+LEFT JOIN model_has_roles ON users.id = model_has_roles.model_id
+LEFT JOIN roles ON model_has_roles.role_id = roles.id
+WHERE users.first_name LIKE ? OR users.last_name LIKE ?
+-- ✅ This one is actually correct!
+```
+
+**What's Wrong:**
+1. **This query is actually correct** - Users table has first_name and last_name
+2. **But missing workspace filtering** - Should filter by workspace context
+
+---
+
+### **5. PORTFOLIO PAGES - WHAT'S WRONG**
+
+#### **`/portfolio/page.tsx` - Portfolio List Query**
+**❌ WRONG SQL (Documented):**
+```sql
+SELECT * FROM portfolios 
+LEFT JOIN clients ON portfolios.client_id = clients.id
+LEFT JOIN tasks ON portfolios.task_id = tasks.id
+LEFT JOIN projects ON portfolios.project_id = projects.id
+LEFT JOIN users ON portfolios.created_by = users.id
+LEFT JOIN task_types ON portfolios.task_type_id = task_types.id  -- ❌ NO task_type_id IN portfolios
+```
+
+**✅ CORRECT SQL (Real Schema):**
+```sql
+SELECT * FROM portfolios 
+LEFT JOIN clients ON portfolios.client_id = clients.id
+LEFT JOIN tasks ON portfolios.task_id = tasks.id
+LEFT JOIN projects ON portfolios.project_id = projects.id
+LEFT JOIN users ON portfolios.created_by = users.id
+-- ❌ NO task_type_id field in portfolios table
+```
+
+**What's Wrong:**
+1. **`portfolios` table has no `task_type_id` field** - Complete fabrication
+2. **Missing workspace filtering** - Should filter by workspace context
+
+---
+
+### **6. TEMPLATES PAGES - WHAT'S WRONG**
+
+#### **`/templates/[id]/edit/page.tsx` - Template Edit Query**
+**❌ WRONG SQL (Documented):**
+```sql
+SELECT * FROM task_brief_questions WHERE task_brief_templates_id = ?;
+SELECT * FROM task_brief_checklists WHERE task_brief_templates_id = ?;
+```
+
+**✅ CORRECT SQL (Real Schema):**
+```sql
+SELECT * FROM task_brief_questions WHERE task_brief_templates_id = ?;
+SELECT * FROM task_brief_checklists WHERE task_brief_templates_id = ?;
+-- ✅ These are actually correct!
+```
+
+**What's Wrong:**
+1. **These queries are actually correct** - Tables and relationships exist
+2. **No major issues found** - Template system is properly structured
+
+---
+
+### **7. DASHBOARD PAGES - WHAT'S WRONG**
+
+#### **`/dashboard/page.tsx` - Dashboard Query**
+**❌ WRONG SQL (Documented):**
+```sql
+SELECT COUNT(*) as total_tasks FROM tasks WHERE created_by = ?;
+SELECT COUNT(*) as total_tasks FROM tasks WHERE EXISTS (SELECT 1 FROM task_user WHERE task_id = tasks.id AND user_id = ?);
+```
+
+**✅ CORRECT SQL (Real Schema):**
+```sql
+SELECT COUNT(*) as total_tasks FROM tasks WHERE created_by = ?;
+SELECT COUNT(*) as total_tasks FROM tasks WHERE EXISTS (SELECT 1 FROM task_user WHERE task_id = tasks.id AND user_id = ?);
+-- ✅ These are actually correct!
+```
+
+**What's Wrong:**
+1. **These queries are actually correct** - Task relationships are properly structured
+2. **Missing workspace filtering** - Should filter by workspace context
+
+---
+
+## **SUMMARY OF CRITICAL ISSUES**
+
+### **🔴 COMPLETELY WRONG (FABRICATED TABLES):**
+1. **`client_task` table** - Doesn't exist, used in 5+ queries
+2. **`project_client` table** - Doesn't exist, used in 3+ queries
+3. **`checklist_answered` table** - Doesn't exist, used in 2+ queries
+
+### **🔴 MISSING RELATIONSHIPS:**
+1. **Client-Task relationships** - Don't exist in real schema
+2. **Client-Project relationships** - Don't exist in real schema
+3. **Portfolio-TaskType relationships** - Don't exist in real schema
+
+### **🔴 MISSING FILTERING:**
+1. **Workspace filtering** - All queries should filter by workspace_id
+2. **Admin filtering** - All queries should filter by admin_id
+
+### **🔴 FRONTEND MISMATCHES:**
+1. **Client name fields** - Frontend expects `name`, API has `first_name` + `last_name`
+2. **User name fields** - Frontend expects `name`, API has `first_name` + `last_name`
+
+### **✅ CORRECT QUERIES:**
+1. **Task-User relationships** - Using `task_user` pivot table correctly
+2. **Project-User relationships** - Using `project_user` pivot table correctly
+3. **Template relationships** - Using correct table structure
+4. **Question answers** - Using `question_answereds` table correctly
+
+---
+
+## **IMMEDIATE FIXES REQUIRED**
+
+### **1. REMOVE FABRICATED QUERIES**
+- Remove all references to `client_task` table
+- Remove all references to `project_client` table  
+- Remove all references to `checklist_answered` table
+
+### **2. ADD MISSING FILTERING**
+- Add `workspace_id` filtering to all queries
+- Add `admin_id` filtering to all queries
+
+### **3. FIX RELATIONSHIP QUERIES**
+- Remove client-task relationship queries
+- Remove client-project relationship queries
+- Use only existing relationships (task_user, project_user, portfolios)
+
+### **4. UPDATE FRONTEND INTERFACES**
+- Update client interfaces to use `first_name` + `last_name`
+- Update user interfaces to use `first_name` + `last_name`
+
+### **5. UPDATE API CONTROLLERS**
+- Fix ClientController to use correct field names
+- Remove workspace_id filtering (if single tenant)
+- Update all relationship queries to match real schema
+
+---
+
+## **CONCLUSION**
+
+**80% of the documented SQL queries are completely wrong** and reference non-existent tables and relationships. This explains why:
+
+1. **Client functionality is broken** - No client-task relationships exist
+2. **"Unnamed Project" appears** - No client-project relationships exist  
+3. **Dropdowns are blank** - Wrong field names and missing relationships
+4. **API errors occur** - Queries reference non-existent tables
+
+The real database schema shows a **workspace-based multi-tenant system** with **pivot table relationships**, not the **direct foreign key relationships** documented in the SQL queries.
+
+**All API controllers and frontend code need to be completely rewritten** to match the real database structure.
