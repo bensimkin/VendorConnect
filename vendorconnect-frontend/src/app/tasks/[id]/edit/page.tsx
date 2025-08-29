@@ -199,21 +199,21 @@ export default function EditTaskPage() {
            title: taskData?.title || '',
            description: taskData?.description || '',
            note: taskData?.note || '',
-           status_id: taskData?.status?.id || '',
-           priority_id: taskData?.priority?.id || '',
+           status_id: taskData?.status?.id || 0,
+           priority_id: taskData?.priority?.id || 0,
            user_ids: taskData?.assigned_to?.id ? [taskData.assigned_to.id] : [],
            client_ids: taskData?.client?.id ? [taskData.client.id] : [],
-           project_id: taskData?.project?.id || '',
+           project_id: taskData?.project?.id || 0,
            end_date: taskData?.due_date ? taskData.due_date.split('T')[0] : '',
-           task_type_id: taskData?.task_type?.id || '',
+           task_type_id: taskData?.task_type?.id || 0,
            close_deadline: taskData?.close_deadline || false,
            deliverable_quantity: taskData?.deliverable_quantity || 1,
          });
          
          console.log('Form data set to:', {
-           status_id: taskData?.status?.id || '',
-           priority_id: taskData?.priority?.id || '',
-           project_id: taskData?.project?.id || '',
+           status_id: taskData?.status?.id || 0,
+           priority_id: taskData?.priority?.id || 0,
+           project_id: taskData?.project?.id || 0,
          });
 
       // Fetch dropdown data
