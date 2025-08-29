@@ -32,7 +32,7 @@ class TaskController extends BaseController
     {
         try {
             $user = Auth::user();
-            $query = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project']);
+            $query = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'project.clients']);
             
             // Role-based filtering
             if ($user->hasRole('requester')) {
@@ -83,19 +83,27 @@ class TaskController extends BaseController
 
             $tasks = $query->paginate($request->get('per_page', 15));
 
-            // Apply role-based data protection to task users
-            if (!$user->hasRole(['admin', 'sub_admin'])) {
-                // Remove sensitive data from assigned users for requesters and taskers
-                $tasks->getCollection()->transform(function ($task) {
-                    if ($task->users) {
+            // Apply role-based data protection to task users and add clients
+            $tasks->getCollection()->transform(function ($task) use ($user) {
+                if ($task->users) {
+                    if (!$user->hasRole(['admin', 'sub_admin'])) {
+                        // Remove sensitive data from assigned users for requesters and taskers
                         foreach ($task->users as $taskUser) {
                             unset($taskUser->email);
                             unset($taskUser->phone);
                         }
                     }
-                    return $task;
-                });
-            }
+                }
+                
+                // Add clients from project to task response
+                if ($task->project && $task->project->clients) {
+                    $task->clients = $task->project->clients;
+                } else {
+                    $task->clients = collect();
+                }
+                
+                return $task;
+            });
 
             // Check for expired tasks with strict deadlines
             $rejectedStatus = Status::where('title', 'Rejected')->first();
@@ -256,7 +264,7 @@ class TaskController extends BaseController
     {
         try {
             $user = Auth::user();
-            $task = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'questionAnswers.briefQuestions', 'checklistAnswers', 'deliverables.creator', 'deliverables.media', 'messages.sender'])
+            $task = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'project.clients', 'questionAnswers.briefQuestions', 'checklistAnswers', 'deliverables.creator', 'deliverables.media', 'messages.sender'])
                 ->find($id);
 
             if (!$task) {
@@ -302,6 +310,13 @@ class TaskController extends BaseController
                         unset($taskUser->phone);
                     }
                 }
+            }
+
+            // Add clients from project to task response
+            if ($task->project && $task->project->clients) {
+                $task->clients = $task->project->clients;
+            } else {
+                $task->clients = collect();
             }
 
             return $this->sendResponse($task, 'Task retrieved successfully');
