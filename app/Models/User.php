@@ -74,7 +74,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function projects()
     {
-        return $this->belongsToMany(Project::class)->where('projects.workspace_id', session()->get('workspace_id'));
+        return $this->belongsToMany(Project::class);
     }
 
     public function tasks()
@@ -90,19 +90,19 @@ class User extends Authenticatable implements MustVerifyEmail
     public function status_tasks($status_id)
     {
         return $this->belongsToMany(Task::class, 'task_user')
-            ->where('tasks.workspace_id', session()->get('workspace_id'))->where('tasks.status_id', $status_id);
+            ->where('tasks.status_id', $status_id);
     }
 
     public function status_projects($status_id)
     {
         return $this->belongsToMany(Project::class, 'project_user')
-            ->where('projects.workspace_id', session()->get('workspace_id'))->where('projects.status_id', $status_id);
+            ->where('projects.status_id', $status_id);
     }
 
     public function project_tasks($project_id)
     {
         return $this->belongsToMany(Task::class, 'task_user')
-        ->where('tasks.workspace_id', session()->get('workspace_id'))->where('tasks.project_id', $project_id)->get();
+        ->where('tasks.project_id', $project_id)->get();
     }
 
     // public function meetings()
