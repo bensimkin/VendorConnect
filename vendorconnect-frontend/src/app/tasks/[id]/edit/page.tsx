@@ -14,8 +14,9 @@ import { apiClient } from '@/lib/api-client';
 import { toast } from 'react-hot-toast';
 
 // Helper function to get client display name
-const getClientDisplayName = (client: { first_name: string; last_name: string; name?: string }) => {
-  return client.name || `${client.first_name} ${client.last_name}`.trim();
+const getClientDisplayName = (client: { first_name: string; last_name: string; company?: string }) => {
+  const fullName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
+  return client.company ? `${fullName} (${client.company})` : fullName;
 };
 
 interface Task {
@@ -212,20 +213,20 @@ export default function EditTaskPage() {
       const [usersRes, clientsRes, projectsRes, taskTypesRes, templatesRes, statusesRes, prioritiesRes] = await Promise.all([
         apiClient.get('/users'),
         apiClient.get('/clients'),
-        apiClient.get('/projects'),
+        apiClient.get('/projects?per_page=all'),
         apiClient.get('/task-types?per_page=all'),
         apiClient.get('/task-brief-templates'),
-        apiClient.get('/statuses'),
-        apiClient.get('/priorities'),
+        apiClient.get('/statuses?per_page=all'),
+        apiClient.get('/priorities?per_page=all'),
       ]);
       
       setUsers(usersRes.data.data?.data || usersRes.data.data || []);
       setClients(clientsRes.data.data?.data || clientsRes.data.data || []);
-      setProjects(projectsRes.data.data?.data || projectsRes.data.data || []);
-      setTaskTypes(taskTypesRes.data.data || []);
-      setTemplates(templatesRes.data.data || []);
-      setStatuses(statusesRes.data.data?.data || statusesRes.data.data || []);
-      setPriorities(prioritiesRes.data.data?.data || prioritiesRes.data.data || []);
+      setProjects(projectsRes.data.data?.data || projectsRes.data.data || projectsRes.data || []);
+      setTaskTypes(taskTypesRes.data.data || taskTypesRes.data || []);
+      setTemplates(templatesRes.data.data || templatesRes.data || []);
+      setStatuses(statusesRes.data.data?.data || statusesRes.data.data || statusesRes.data || []);
+      setPriorities(prioritiesRes.data.data?.data || prioritiesRes.data.data || prioritiesRes.data || []);
 
       // Load template questions if template exists
       if (taskData.template?.id) {
