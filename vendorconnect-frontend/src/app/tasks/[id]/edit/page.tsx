@@ -147,13 +147,13 @@ export default function EditTaskPage() {
     title: '',
     description: '',
     note: '',
-    status_id: '',
-    priority_id: '',
+    status_id: 0,
+    priority_id: 0,
     user_ids: [] as number[],
     client_ids: [] as number[],
-    project_id: '',
+    project_id: 0,
     end_date: '',
-    task_type_id: '',
+    task_type_id: 0,
     close_deadline: false,
     deliverable_quantity: 1,
   });
@@ -199,21 +199,21 @@ export default function EditTaskPage() {
            title: taskData?.title || '',
            description: taskData?.description || '',
            note: taskData?.note || '',
-           status_id: taskData?.status?.id ? taskData.status.id.toString() : '',
-           priority_id: taskData?.priority?.id ? taskData.priority.id.toString() : '',
+           status_id: taskData?.status?.id || '',
+           priority_id: taskData?.priority?.id || '',
            user_ids: taskData?.assigned_to?.id ? [taskData.assigned_to.id] : [],
            client_ids: taskData?.client?.id ? [taskData.client.id] : [],
-           project_id: taskData?.project?.id ? taskData.project.id.toString() : '',
+           project_id: taskData?.project?.id || '',
            end_date: taskData?.due_date ? taskData.due_date.split('T')[0] : '',
-           task_type_id: taskData?.task_type?.id ? taskData.task_type.id.toString() : '',
+           task_type_id: taskData?.task_type?.id || '',
            close_deadline: taskData?.close_deadline || false,
            deliverable_quantity: taskData?.deliverable_quantity || 1,
          });
          
          console.log('Form data set to:', {
-           status_id: taskData?.status?.id ? taskData.status.id.toString() : '',
-           priority_id: taskData?.priority?.id ? taskData.priority.id.toString() : '',
-           project_id: taskData?.project?.id ? taskData.project.id.toString() : '',
+           status_id: taskData?.status?.id || '',
+           priority_id: taskData?.priority?.id || '',
+           project_id: taskData?.project?.id || '',
          });
 
       // Fetch dropdown data
@@ -467,7 +467,7 @@ export default function EditTaskPage() {
                   >
                     <option value="">Select Status</option>
                     {statuses.map((status) => (
-                      <option key={status.id} value={status.id.toString()}>
+                      <option key={status.id} value={status.id}>
                         {status.title}
                       </option>
                     ))}
@@ -484,7 +484,7 @@ export default function EditTaskPage() {
                   >
                     <option value="">Select Priority</option>
                     {priorities.map((priority) => (
-                      <option key={priority.id} value={priority.id.toString()}>
+                      <option key={priority.id} value={priority.id}>
                         {priority.title}
                       </option>
                     ))}
@@ -541,7 +541,7 @@ export default function EditTaskPage() {
                   >
                     <option value="">Select Project</option>
                     {projects.map((project) => (
-                      <option key={project.id} value={project.id.toString()}>
+                      <option key={project.id} value={project.id}>
                         {project.title}
                       </option>
                     ))}
