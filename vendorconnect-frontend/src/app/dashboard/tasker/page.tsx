@@ -369,7 +369,7 @@ export default function TaskerDashboardPage() {
             <CardDescription>Common tasks and shortcuts</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-1">
               <Button 
                 variant="outline" 
                 className="h-20 flex-col gap-2"
@@ -378,22 +378,8 @@ export default function TaskerDashboardPage() {
                 <FileText className="h-6 w-6" />
                 <span>View My Tasks</span>
               </Button>
-              <Button 
-                variant="outline" 
-                className="h-20 flex-col gap-2"
-                onClick={() => router.push('/portfolio')}
-              >
-                <User className="h-6 w-6" />
-                <span>View Portfolio</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="h-20 flex-col gap-2"
-                onClick={() => router.push('/templates')}
-              >
-                <FileText className="h-6 w-6" />
-                <span>Task Templates</span>
-              </Button>
+
+
             </div>
           </CardContent>
         </Card>
