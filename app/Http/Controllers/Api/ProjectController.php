@@ -244,7 +244,7 @@ class ProjectController extends BaseController
                 ->where('project_id', $id);
 
             // Apply role-based filtering
-            if ($user->hasRole('requester')) {
+            if ($user->hasRole('Requester')) {
                 // Requesters only see tasks they created
                 $taskQuery->where('created_by', $user->id);
             } elseif ($user->hasRole('tasker')) {

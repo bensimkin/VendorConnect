@@ -26,7 +26,7 @@ class DashboardController extends BaseController
             // Get basic counts with role-based filtering
             $totalTasksQuery = Task::query();
             
-            if ($user->hasRole('requester')) {
+            if ($user->hasRole('Requester')) {
                 $totalTasksQuery->where('created_by', $user->id);
             } elseif ($user->hasRole('tasker')) {
                 $totalTasksQuery->whereHas('users', function ($q) use ($user) {
@@ -46,7 +46,7 @@ class DashboardController extends BaseController
             $recentTasksQuery = Task::with(['users', 'status', 'priority', 'taskType', 'template']);
             
             // Apply role-based filtering for recent tasks
-            if ($user->hasRole('requester')) {
+            if ($user->hasRole('Requester')) {
                 // Requesters only see tasks they created
                 $recentTasksQuery->where('created_by', $user->id);
             } elseif ($user->hasRole('tasker')) {
@@ -105,7 +105,7 @@ class DashboardController extends BaseController
         // Apply role-based filtering to task statistics
         $taskQuery = Task::query();
         
-        if ($user->hasRole('requester')) {
+        if ($user->hasRole('Requester')) {
             // Requesters only see tasks they created
             $taskQuery->where('created_by', $user->id);
         } elseif ($user->hasRole('tasker')) {
@@ -224,7 +224,7 @@ class DashboardController extends BaseController
             }]);
 
         // Apply role-based filtering
-        if ($user->hasRole('requester')) {
+        if ($user->hasRole('Requester')) {
             // Requesters only see projects they created or are involved with
             $projectQuery->where(function ($q) use ($user) {
                 $q->where('created_by', $user->id)
@@ -347,7 +347,7 @@ class DashboardController extends BaseController
         try {
             $user = Auth::user();
             
-            if (!$user->hasRole('requester')) {
+            if (!$user->hasRole('Requester')) {
                 return $this->sendError('Unauthorized access', [], 403);
             }
 
