@@ -21,7 +21,24 @@ class PortfolioController extends BaseController
     public function index(Request $request)
     {
         try {
+            $user = Auth::user();
             $query = Portfolio::with(['client', 'task', 'project', 'createdBy', 'taskType']);
+
+            // Role-based filtering
+            if ($user->hasRole('Requester')) {
+                // Requesters see portfolio items related to clients whose tasks they created
+                $query->whereHas('task', function($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                });
+            } elseif ($user->hasRole('tasker')) {
+                // Taskers see portfolio items related to clients whose tasks they're assigned to
+                $query->whereHas('task', function($q) use ($user) {
+                    $q->whereHas('users', function($subQ) use ($user) {
+                        $subQ->where('users.id', $user->id);
+                    });
+                });
+            }
+            // Admins and sub-admins see all portfolio items (no additional filtering)
 
             // Apply filters
             if ($request->has('client_id')) {
