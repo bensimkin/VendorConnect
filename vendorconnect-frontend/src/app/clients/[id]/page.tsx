@@ -352,7 +352,7 @@ export default function ClientDetailPage() {
                                 color: project.status.color || undefined,
                               }}
                             >
-                              {project.status.name}
+                              {project.status.title}
                             </Badge>
                           )}
                           <Button
@@ -398,12 +398,12 @@ export default function ClientDetailPage() {
                           <div className="flex gap-2 mt-2">
                             {task.status && (
                               <Badge variant="outline" className="text-xs">
-                                {task.status.name}
+                                {task.status.title}
                               </Badge>
                             )}
                             {task.priority && (
                               <Badge variant="outline" className="text-xs">
-                                {task.priority.name}
+                                {task.priority.title}
                               </Badge>
                             )}
                           </div>

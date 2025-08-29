@@ -372,11 +372,11 @@ export default function ProjectManagementPage() {
                                       <Badge
                                         variant="secondary"
                                         style={{
-                                          backgroundColor: getStatusColorByName(task.status.name) + '20',
-                                          color: getStatusColorByName(task.status.name),
+                                                          backgroundColor: getStatusColorByName(task.status.title) + '20',
+                color: getStatusColorByName(task.status.title),
                                         }}
                                       >
-                                        {task.status.name}
+                                        {task.status.title}
                                       </Badge>
                                     )}
                                     {task.priority && (
@@ -384,7 +384,7 @@ export default function ProjectManagementPage() {
                                         variant="secondary"
                                         className="bg-blue-100 text-blue-800"
                                       >
-                                        {task.priority.name}
+                                        {task.priority.title}
                                       </Badge>
                                     )}
                                     {task.end_date && (

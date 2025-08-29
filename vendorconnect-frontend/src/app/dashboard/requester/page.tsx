@@ -269,7 +269,7 @@ export default function RequesterDashboardPage() {
                           <h4 className="font-medium text-sm">{task.title}</h4>
                           {task.status && (
                             <Badge variant="secondary" className="text-xs">
-                              {task.status.name}
+                              {task.status.title}
                             </Badge>
                           )}
                         </div>
@@ -314,7 +314,7 @@ export default function RequesterDashboardPage() {
                         )}
                       </div>
                       {task.priority && (
-                        <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority.name)}`} />
+                        <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority.title)}`} />
                       )}
                     </div>
                   ))
