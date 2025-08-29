@@ -130,7 +130,8 @@ export default function ClientDetailPage() {
   const handleDeleteClient = async () => {
     if (!client) return;
     
-    if (!confirm(`Are you sure you want to delete "${client.name}"? This action cannot be undone.`)) {
+    const displayName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
+    if (!confirm(`Are you sure you want to delete "${displayName}"? This action cannot be undone.`)) {
       return;
     }
 
@@ -190,7 +191,7 @@ export default function ClientDetailPage() {
               <span>Back to Clients</span>
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{client.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{`${client.first_name || ''} ${client.last_name || ''}`.trim()}</h1>
               <p className="text-gray-600 dark:text-gray-400">Client Details</p>
             </div>
           </div>

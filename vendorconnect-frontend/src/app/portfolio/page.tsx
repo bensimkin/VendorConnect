@@ -213,7 +213,7 @@ export default function PortfolioPage() {
                   <option value="">All Clients</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
-                      {client.name} {client.company ? `(${client.company})` : ''}
+                      {`${client.first_name || ''} ${client.last_name || ''}`.trim()} {client.company ? `(${client.company})` : ''}
                     </option>
                   ))}
                 </select>
