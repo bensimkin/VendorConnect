@@ -23,8 +23,8 @@ interface TaskerDashboardData {
     description?: string;
     note?: string;
     deliverable_quantity?: number;
-      status?: { name: string };
-  priority?: { name: string };
+      status?: { title: string };  // FIXED: Use primary database field
+  priority?: { title: string };  // FIXED: Use primary database field
     end_date?: string;
     project?: { title: string };
     template?: {
@@ -41,7 +41,7 @@ interface TaskerDashboardData {
     title: string;
     end_date: string;
     days_until_due: number;
-    priority?: { name: string };
+    priority?: { title: string };  // FIXED: Use primary database field
   }>;
   task_statistics: {
     by_status: Record<string, number>;
