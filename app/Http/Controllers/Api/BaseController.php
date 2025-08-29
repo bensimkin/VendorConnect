@@ -9,6 +9,31 @@ use Illuminate\Support\Facades\Auth;
 class BaseController extends Controller
 {
     /**
+     * Recursively convert models/collections to arrays and remove unwanted keys
+     */
+    protected function cleanResponseData($data)
+    {
+        // Convert Arrayable (Eloquent models/collections) to array first
+        if ($data instanceof \Illuminate\Contracts\Support\Arrayable) {
+            $data = $data->toArray();
+        }
+
+        if (is_array($data)) {
+            // Remove workspace_id from any level
+            if (array_key_exists('workspace_id', $data)) {
+                unset($data['workspace_id']);
+            }
+            // Recurse into child elements
+            foreach ($data as $key => $value) {
+                $data[$key] = $this->cleanResponseData($value);
+            }
+            return $data;
+        }
+        // Scalars/null
+        return $data;
+    }
+
+    /**
      * Success response
      */
     public function sendResponse($result, $message = 'Success')
@@ -22,7 +47,7 @@ class BaseController extends Controller
             $response = [
                 'success' => true,
                 'message' => $message,
-                'data' => $result
+                'data' => $this->cleanResponseData($result)
             ];
 
             \Log::info('Response structure: ' . json_encode($response));
@@ -70,7 +95,7 @@ class BaseController extends Controller
         $response = [
             'success' => true,
             'message' => $message,
-            'data' => $data->items(),
+            'data' => $this->cleanResponseData($data->items()),
             'pagination' => [
                 'current_page' => $data->currentPage(),
                 'last_page' => $data->lastPage(),
