@@ -462,7 +462,7 @@ export default function EditTaskPage() {
                   <select
                     id="status"
                     value={formData.status_id}
-                    onChange={(e) => setFormData({ ...formData, status_id: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, status_id: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
                     <option value="">Select Status</option>
@@ -479,7 +479,7 @@ export default function EditTaskPage() {
                   <select
                     id="priority"
                     value={formData.priority_id}
-                    onChange={(e) => setFormData({ ...formData, priority_id: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, priority_id: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
                     <option value="">Select Priority</option>
@@ -536,7 +536,7 @@ export default function EditTaskPage() {
                   <select
                     id="project"
                     value={formData.project_id}
-                    onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, project_id: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
                     <option value="">Select Project</option>
@@ -579,7 +579,7 @@ export default function EditTaskPage() {
                   <select
                     id="task_type"
                     value={formData.task_type_id}
-                    onChange={(e) => setFormData({ ...formData, task_type_id: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, task_type_id: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
                     <option value="">Select Task Type</option>
