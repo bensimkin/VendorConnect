@@ -34,13 +34,13 @@ const navigation = [
   { name: 'My Dashboard', href: '/dashboard/tasker', icon: Home, roles: ['Tasker'] },
   { name: 'My Dashboard', href: '/dashboard/requester', icon: Home, roles: ['Requester'] },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
-  { name: 'Templates', href: '/templates', icon: FileText, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
+  { name: 'Templates', href: '/templates', icon: FileText, roles: ['Admin', 'Requester', 'sub admin'] },
   { name: 'Task Types', href: '/task-types', icon: Tag, roles: ['Admin', 'sub admin'] },
   { name: 'Users', href: '/users', icon: Users, roles: ['Admin'] },
   { name: 'Clients', href: '/clients', icon: Building2, roles: ['Admin'] },
-  { name: 'Projects', href: '/projects', icon: FolderOpen, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
-  { name: 'Project Management', href: '/project-management', icon: BarChart3, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
-  { name: 'Portfolio', href: '/portfolio', icon: Briefcase, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
+  { name: 'Projects', href: '/projects', icon: FolderOpen, roles: ['Admin', 'Requester', 'sub admin'] },
+  { name: 'Project Management', href: '/project-management', icon: BarChart3, roles: ['Admin', 'Requester', 'sub admin'] },
+  { name: 'Portfolio', href: '/portfolio', icon: Briefcase, roles: ['Admin', 'Requester', 'sub admin'] },
   { name: 'Settings', href: '/settings', icon: Settings, roles: ['Admin'] },
 ];
 
