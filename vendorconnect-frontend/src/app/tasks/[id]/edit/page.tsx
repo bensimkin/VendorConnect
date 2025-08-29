@@ -488,7 +488,7 @@ export default function EditTaskPage() {
                     onChange={(e) => setFormData({ ...formData, status_id: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
-                    <option value="">Select Status</option>
+                    <option value="0">Select Status</option>
                     {statuses.map((status) => (
                       <option key={status.id} value={status.id}>
                         {status.title}
@@ -505,7 +505,7 @@ export default function EditTaskPage() {
                     onChange={(e) => setFormData({ ...formData, priority_id: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
-                    <option value="">Select Priority</option>
+                    <option value="0">Select Priority</option>
                     {priorities.map((priority) => (
                       <option key={priority.id} value={priority.id}>
                         {priority.title}
@@ -562,7 +562,7 @@ export default function EditTaskPage() {
                     onChange={(e) => setFormData({ ...formData, project_id: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
-                    <option value="">Select Project</option>
+                    <option value="0">Select Project</option>
                     {projects.map((project) => (
                       <option key={project.id} value={project.id}>
                         {project.title}
