@@ -107,9 +107,9 @@ interface QuestionAnswer {
 
 interface Comment {
   id: number;
-  comment: string;
+  message_text: string;
   created_at: string;
-  user: {
+  sender: {
     id: number;
     first_name: string;
     last_name: string;
