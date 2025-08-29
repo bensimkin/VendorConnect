@@ -117,7 +117,7 @@ class Project extends Model implements HasMedia
     }
     public function milestones()
     {
-        return $this->hasMany(Milestone::class)->where('milestones.workspace_id', session()->get('workspace_id'));
+        return $this->hasMany(Milestone::class);
     }
     public function priority()
     {

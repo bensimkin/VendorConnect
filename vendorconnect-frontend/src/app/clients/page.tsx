@@ -16,14 +16,13 @@ import { filterSensitiveClientDataArray, hasAdminPrivileges } from '@/lib/utils/
 
 // Helper function to get client display name
 const getClientDisplayName = (client: { first_name: string; last_name: string; name?: string }) => {
-  return client.name || `${client.first_name} ${client.last_name}`.trim();
+  return `${client.first_name} ${client.last_name}`.trim();
 };
 
 interface Client {
   id: number;
   first_name: string;
   last_name: string;
-  name?: string; // For backward compatibility
   email?: string;
   phone?: string;
   address?: string;
