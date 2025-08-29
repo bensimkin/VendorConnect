@@ -151,7 +151,7 @@ class ProjectController extends BaseController
                 'description' => $request->description,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date ?: $request->start_date, // Use start_date as default if end_date is not provided
-                'status_id' => 1, // Default active status
+                'status_id' => $request->status_id ?? 1, // Use provided status_id or default to 1
                 'created_by' => $request->user()->id,
                 'workspace_id' => 1, // Default workspace for single-tenant system
             ]);
@@ -164,10 +164,14 @@ class ProjectController extends BaseController
             // Attach clients
             if ($request->has('client_ids')) {
                 // Multiple clients mode
+                \Log::info('Attaching multiple clients to project', ['client_ids' => $request->client_ids, 'project_id' => $project->id]);
                 $project->clients()->attach($request->client_ids, ['admin_id' => 1]);
             } elseif ($request->has('client_id')) {
                 // Single client mode
+                \Log::info('Attaching single client to project', ['client_id' => $request->client_id, 'project_id' => $project->id]);
                 $project->clients()->attach($request->client_id, ['admin_id' => 1]);
+            } else {
+                \Log::warning('No client data provided for project creation', ['project_id' => $project->id, 'request_data' => $request->all()]);
             }
 
             DB::commit();
