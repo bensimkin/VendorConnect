@@ -36,21 +36,23 @@ interface Task {
     id: number;
     title: string;
   };
-  assigned_to?: {
+  users?: Array<{
     id: number;
     first_name: string;
     last_name: string;
-  };
-  client?: {
+  }>;
+  clients?: Array<{
     id: number;
-    name: string;
-  };
+    first_name: string;
+    last_name: string;
+    company?: string;
+  }>;
   project?: {
     id: number;
     title: string;
   };
-  due_date?: string;
-  task_type?: {
+  end_date?: string;
+  taskType?: {
     id: number;
     task_type: string;
   };
@@ -194,13 +196,13 @@ export default function EditTaskPage() {
            title: taskData?.title || '',
            description: taskData?.description || '',
            note: taskData?.note || '',
-           status_id: taskData?.status_id || null,
-           priority_id: taskData?.priority_id || null,
-           user_ids: taskData?.assigned_to?.id ? [taskData.assigned_to.id] : [],
-           client_ids: taskData?.client?.id ? [taskData.client.id] : [],
-           project_id: taskData?.project_id || null,
-           end_date: taskData?.due_date ? taskData.due_date.split('T')[0] : '',
-           task_type_id: taskData?.task_type_id || null,
+           status_id: taskData?.status?.id || null,
+           priority_id: taskData?.priority?.id || null,
+           user_ids: taskData?.users?.map(user => user.id) || [],
+           client_ids: taskData?.clients?.map(client => client.id) || [],
+           project_id: taskData?.project?.id || null,
+           end_date: taskData?.end_date ? taskData.end_date.split('T')[0] : '',
+           task_type_id: taskData?.taskType?.id || null,
            close_deadline: taskData?.close_deadline === true ? 1 : 0,
            deliverable_quantity: taskData?.deliverable_quantity || 1,
          });
