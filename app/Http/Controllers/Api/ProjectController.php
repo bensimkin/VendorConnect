@@ -325,6 +325,11 @@ class ProjectController extends BaseController
             $validator = Validator::make($request->all(), $validationRules);
 
             if ($validator->fails()) {
+                \Log::error('Project update validation failed', [
+                    'project_id' => $id,
+                    'request_data' => $request->all(),
+                    'validation_errors' => $validator->errors()->toArray()
+                ]);
                 return $this->sendValidationError($validator->errors());
             }
 
