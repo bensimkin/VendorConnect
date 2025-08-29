@@ -22,7 +22,7 @@ interface Project {
   created_at: string;
   updated_at: string;
   status?: { id: number; title: string };
-  clients?: Array<{ id: number; name: string; company?: string }>;
+  clients?: Array<{ id: number; name: string; first_name?: string; last_name?: string; company?: string }>;
   users?: Array<{ id: number; first_name: string; last_name: string; email: string }>;
   tasks?: Array<{ id: number; title: string; status: { title: string } }>;  // FIXED: Use only primary field
 }
