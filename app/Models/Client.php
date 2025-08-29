@@ -42,7 +42,7 @@ class Client extends Authenticatable implements MustVerifyEmail
         'client_note',
     ];
 
-    protected $appends = ['name'];  // TEMPORARILY ENABLED FOR TESTING
+    // protected $appends = ['name'];  // REMOVED: Causes duplicate fields in API
 
     /**
      * The attributes that should be hidden for serialization.
@@ -89,11 +89,10 @@ class Client extends Authenticatable implements MustVerifyEmail
         return str($this->name);
     }
 
-    public function getNameAttribute()
-    {
-        \Log::info('getNameAttribute called for client ' . $this->id);
-        return trim($this->first_name . ' ' . $this->last_name);
-    }
+    // public function getNameAttribute()
+    // {
+    //     return trim($this->first_name . ' ' . $this->last_name);
+    // }
 
     public function todos($status = null, $search = '')
     {
