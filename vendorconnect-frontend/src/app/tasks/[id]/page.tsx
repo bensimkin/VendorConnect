@@ -657,7 +657,17 @@ export default function TaskDetailPage() {
               </CardContent>
             </Card>
 
-
+            {/* Brief */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Brief</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  {task.template?.standard_brief || task.template_standard_brief || 'No brief provided'}
+                </p>
+              </CardContent>
+            </Card>
 
             {/* Notes */}
             {task.note && (
