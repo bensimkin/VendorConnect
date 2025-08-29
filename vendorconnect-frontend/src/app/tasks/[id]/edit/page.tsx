@@ -388,13 +388,14 @@ export default function EditTaskPage() {
   }
 
   // Debug: Log current state before render
-  console.log('Rendering edit task page:');
-  console.log('formData:', formData);
-  console.log('statuses:', statuses);
-  console.log('priorities:', priorities);
-  console.log('projects:', projects);
-  console.log('projects.length:', projects.length);
-  console.log('formData.project_id:', formData.project_id);
+  console.log('=== RENDERING EDIT TASK PAGE ===');
+  console.log('formData.status_id:', formData.status_id, 'type:', typeof formData.status_id);
+  console.log('formData.priority_id:', formData.priority_id, 'type:', typeof formData.priority_id);
+  console.log('formData.project_id:', formData.project_id, 'type:', typeof formData.project_id);
+  console.log('statuses array:', statuses);
+  console.log('priorities array:', priorities);
+  console.log('projects array:', projects);
+  console.log('=== END DEBUG ===');
 
   // Test API calls
   const testAPIs = async () => {
@@ -465,6 +466,9 @@ export default function EditTaskPage() {
                     onChange={(e) => setFormData({ ...formData, status_id: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
+                    {/* Debug: Show current value */}
+                    {console.log('Status dropdown - current value:', formData.status_id)}
+                    {console.log('Status dropdown - available options:', statuses.map(s => ({id: s.id, title: s.title})))}
                     <option value="">Select Status</option>
                     {statuses.map((status) => (
                       <option key={status.id} value={status.id}>
