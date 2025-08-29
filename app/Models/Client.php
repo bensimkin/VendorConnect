@@ -63,6 +63,8 @@ class Client extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
     ];
 
+    protected $appends = ['name'];
+
     protected $guard = 'client';
 
     public function projects()
@@ -89,10 +91,10 @@ class Client extends Authenticatable implements MustVerifyEmail
         return str($this->name);
     }
 
-    // public function getNameAttribute()
-    // {
-    //     return trim($this->first_name . ' ' . $this->last_name);
-    // }
+    public function getNameAttribute()
+    {
+        return trim($this->first_name . ' ' . $this->last_name);
+    }
 
     public function todos($status = null, $search = '')
     {

@@ -21,7 +21,7 @@ class ProjectController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = Project::with(['users', 'tasks', 'status']);
+            $query = Project::with(['users', 'tasks', 'status', 'clients']);
             // Removed workspace filtering for single-tenant system
 
             // Apply filters
@@ -29,8 +29,7 @@ class ProjectController extends BaseController
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%")
-                      );
+                      ->orWhere('description', 'like', "%{$search}%");
                 });
             }
 
@@ -182,7 +181,7 @@ class ProjectController extends BaseController
     {
         try {
             $user = Auth::user();
-            $project = Project::with(['users', 'tasks.status', 'status'])
+            $project = Project::with(['users', 'tasks.status', 'status', 'clients'])
                 ->find($id);
 
             if (!$project) {
