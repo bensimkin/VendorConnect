@@ -244,7 +244,8 @@ export default function PortfolioDetailPage() {
                     <h3 className="font-medium">Client</h3>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <User className="h-4 w-4" />
-                      <span>{portfolio.client.name}</span>
+                      <span>{`${portfolio.client.first_name || ''} ${portfolio.client.last_name || ''}`.trim()}</span>
+                      <span>{`${portfolio.client.first_name || ''} ${portfolio.client.last_name || ''}`.trim()}</span>
                       {portfolio.client.company && (
                         <span className="text-sm">({portfolio.client.company})</span>
                       )}
