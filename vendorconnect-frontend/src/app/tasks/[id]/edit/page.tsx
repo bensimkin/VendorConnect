@@ -220,11 +220,11 @@ export default function EditTaskPage() {
         apiClient.get('/priorities?per_page=all'),
       ]);
       
-      setUsers(usersRes.data.data || []);
-      setClients(clientsRes.data.data || []);
-      setProjects(projectsRes.data.data || []);
-      setTaskTypes(taskTypesRes.data.data || []);
-      setTemplates(templatesRes.data.data || []);
+      setUsers(usersRes.data.data || usersRes.data || []);
+      setClients(clientsRes.data.data || clientsRes.data || []);
+      setProjects(projectsRes.data.data || projectsRes.data || []);
+      setTaskTypes(taskTypesRes.data.data || taskTypesRes.data || []);
+      setTemplates(templatesRes.data.data || templatesRes.data || []);
       setStatuses(statusesRes.data.data || statusesRes.data || []);
       setPriorities(prioritiesRes.data.data || prioritiesRes.data || []);
 
@@ -304,7 +304,7 @@ export default function EditTaskPage() {
         project_id: formData.project_id,
         task_type_id: formData.task_type_id,
         user_ids: formData.user_ids,
-        client_ids: formData.client_ids,
+        // client_ids: formData.client_ids, // Removed - no direct client-task relationship
         end_date: formData.end_date,
         close_deadline: formData.close_deadline,
         deliverable_quantity: formData.deliverable_quantity,
@@ -480,10 +480,11 @@ export default function EditTaskPage() {
                     onChange={(e) => setFormData({ ...formData, priority_id: parseInt(e.target.value) || null })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
+                    {/* Debug: Priorities count: {priorities.length} */}
                     <option value="">Select Priority</option>
                     {priorities.map((priority) => (
                       <option key={priority.id} value={priority.id}>
-                        {priority.title}
+                        {priority.title || `Priority ${priority.id}`}
                       </option>
                     ))}
                   </select>
@@ -537,10 +538,11 @@ export default function EditTaskPage() {
                     onChange={(e) => setFormData({ ...formData, project_id: parseInt(e.target.value) || null })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
+                    {/* Debug: Projects count: {projects.length} */}
                     <option value="">Select Project</option>
                     {projects.map((project) => (
                       <option key={project.id} value={project.id}>
-                        {project.title}
+                        {project.title || `Project ${project.id}`}
                       </option>
                     ))}
                   </select>

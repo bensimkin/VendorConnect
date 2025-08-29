@@ -140,3 +140,44 @@ The fix integrates with existing settings:
 ## ✅ **Status: RESOLVED**
 
 The "Unnamed Project" issue has been successfully resolved. All new projects will now properly attach clients and display correct project titles in the frontend.
+
+## 🔧 **Additional Fix: Dropdown Data Loading**
+
+### **Issue**: Blank dropdowns in Edit Task page
+The status and priority dropdowns in the task edit page were showing blank options because the frontend was not correctly parsing the API response structure when `per_page=all` is used.
+
+### **Fix Applied**:
+**File**: `vendorconnect-frontend/src/app/tasks/[id]/edit/page.tsx`
+
+**Changes**:
+- ✅ **Fixed API response parsing** for statuses and priorities
+- ✅ **Added fallback data access** to handle different API response structures
+
+**Before**:
+```typescript
+setStatuses(statusesRes.data.data || []);
+setPriorities(prioritiesRes.data.data || []);
+```
+
+**After**:
+```typescript
+setStatuses(statusesRes.data.data || statusesRes.data || []);
+setPriorities(prioritiesRes.data.data || prioritiesRes.data || []);
+```
+
+### **Root Cause**:
+When APIs are called with `per_page=all`, they return data directly in the `data` field instead of nested under `data.data` (which is used for paginated responses).
+
+### **Testing Results**:
+- ✅ Status dropdown now shows proper status names (Active, Inactive, Rejected, etc.)
+- ✅ Priority dropdown now shows proper priority names (Low, Medium, High, etc.)
+- ✅ Project dropdown continues to work correctly
+- ✅ All other dropdowns functioning properly
+
+## 🎯 **Final Status: FULLY RESOLVED**
+
+Both the "Unnamed Project" issue and the blank dropdown issue have been successfully resolved. The frontend now properly displays:
+- ✅ Correct project titles instead of "Unnamed Project"
+- ✅ Proper status names in dropdowns
+- ✅ Proper priority names in dropdowns
+- ✅ All client relationships working correctly
