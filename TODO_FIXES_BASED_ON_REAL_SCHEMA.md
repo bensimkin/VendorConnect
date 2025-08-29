@@ -158,40 +158,77 @@ protected function cleanResponse($data) {
 - Dropdowns show blank values
 - Type mismatches between API and frontend
 - Missing data initialization
+- Form data initialized with 0 instead of null
 
 #### **Step-by-Step Fix:**
 
-**Step 4.1: Fix Dropdown Value Types**
+**Step 4.1: Fix Form Data Initialization**
 ```bash
 # Files to update:
-# - vendorconnect-frontend/src/pages/tasks/[id]/edit/page.tsx
-# - vendorconnect-frontend/src/pages/tasks/new/page.tsx
-# - vendorconnect-frontend/src/pages/projects/[id]/edit/page.tsx
+# - vendorconnect-frontend/src/app/tasks/[id]/edit/page.tsx
+# - vendorconnect-frontend/src/app/tasks/new/page.tsx
+# - vendorconnect-frontend/src/app/projects/[id]/edit/page.tsx
 ```
 
 **Change from:**
 ```typescript
-const [statusId, setStatusId] = useState<string>('');
+const [formData, setFormData] = useState({
+  status_id: 0,        // ❌ Wrong - should be null
+  priority_id: 0,      // ❌ Wrong - should be null
+  project_id: 0,       // ❌ Wrong - should be null
+});
 ```
 
 **To:**
 ```typescript
-const [statusId, setStatusId] = useState<number | null>(null);
+const [formData, setFormData] = useState({
+  status_id: null,     // ✅ Correct
+  priority_id: null,   // ✅ Correct
+  project_id: null,    // ✅ Correct
+});
 ```
 
-**Step 4.2: Fix Data Initialization**
+**Step 4.2: Fix Dropdown Value Handling**
 ```bash
-# Ensure dropdowns are initialized with correct values:
-useEffect(() => {
-    if (task) {
-        setStatusId(task.status_id || null);
-        setPriorityId(task.priority_id || null);
-        setProjectId(task.project_id || null);
-    }
-}, [task]);
+# Change dropdown value handling:
 ```
 
-**Step 4.3: Fix API Response Parsing**
+**Change from:**
+```typescript
+<select value={formData.status_id}>
+  <option value="0">Select Status</option>
+```
+
+**To:**
+```typescript
+<select value={formData.status_id || ''}>
+  <option value="">Select Status</option>
+```
+
+**Step 4.3: Fix Data Loading from API**
+```bash
+# Fix how task data is loaded into form:
+```
+
+**Change from:**
+```typescript
+setFormData({
+  status_id: taskData?.status_id || 0,
+  priority_id: taskData?.priority_id || 0,
+  project_id: taskData?.project_id || 0,
+});
+```
+
+**To:**
+```typescript
+setFormData({
+  status_id: taskData?.status?.id || null,
+  priority_id: taskData?.priority?.id || null,
+  project_id: taskData?.project?.id || null,
+});
+```
+
+**Step 4.4: Fix API Response Parsing**
 ```bash
 # Ensure consistent response parsing:
 const data = response.data.data?.data || response.data.data || [];
@@ -199,36 +236,144 @@ const data = response.data.data?.data || response.data.data || [];
 
 ---
 
-### **5. FIX RELATIONSHIP QUERIES (LOW PRIORITY)**
+### **5. FIX RELATIONSHIP QUERIES (MEDIUM PRIORITY)**
 
 #### **Problem:**
-- Some queries assume non-existent relationships
-- Missing proper relationship handling
+- API controllers not using existing relationship tables properly
+- Missing proper relationship loading
+- Frontend not handling relationship data correctly
 
 #### **Step-by-Step Fix:**
 
-**Step 5.1: Remove Non-Existent Relationship Queries**
+**Step 5.1: Fix API Controllers to Use Existing Tables**
 ```bash
-# Remove all references to:
-# - client_task table (doesn't exist)
-# - project_client table (doesn't exist)
-# - checklist_answered table (doesn't exist)
+# Files to update:
+# - app/Http/Controllers/Api/TaskController.php
+# - app/Http/Controllers/Api/ProjectController.php
+# - app/Http/Controllers/Api/ClientController.php
 ```
 
-**Step 5.2: Use Correct Relationship Queries**
+**TaskController - Load Client Relationships:**
+```php
+// Change from:
+$task = Task::with(['status', 'priority', 'project'])->find($id);
+
+// To:
+$task = Task::with([
+    'status', 
+    'priority', 
+    'project',
+    'client_task.client',  // ✅ Use existing client_task table
+    'checklist_answereds'  // ✅ Use existing checklist_answereds table
+])->find($id);
+```
+
+**ProjectController - Load Client Relationships:**
+```php
+// Change from:
+$project = Project::with(['status', 'priority'])->find($id);
+
+// To:
+$project = Project::with([
+    'status', 
+    'priority',
+    'client_project.client'  // ✅ Use existing client_project table
+])->find($id);
+```
+
+**Step 5.2: Fix Data Saving to Use Pivot Tables**
 ```bash
-# For tasks and users:
-SELECT * FROM tasks 
-LEFT JOIN task_user ON tasks.id = task_user.task_id
-LEFT JOIN users ON task_user.user_id = users.id
+# When creating/updating tasks and projects:
+```
 
-# For projects and users:
-SELECT * FROM projects 
-LEFT JOIN project_user ON projects.id = project_user.project_id
-LEFT JOIN users ON project_user.user_id = users.id
+**Task Creation/Update:**
+```php
+// Save client relationships
+if ($request->has('client_ids')) {
+    $task->client_task()->sync($request->client_ids);
+}
 
-# For clients (no direct relationships):
-# Use portfolios table for client-task/project relationships
+// Save checklist answers
+if ($request->has('checklist_answers')) {
+    foreach ($request->checklist_answers as $checklistId => $answer) {
+        $task->checklist_answereds()->updateOrCreate(
+            ['checklist_id' => $checklistId],
+            ['checklist_answer' => $answer, 'answer_by' => Auth::id()]
+        );
+    }
+}
+```
+
+**Project Creation/Update:**
+```php
+// Save client relationships
+if ($request->has('client_ids')) {
+    $project->client_project()->sync($request->client_ids);
+}
+```
+
+**Step 5.3: Update Frontend Interfaces**
+```bash
+# Files to update:
+# - vendorconnect-frontend/src/types/task.ts
+# - vendorconnect-frontend/src/types/project.ts
+# - vendorconnect-frontend/src/types/client.ts
+```
+
+**Task Interface:**
+```typescript
+interface Task {
+  // ... existing fields
+  client_task?: {
+    client: {
+      id: number;
+      first_name: string;
+      last_name: string;
+    }
+  }[];
+  checklist_answereds?: {
+    checklist_id: number;
+    checklist_answer: string;
+    answer_by: number;
+  }[];
+}
+```
+
+**Project Interface:**
+```typescript
+interface Project {
+  // ... existing fields
+  client_project?: {
+    client: {
+      id: number;
+      first_name: string;
+      last_name: string;
+    }
+  }[];
+}
+```
+
+**Step 5.4: Update Frontend Display Logic**
+```bash
+# Update how client relationships are displayed:
+```
+
+**Task Display:**
+```typescript
+// Change from:
+{task.client?.name}
+
+// To:
+{task.client_task?.map(ct => ct.client.first_name + ' ' + ct.client.last_name).join(', ')}
+```
+
+**Project Display:**
+```typescript
+// Change from:
+{project.client?.name}
+
+// To:
+{project.client_project?.map(cp => cp.client.first_name + ' ' + cp.client.last_name).join(', ')}
 ```
 
 ---
@@ -246,14 +391,18 @@ LEFT JOIN users ON project_user.user_id = users.id
 3. Update API controllers
 
 ### **Phase 3: Frontend Fixes (Day 3)**
-1. Fix dropdown issues
+1. Fix dropdown issues (form data initialization)
 2. Fix data type mismatches
 3. Test all forms
 
-### **Phase 4: Cleanup (Day 4)**
+### **Phase 4: Relationship Fixes (Day 4)**
+1. Fix API controllers to use existing tables
+2. Update frontend interfaces for relationships
+3. Test relationship functionality
+
+### **Phase 5: Cleanup (Day 5)**
 1. Remove workspace_id from API responses
-2. Fix remaining relationship queries
-3. Final testing
+2. Final testing of all functionality
 
 ---
 
@@ -271,11 +420,14 @@ LEFT JOIN users ON project_user.user_id = users.id
 - [ ] Task edit dropdowns populate correctly
 - [ ] Task status/priority/project selections work
 - [ ] Task list shows proper data
+- [ ] Task-client relationships work
+- [ ] Task checklist answers work
 
 ### **Project Functionality:**
 - [ ] Project creation works
 - [ ] Project edit dropdowns populate correctly
 - [ ] Project list shows proper data
+- [ ] Project-client relationships work
 
 ### **User Functionality:**
 - [ ] User creation works
@@ -286,6 +438,7 @@ LEFT JOIN users ON project_user.user_id = users.id
 - [ ] No workspace_id in responses
 - [ ] Consistent field names
 - [ ] Proper data structures
+- [ ] Relationship data included
 
 ---
 
@@ -317,12 +470,16 @@ git push origin backup-before-fixes
 - [ ] All project operations work correctly
 - [ ] All dropdowns populate correctly
 - [ ] No "Unnamed" entities appear
+- [ ] Client-task relationships work
+- [ ] Client-project relationships work
+- [ ] Checklist answers work
 
 ### **Technical:**
 - [ ] No workspace_id in API responses
 - [ ] Consistent field naming
 - [ ] Proper data types
 - [ ] Clean code structure
+- [ ] Existing tables used correctly
 
 ### **Performance:**
 - [ ] No unnecessary database queries
@@ -333,7 +490,8 @@ git push origin backup-before-fixes
 
 ## NOTES
 
-- **Focus on real issues** - Don't fix fabricated problems
+- **Use existing tables** - Don't remove tables that exist
+- **Fix relationships** - Use client_task, client_project, checklist_answereds tables
 - **Test thoroughly** - Each change should be tested
 - **Document changes** - Update documentation as you go
 - **Keep it simple** - Don't over-engineer solutions
