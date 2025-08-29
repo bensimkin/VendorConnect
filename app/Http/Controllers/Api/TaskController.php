@@ -36,8 +36,13 @@ class TaskController extends BaseController
             
             // Role-based filtering
             if ($user->hasRole('Requester')) {
-                // Requesters only see tasks they created
-                $query->where('created_by', $user->id);
+                // Requesters see tasks they created OR are assigned to
+                $query->where(function($q) use ($user) {
+                    $q->where('created_by', $user->id)
+                      ->orWhereHas('users', function($subQ) use ($user) {
+                          $subQ->where('users.id', $user->id);
+                      });
+                });
             } elseif ($user->hasRole('tasker')) {
                 // Taskers only see tasks they're assigned to
                 $query->whereHas('users', function ($q) use ($user) {
