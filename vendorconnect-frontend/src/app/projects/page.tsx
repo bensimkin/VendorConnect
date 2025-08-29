@@ -16,7 +16,9 @@ interface Project {
   description?: string;
   clients?: Array<{
     id: number;
-    name: string;
+    first_name?: string;
+    last_name?: string;
+    name?: string;
   }>;
   status?: {
     id: number;
