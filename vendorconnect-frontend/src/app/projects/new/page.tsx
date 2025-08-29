@@ -18,6 +18,8 @@ import { useProjectSettings } from '@/hooks/use-project-settings';
 interface Client {
   id: number;
   name: string;
+  first_name?: string;
+  last_name?: string;
   company?: string;
 }
 
