@@ -225,8 +225,8 @@ export default function EditTaskPage() {
       setProjects(projectsRes.data.data || []);
       setTaskTypes(taskTypesRes.data.data || []);
       setTemplates(templatesRes.data.data || []);
-      setStatuses(statusesRes.data.data || []);
-      setPriorities(prioritiesRes.data.data || []);
+      setStatuses(statusesRes.data.data || statusesRes.data || []);
+      setPriorities(prioritiesRes.data.data || prioritiesRes.data || []);
 
       // Load template questions if template exists
       if (taskData.template?.id) {
