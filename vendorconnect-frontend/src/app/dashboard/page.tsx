@@ -53,9 +53,20 @@ interface DashboardData {
     description?: string;
     note?: string;
     deliverable_quantity?: number;
-      status?: { title: string };  // FIXED: Use primary database field
-  priority?: { title: string };  // FIXED: Use primary database field
+    status?: { title: string };  // FIXED: Use primary database field
+    priority?: { title: string };  // FIXED: Use primary database field
     project?: { title: string };
+    clients?: Array<{
+      id: number;
+      first_name?: string;
+      last_name?: string;
+      name?: string;
+    }>;
+    users?: Array<{
+      id: number;
+      first_name: string;
+      last_name: string;
+    }>;
     template?: {
       id: number;
       title: string;
@@ -427,6 +438,14 @@ export default function DashboardPage() {
                       <p className="text-xs text-muted-foreground">
                         {task.status ? `Status: ${task.status.title}` : 'No status'} •{' '}
                         {new Date(task.created_at).toLocaleDateString()}
+                        {task.clients && task.clients.length > 0 && (
+                          <span> • Client: {task.clients[0].first_name && task.clients[0].last_name ? 
+                            `${task.clients[0].first_name} ${task.clients[0].last_name}` : 
+                            task.clients[0].name || 'Unknown'}</span>
+                        )}
+                        {task.users && task.users.length > 0 && (
+                          <span> • Tasker: {task.users[0].first_name} {task.users[0].last_name}</span>
+                        )}
                       </p>
                       {task.note && (
                         <p className="text-xs text-muted-foreground line-clamp-1">
