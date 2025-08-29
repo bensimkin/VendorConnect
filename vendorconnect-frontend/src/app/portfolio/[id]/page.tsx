@@ -23,6 +23,7 @@ import {
   Plus
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import getFileUrl from '@/lib/file-utils';
 
 interface Portfolio {
   id: number;
@@ -84,7 +85,8 @@ export default function PortfolioDetailPage() {
     try {
       setLoading(true);
       const response = await apiClient.get(`/portfolios/${portfolioId}`);
-      setPortfolio(response.data.data);
+      const portfolioData = response.data.data?.data || response.data.data || response.data;
+      setPortfolio(portfolioData);
     } catch (error) {
       console.error('Failed to fetch portfolio:', error);
       toast.error('Failed to load portfolio details');
@@ -340,7 +342,7 @@ export default function PortfolioDetailPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => window.open(file.original_url, '_blank')}
+                            onClick={() => window.open(getFileUrl(file.original_url), '_blank')}
                           >
                             <Eye className="h-4 w-4 mr-1" />
                             View
@@ -350,7 +352,7 @@ export default function PortfolioDetailPage() {
                             size="sm"
                             onClick={() => {
                               const link = document.createElement('a');
-                              link.href = file.original_url;
+                              link.href = getFileUrl(file.original_url);
                               link.download = file.file_name;
                               link.click();
                             }}
