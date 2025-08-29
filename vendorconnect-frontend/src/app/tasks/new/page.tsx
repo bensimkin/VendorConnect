@@ -526,7 +526,7 @@ export default function NewTaskPage() {
                   >
                     {statuses.map((status) => (
                       <option key={status.id} value={status.id}>
-                        {status.name}
+                        {status.title}
                       </option>
                     ))}
                   </select>
@@ -542,7 +542,7 @@ export default function NewTaskPage() {
                   >
                     {priorities.map((priority) => (
                       <option key={priority.id} value={priority.id}>
-                        {priority.name}
+                        {priority.title}
                       </option>
                     ))}
                   </select>

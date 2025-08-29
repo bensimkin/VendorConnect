@@ -242,7 +242,7 @@ export default function TaskerDashboardPage() {
                           <h4 className="font-medium text-sm">{task.title}</h4>
                           {task.status && (
                             <Badge variant="secondary" className="text-xs">
-                              {task.status.name}
+                              {task.status.title}
                             </Badge>
                           )}
                         </div>
@@ -281,7 +281,7 @@ export default function TaskerDashboardPage() {
                         )}
                       </div>
                       {task.priority && (
-                        <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority.name)}`} />
+                        <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority.title)}`} />
                       )}
                     </div>
                   ))
@@ -316,7 +316,7 @@ export default function TaskerDashboardPage() {
                       </div>
                       {task.priority && (
                         <Badge variant="secondary" className="text-xs">
-                          {task.priority.name}
+                          {task.priority.title}
                         </Badge>
                       )}
                     </div>
