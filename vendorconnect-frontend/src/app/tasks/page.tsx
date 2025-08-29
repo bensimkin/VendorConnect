@@ -18,11 +18,11 @@ interface Task {
   deliverable_quantity?: number;
   status?: {
     id: number;
-    name: string;
+    title: string;  // FIXED: Use primary database field
   };
   priority?: {
     id: number;
-    name: string;
+    title: string;  // FIXED: Use primary database field
   };
   users?: Array<{
     id: number;
