@@ -399,14 +399,24 @@ export default function EditTaskPage() {
     );
   }
 
+  // Debug: Check if data is loaded
+  console.log('Loading state:', loading);
+  console.log('Task loaded:', !!task);
+  console.log('Statuses loaded:', statuses.length > 0);
+  console.log('Priorities loaded:', priorities.length > 0);
+  console.log('Projects loaded:', projects.length > 0);
+
   // Debug: Log current state before render
   console.log('=== RENDERING EDIT TASK PAGE ===');
   console.log('formData.status_id:', formData.status_id, 'type:', typeof formData.status_id);
   console.log('formData.priority_id:', formData.priority_id, 'type:', typeof formData.priority_id);
   console.log('formData.project_id:', formData.project_id, 'type:', typeof formData.project_id);
-  console.log('statuses array:', statuses);
-  console.log('priorities array:', priorities);
-  console.log('projects array:', projects);
+  console.log('statuses array length:', statuses.length);
+  console.log('priorities array length:', priorities.length);
+  console.log('projects array length:', projects.length);
+  console.log('statuses with ID 21:', statuses.find(s => s.id === 21));
+  console.log('priorities with ID 3:', priorities.find(p => p.id === 3));
+  console.log('projects with ID 7:', projects.find(p => p.id === 7));
   console.log('=== END DEBUG ===');
 
   // Test API calls
