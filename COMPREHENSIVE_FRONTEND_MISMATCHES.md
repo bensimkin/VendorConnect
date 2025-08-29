@@ -769,3 +769,91 @@ WHERE user_id = ?;
 1. **Dashboard Pages** - Mostly fixed
 2. **Template Pages** - Mostly correct
 3. **User List Page** - Mostly correct
+
+## CRITICAL SQL/API/FRONTEND INCONSISTENCIES FOUND
+
+### 1. CLIENT TABLE FIELD MISMATCH (CRITICAL)
+**Database Schema Documentation**: ❌ **WRONG** - Shows `name` field
+**Actual Database**: ✅ **CORRECT** - Has `first_name` and `last_name` fields
+**API Controller**: ❌ **WRONG** - Uses `'name'` field in search and creation
+**Client Model**: ✅ **CORRECT** - Has `first_name` and `last_name` in `$fillable`
+**Frontend**: ❌ **WRONG** - Expects `name` field
+
+**Impact**: 
+- Client creation fails (tries to insert into non-existent `name` field)
+- Client search doesn't work (searches non-existent `name` field)
+- Frontend shows "Unnamed Client" everywhere
+
+**SQL Queries in Documentation**: ❌ **WRONG** - All show `first_name, last_name` but should match actual API usage
+
+### 2. DATABASE SCHEMA DOCUMENTATION OUTDATED
+**Issue**: The `database_schema.sql` file shows the original migration structure, not the current database state
+**Impact**: All SQL queries in this documentation are based on outdated schema
+
+### 3. API CONTROLLER INCONSISTENCIES
+**ClientController Issues**:
+- Line 28: `$q->where('name', 'like', "%{$search}%")` - Field doesn't exist
+- Line 89: `'name' => 'required|string|max:255'` - Validation for non-existent field
+- Line 108: `'name' => $request->name` - Tries to insert non-existent field
+
+### 4. FRONTEND INTERFACE MISMATCHES
+**Client Interface**: Expects `name` field but API returns `first_name` + `last_name`
+**Impact**: Shows "Unnamed Client" in all client displays
+
+## CORRECTED SQL QUERIES (BASED ON ACTUAL DATABASE)
+
+### Client Queries (Corrected)
+```sql
+-- Client list (corrected)
+SELECT * FROM clients 
+ORDER BY clients.created_at DESC
+LIMIT 15 OFFSET 0;
+
+-- Client search (corrected)
+SELECT * FROM clients 
+WHERE first_name LIKE ? OR last_name LIKE ? OR company LIKE ?
+ORDER BY clients.created_at DESC;
+
+-- Client creation (corrected)
+INSERT INTO clients (
+    first_name, last_name, email, phone, company, address, 
+    status, city, state, country, zip, dob, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW());
+
+-- Client update (corrected)
+UPDATE clients SET 
+    first_name = ?, last_name = ?, email = ?, phone = ?, company = ?,
+    address = ?, status = ?, city = ?, state = ?, country = ?, 
+    zip = ?, dob = ?, updated_at = NOW()
+WHERE id = ?;
+```
+
+## IMMEDIATE FIXES REQUIRED
+
+### 1. Fix ClientController
+- Update search query to use `first_name` and `last_name`
+- Update validation to use `first_name` and `last_name`
+- Update client creation to use `first_name` and `last_name`
+
+### 2. Fix Frontend Interfaces
+- Update all client interfaces to use `first_name` + `last_name`
+- Remove `name` field expectations
+
+### 3. Update Documentation
+- Fix `database_schema.sql` to reflect actual database structure
+- Update all SQL queries in this document to match actual API usage
+
+### 4. Test Client CRUD Operations
+- Verify client creation works with correct fields
+- Verify client search works with correct fields
+- Verify frontend displays client names correctly
+
+## SUMMARY OF CRITICAL FINDINGS
+
+1. **Database Schema Documentation**: Completely outdated - shows wrong field structure
+2. **API Controller**: Uses non-existent `name` field - will cause errors
+3. **Frontend**: Expects wrong field structure - shows "Unnamed Client"
+4. **SQL Queries**: All based on wrong schema - need complete rewrite
+5. **Client Model**: Correct but not used by controller
+
+**Priority**: CRITICAL - Client functionality is completely broken due to field mismatches
