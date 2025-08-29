@@ -385,6 +385,13 @@ export default function EditTaskPage() {
     );
   }
 
+  // Debug: Log current state before render
+  console.log('Rendering edit task page:');
+  console.log('formData:', formData);
+  console.log('statuses:', statuses);
+  console.log('priorities:', priorities);
+  console.log('projects:', projects);
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -428,9 +435,6 @@ export default function EditTaskPage() {
                     onChange={(e) => setFormData({ ...formData, status_id: e.target.value })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
-                    {/* Debug: Show current value */}
-                    {console.log('Status dropdown - formData.status_id:', formData.status_id)}
-                    {console.log('Status dropdown - statuses:', statuses)}
                     <option value="">Select Status</option>
                     {statuses.map((status) => (
                       <option key={status.id} value={status.id.toString()}>
