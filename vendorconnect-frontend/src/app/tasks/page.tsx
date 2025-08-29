@@ -122,7 +122,7 @@ export default function TasksPage() {
   const filteredTasks = tasks.filter(task => {
     const matchesStatus = 
       selectedStatus === 'all' || 
-      task.status?.name === selectedStatus;
+      task.status?.title === selectedStatus;
     
     return matchesStatus;
   });
