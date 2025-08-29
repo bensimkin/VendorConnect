@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\BaseController;
 use App\Models\Task;
 use App\Models\TaskDeliverable;
+use App\Models\Portfolio;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -84,6 +85,36 @@ class TaskDeliverableController extends BaseController
                 foreach ($request->file('files') as $file) {
                     $deliverable->addMedia($file)
                         ->toMediaCollection('deliverable-files', 'public');
+                }
+            }
+
+            // Create portfolio item automatically when deliverable is uploaded
+            $task = Task::find($taskId);
+            if ($task && $task->project && $task->project->clients->count() > 0) {
+                $client = $task->project->clients->first();
+                
+                // Check if portfolio item already exists for this task
+                $existingPortfolio = Portfolio::where('task_id', $taskId)->first();
+                
+                if (!$existingPortfolio) {
+                    $portfolio = Portfolio::create([
+                        'client_id' => $client->id,
+                        'task_id' => $taskId,
+                        'project_id' => $task->project_id,
+                        'title' => $deliverable->title,
+                        'description' => $deliverable->description,
+                        'deliverable_type' => $deliverable->type,
+                        'status' => 'completed',
+                        'completed_at' => now(),
+                        'created_by' => Auth::user()->id,
+                    ]);
+
+                    // Copy media files from deliverable to portfolio
+                    $deliverableMedia = $deliverable->getMedia('deliverable-files');
+                    foreach ($deliverableMedia as $media) {
+                        $portfolio->addMedia($media->getPath())
+                            ->toMediaCollection('portfolio-media');
+                    }
                 }
             }
 
@@ -168,6 +199,24 @@ class TaskDeliverableController extends BaseController
                 foreach ($request->file('files') as $file) {
                     $deliverable->addMedia($file)
                         ->toMediaCollection('deliverable-files', 'public');
+                }
+            }
+
+            // Update portfolio item if it exists
+            $existingPortfolio = Portfolio::where('task_id', $taskId)->first();
+            if ($existingPortfolio) {
+                $existingPortfolio->update([
+                    'title' => $deliverable->title,
+                    'description' => $deliverable->description,
+                    'deliverable_type' => $deliverable->type,
+                ]);
+
+                // Add new media files to portfolio
+                if ($request->hasFile('files')) {
+                    foreach ($request->file('files') as $file) {
+                        $existingPortfolio->addMedia($file)
+                            ->toMediaCollection('portfolio-media');
+                    }
                 }
             }
 
