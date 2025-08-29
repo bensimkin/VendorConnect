@@ -646,51 +646,7 @@ export default function TaskDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Template Information */}
-            {task.template_id && (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    <CardTitle>Template Information</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Template ID</Label>
-                      <p className="text-sm text-muted-foreground">
-                        #{task.template_id}
-                      </p>
-                    </div>
-                    {task.template_deliverable_quantity && (
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Deliverable Quantity</Label>
-                        <p className="text-sm text-muted-foreground">
-                          {task.template_deliverable_quantity}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  {task.template_standard_brief && (
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Standard Brief</Label>
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {task.template_standard_brief}
-                      </p>
-                    </div>
-                  )}
-                  {task.template_description && (
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Template Description</Label>
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {task.template_description}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+
 
             {/* Notes */}
             {task.note && (
@@ -810,17 +766,7 @@ export default function TaskDetailPage() {
               </Card>
             )}
             
-            {/* Debug info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Debug Info</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>Checklist items count: {checklistItems.length}</p>
-                <p>Checklist completed state: {JSON.stringify(checklistCompleted)}</p>
-                <p>Task template ID: {task?.template_id}</p>
-              </CardContent>
-            </Card>
+
 
 
 
