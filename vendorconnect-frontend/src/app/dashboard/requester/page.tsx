@@ -24,8 +24,8 @@ interface RequesterDashboardData {
     description?: string;
     note?: string;
     deliverable_quantity?: number;
-      status?: { name: string };
-  priority?: { name: string };
+      status?: { title: string };  // FIXED: Use primary database field
+  priority?: { title: string };  // FIXED: Use primary database field
     end_date?: string;
     project?: { title: string };
     users?: Array<{ first_name: string; last_name: string }>;
