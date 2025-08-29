@@ -430,6 +430,9 @@ priority_id: taskData?.priority?.id || null,    // ✅ Proper null handling
 project_id: taskData?.project?.id || null,      // ✅ Proper null handling
 ```
 
+**What this fixes:**
+The API returns nested relationship objects (like `task.status` with `{id: 1, title: "In Progress"}`), but the frontend was trying to access direct fields (like `task.status_id`) that don't exist in the API response. This change correctly maps the nested relationship data to the form fields.
+
 **Step 4.4: Fix User Assignment Loading**
 ```bash
 # Change from:
@@ -439,14 +442,20 @@ user_ids: taskData?.assigned_to?.id ? [taskData.assigned_to.id] : [],
 user_ids: taskData?.users?.map(user => user.id) || [],
 ```
 
+**What this fixes:**
+The API returns an array of users (`task.users`) for the many-to-many relationship, but the frontend was expecting a single assigned user (`task.assigned_to`). This change correctly maps the array of users to the form's user_ids array.
+
 **Step 4.5: Fix Client Assignment Loading**
 ```bash
 # Change from:
-client_ids: taskData?.client?.id ? [taskData.client.id] : [],
+client_ids: taskData?.clients?.id ? [taskData.client.id] : [],
 
 # To:
 client_ids: taskData?.clients?.map(client => client.id) || [],
 ```
+
+**What this fixes:**
+The API returns an array of clients (`task.clients`) for the many-to-many relationship, but the frontend was expecting a single client (`task.client`). This change correctly maps the array of clients to the form's client_ids array.
 
 **Step 4.6: Fix Date Field Loading**
 ```bash
@@ -457,6 +466,9 @@ end_date: taskData?.due_date ? taskData.due_date.split('T')[0] : '',
 end_date: taskData?.end_date ? taskData.end_date.split('T')[0] : '',
 ```
 
+**What this fixes:**
+The API returns the date field as `end_date`, but the frontend was looking for `due_date`. This change correctly maps the date field from the API response.
+
 **Step 4.7: Fix Boolean Field Loading**
 ```bash
 # Change from:
@@ -465,6 +477,9 @@ close_deadline: taskData?.close_deadline || false,
 # To:
 close_deadline: taskData?.close_deadline === 1,
 ```
+
+**What this fixes:**
+The API returns `close_deadline` as a number (0 or 1), but the frontend was treating it as a boolean. This change correctly converts the numeric value to a boolean for the checkbox.
 
 **Step 4.8: Apply Same Fixes to New Task Form**
 ```bash
@@ -832,6 +847,61 @@ Tasks that are assigned to projects are displaying "Unnamed Project" instead of 
 - The project management functionality is broken
 - Users can't understand the relationship between tasks and projects
 - This makes project organization and management very difficult
+
+---
+
+### **7. CRITICAL DATA FLOW MISMATCH - API RESPONSE vs FRONTEND EXPECTATION (HIGH PRIORITY)**
+
+#### **Problem Explanation:**
+There is a fundamental mismatch between what the API returns and what the frontend expects for task data. This is the root cause of the blank dropdowns in the edit task page.
+
+**What's happening:**
+- **API Response Structure**: The TaskController::show method returns nested relationship objects
+- **Frontend Expectation**: The frontend code expects direct field access
+- **Result**: Dropdowns remain blank because the data mapping is incorrect
+
+**Specific Mismatches Identified:**
+
+**Status Dropdown:**
+- **API Returns**: `task.status: { id: 1, title: "In Progress" }`
+- **Frontend Expected**: `task.status_id: 1`
+- **Fix Applied**: Changed to `taskData?.status?.id || null`
+
+**Priority Dropdown:**
+- **API Returns**: `task.priority: { id: 2, title: "High" }`
+- **Frontend Expected**: `task.priority_id: 2`
+- **Fix Applied**: Changed to `taskData?.priority?.id || null`
+
+**Project Dropdown:**
+- **API Returns**: `task.project: { id: 3, title: "Website Redesign" }`
+- **Frontend Expected**: `task.project_id: 3`
+- **Fix Applied**: Changed to `taskData?.project?.id || null`
+
+**Users Assignment:**
+- **API Returns**: `task.users: [{ id: 1, first_name: "John", last_name: "Doe" }]`
+- **Frontend Expected**: `task.assigned_to: { id: 1, first_name: "John", last_name: "Doe" }`
+- **Fix Applied**: Changed to `taskData?.users?.map(user => user.id) || []`
+
+**Clients Assignment:**
+- **API Returns**: `task.clients: [{ id: 1, first_name: "Jane", last_name: "Smith" }]`
+- **Frontend Expected**: `task.client: { id: 1, name: "Jane Smith" }`
+- **Fix Applied**: Changed to `taskData?.clients?.map(client => client.id) || []`
+
+**Date Field:**
+- **API Returns**: `task.end_date: "2024-01-15"`
+- **Frontend Expected**: `task.due_date: "2024-01-15"`
+- **Fix Applied**: Changed to `taskData?.end_date`
+
+**Task Type:**
+- **API Returns**: `task.taskType: { id: 1, task_type: "Design" }`
+- **Frontend Expected**: `task.task_type: { id: 1, task_type: "Design" }`
+- **Fix Applied**: Changed to `taskData?.taskType?.id || null`
+
+**Why this matters:**
+- This was the root cause of all blank dropdown issues
+- Users couldn't see current values in edit forms
+- Task management was severely impaired
+- The fix resolves the core data mapping problem
 
 #### **Step-by-Step Fix:**
 
