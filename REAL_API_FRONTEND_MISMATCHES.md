@@ -306,7 +306,48 @@ checklist_answers?: Array<{
 
 **MISMATCH:** Frontend missing `id`, `task_id`, `checklist_id`, `answer_by`, `created_at`, `updated_at`, and `notes`/`item_index` in the answer object
 
-## 7. Dropdown Value Type Mismatch (FIXED)
+## 7. Client Name Field Mismatch
+
+### API Response for Clients:
+```json
+{
+  "id": 83,
+  "first_name": "John",
+  "last_name": "Marketing",
+  "company": "Acme Corporation",
+  "email": "test@example.com",
+  // ... other fields
+}
+```
+
+### Frontend Interface:
+```typescript
+clients?: Array<{
+  id: number;
+  name: string;  // ❌ MISMATCH: This field doesn't exist in API
+}>;
+```
+
+### Frontend Usage (from tasks/page.tsx):
+```typescript
+{task.clients.map(client => client.name || 'Unnamed Client').join(', ')}
+```
+
+### MISMATCH:
+- **API**: Clients have `first_name` and `last_name` fields
+- **Frontend**: Expects a `name` field that doesn't exist
+- **Result**: `client.name` is `undefined`, shows "Unnamed Client"
+
+### Frontend Helper Function (in some files):
+```typescript
+const getClientDisplayName = (client: Client) => {
+  return client.name || `${client.first_name} ${client.last_name}`.trim();
+};
+```
+
+**PROBLEM**: The helper function exists but the interface still expects `name` field, and many places directly access `client.name`.
+
+## 8. Dropdown Value Type Mismatch (FIXED)
 
 ### Issue Found:
 - **Form data**: Uses numbers (`status_id: 20`)
@@ -327,6 +368,8 @@ checklist_answers?: Array<{
 6. **❌ UNFIXED**: `checklist_answers` structure mismatch
 7. **❌ UNFIXED**: `question_answers` structure mismatch
 8. **❌ UNFIXED**: Missing fields in nested objects (priority, project, task_type)
+9. **❌ UNFIXED**: Client name field mismatch (`name` vs `first_name` + `last_name`)
+10. **❌ UNFIXED**: Frontend accessing non-existent `client.name` field
 
 ## Recommendations:
 
@@ -337,4 +380,6 @@ checklist_answers?: Array<{
 5. Update `checklist_answers` interface to match API structure
 6. Update `question_answers` interface to match API structure
 7. Add missing fields to nested object interfaces (priority, project, task_type)
-8. Consider adding missing fields to interfaces for completeness
+8. Fix client name field mismatch - remove `name` from interfaces, use `first_name` + `last_name`
+9. Update all frontend code to use `getClientDisplayName()` helper instead of `client.name`
+10. Consider adding missing fields to interfaces for completeness
