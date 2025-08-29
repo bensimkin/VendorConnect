@@ -39,11 +39,11 @@ interface Task {
   description?: string;
   status?: {
     id: number;
-    name: string;
+    title: string;  // FIXED: Use primary database field
   };
   priority?: {
     id: number;
-    name: string;
+    title: string;  // FIXED: Use primary database field
   };
   users?: Array<{
     id: number;
@@ -178,8 +178,7 @@ export default function ProjectManagementPage() {
     return projectTasks[project.id].filter((task: any) => {
       if (!task.end_date) return false;
       const endDate = new Date(task.end_date);
-      const isCompleted = task.status?.name?.toLowerCase() === 'completed' || 
-                         task.status?.title?.toLowerCase() === 'completed';
+      const isCompleted = task.status?.title?.toLowerCase() === 'completed';
       return endDate < now && !isCompleted;
     }).length;
   };
@@ -196,7 +195,7 @@ export default function ProjectManagementPage() {
     const overdueTasks = tasks.filter(task => {
       if (!task.end_date) return false;
       const endDate = new Date(task.end_date);
-      const isCompleted = task.status?.name?.toLowerCase() === 'completed';
+      const isCompleted = task.status?.title?.toLowerCase() === 'completed';
       return endDate < now && !isCompleted;
     }).length;
     
@@ -364,7 +363,7 @@ export default function ProjectManagementPage() {
                               onClick={() => router.push(`/tasks/${task.id}`)}
                             >
                               <div className="flex items-center gap-3">
-                                {getStatusIcon(task.status?.name)}
+                                {getStatusIcon(task.status?.title)}
                                 <div>
                                   <p className="font-medium text-sm">{task.title}</p>
                                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
