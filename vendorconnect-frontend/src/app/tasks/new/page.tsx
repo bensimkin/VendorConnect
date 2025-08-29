@@ -16,12 +16,12 @@ import { format } from 'date-fns';
 
 interface Status {
   id: number;
-  name: string;
+  title: string;  // FIXED: Use primary database field
 }
 
 interface Priority {
   id: number;
-  name: string;
+  title: string;  // FIXED: Use primary database field
 }
 
 interface User {
@@ -53,7 +53,7 @@ interface Template {
 
 interface TaskType {
   id: number;
-  name: string;
+  task_type: string;  // FIXED: Use primary database field
 }
 
 interface TemplateQuestion {
