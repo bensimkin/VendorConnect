@@ -76,6 +76,27 @@ interface DashboardData {
     };
     created_at: string;
   }>;
+  overdue_tasks: Array<{
+    id: number;
+    title: string;
+    description?: string;
+    end_date: string;
+    status?: { id: number; title: string };
+    priority?: { id: number; title: string };
+    project?: { id: number; title: string };
+    clients?: Array<{
+      id: number;
+      first_name?: string;
+      last_name?: string;
+      name?: string;
+    }>;
+    users?: Array<{
+      id: number;
+      first_name: string;
+      last_name: string;
+    }>;
+    created_at: string;
+  }>;
   user_activity: any[];
   task_trend: Array<{
     date: string;
@@ -353,6 +374,83 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Overdue Tasks */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-red-500" />
+                  Overdue Tasks
+                </CardTitle>
+                <CardDescription>Tasks that have passed their deadline and need immediate attention</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => router.push('/tasks')}>
+                View All Tasks
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {data?.overdue_tasks && data.overdue_tasks.length > 0 ? (
+                data.overdue_tasks.slice(0, 5).map((task, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-3 border border-red-200 rounded-lg bg-red-50">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-medium text-sm text-red-800">{task.title}</h4>
+                        {task.priority && (
+                          <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">
+                            {task.priority.title}
+                          </Badge>
+                        )}
+                        {task.status && (
+                          <Badge variant="secondary" className="text-xs">
+                            {task.status.title}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-red-600">
+                        <span>Due: {new Date(task.end_date).toLocaleDateString()}</span>
+                        <span>Overdue: {Math.ceil((new Date().getTime() - new Date(task.end_date).getTime()) / (1000 * 60 * 60 * 24))} days</span>
+                        {task.project && (
+                          <span>Project: {task.project.title}</span>
+                        )}
+                        {task.clients && task.clients.length > 0 && (
+                          <span>Client: {task.clients[0].first_name && task.clients[0].last_name ? 
+                            `${task.clients[0].first_name} ${task.clients[0].last_name}` : 
+                            task.clients[0].name || 'Unknown'}</span>
+                        )}
+                        {task.users && task.users.length > 0 && (
+                          <span>Assigned: {task.users[0].first_name} {task.users[0].last_name}</span>
+                        )}
+                      </div>
+                      {task.description && (
+                        <p className="text-xs text-red-600 line-clamp-1 mt-1">
+                          {task.description}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => router.push(`/tasks/${task.id}`)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      View
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <Clock className="h-12 w-12 text-green-400 mx-auto mb-4" />
+                  <p className="text-green-600 font-medium">No overdue tasks</p>
+                  <p className="text-sm text-muted-foreground">All tasks are on schedule!</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Project Management Overview */}
         {data?.project_management && data.project_management.length > 0 && (
