@@ -132,9 +132,9 @@ export default function TemplatesPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
-                      <CardTitle className="text-lg flex items-center gap-2">
+                      <CardTitle className="text-lg flex items-center gap-2 overflow-hidden">
                         <FileText className="h-5 w-5 text-muted-foreground" />
-                        {template.title}
+                        <span className="truncate">{template.title}</span>
                       </CardTitle>
                       {template.task_type && (
                         <CardDescription>
@@ -161,7 +161,7 @@ export default function TemplatesPage() {
                   </div>
                   
                   {/* Actions */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button
                       size="sm"
                       variant="outline"
