@@ -448,6 +448,12 @@ class DashboardController extends BaseController
                     ];
                 });
 
+            // Get task statistics for charts (filtered for requester's tasks)
+            $taskStatistics = $this->getRequesterTaskStatistics($user);
+            
+            // Get task completion trend for charts (filtered for requester's tasks)
+            $taskTrend = $this->getRequesterTaskCompletionTrend($user);
+
             $dashboardData = [
                 'overview' => [
                     'total_tasks' => $totalTasks,
@@ -459,11 +465,88 @@ class DashboardController extends BaseController
                 'recent_tasks' => $recentTasks,
                 'recent_projects' => $recentProjects,
                 'recent_deliverables' => $recentDeliverables,
+                'task_statistics' => $taskStatistics,
+                'task_trend' => $taskTrend,
             ];
 
             return $this->sendResponse($dashboardData, 'Requester dashboard data retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error retrieving requester dashboard data: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Get task statistics for requester (filtered for their tasks)
+     */
+    private function getRequesterTaskStatistics($user)
+    {
+        // Get completed status ID
+        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatusId = $completedStatus ? $completedStatus->id : null;
+        
+        // Base query for requester's tasks (created OR assigned)
+        $taskQuery = Task::where(function($query) use ($user) {
+            $query->where('created_by', $user->id)
+                  ->orWhereHas('users', function($q) use ($user) {
+                      $q->where('users.id', $user->id);
+                  });
+        });
+        
+        // Get status distribution
+        $stats = $taskQuery->select('status_id', DB::raw('count(*) as count'))
+            ->groupBy('status_id')
+            ->get();
+
+        $statusCounts = [];
+        foreach ($stats as $stat) {
+            $statusCounts[$stat->status_id] = $stat->count;
+        }
+
+        // Get completed this week
+        $completedThisWeek = $completedStatusId ? (clone $taskQuery)->where('status_id', $completedStatusId)
+            ->whereBetween('updated_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+            ->count() : 0;
+            
+        // Get overdue tasks
+        $overdue = (clone $taskQuery)->where('end_date', '<', Carbon::now())
+            ->where('status_id', '!=', $completedStatusId)
+            ->count();
+        
+        return [
+            'by_status' => $statusCounts,
+            'completed_this_week' => $completedThisWeek,
+            'overdue' => $overdue,
+        ];
+    }
+
+    /**
+     * Get task completion trend for requester (filtered for their tasks)
+     */
+    private function getRequesterTaskCompletionTrend($user)
+    {
+        // Get completed status ID
+        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatusId = $completedStatus ? $completedStatus->id : null;
+        
+        $trend = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $count = $completedStatusId ? Task::where(function($query) use ($user) {
+                    $query->where('created_by', $user->id)
+                          ->orWhereHas('users', function($q) use ($user) {
+                              $q->where('users.id', $user->id);
+                          });
+                })
+                ->where('status_id', $completedStatusId)
+                ->whereDate('updated_at', $date)
+                ->count() : 0;
+            
+            $trend[] = [
+                'date' => $date->format('Y-m-d'),
+                'completed_tasks' => $count,
+            ];
+        }
+
+        return $trend;
     }
 }

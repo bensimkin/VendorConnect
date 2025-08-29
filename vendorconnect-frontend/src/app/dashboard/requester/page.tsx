@@ -9,6 +9,31 @@ import { Badge } from '@/components/ui/badge';
 import apiClient from '@/lib/api-client';
 import { Activity, CheckCircle2, Clock, TrendingUp, AlertCircle, FileText, Calendar, User, Plus, FolderOpen } from 'lucide-react';
 import { format } from 'date-fns';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line, Doughnut } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface RequesterDashboardData {
   overview: {
@@ -51,6 +76,10 @@ interface RequesterDashboardData {
     completed_this_week: number;
     overdue: number;
   };
+  task_trend: Array<{
+    date: string;
+    completed_tasks: number;
+  }>;
   recent_deliverables: Array<{
     id: number;
     title: string;
@@ -139,6 +168,35 @@ export default function RequesterDashboardPage() {
   const calculateProgress = (completed: number, total: number) => {
     if (total === 0) return 0;
     return Math.round((completed / total) * 100);
+  };
+
+  // Chart data processing
+  const taskTrendData = {
+    labels: data?.task_trend?.map(t => format(new Date(t.date), 'MMM dd')) || [],
+    datasets: [
+      {
+        label: 'Tasks Completed',
+        data: data?.task_trend?.map(t => t.completed_tasks) || [],
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const taskCompletionData = {
+    labels: ['Completed', 'Pending', 'Overdue'],
+    datasets: [
+      {
+        data: [
+          data?.task_statistics?.by_status?.['17'] || 0, // Completed status ID
+          (data?.overview?.total_tasks || 0) - (data?.task_statistics?.by_status?.['17'] || 0) - (data?.task_statistics?.overdue || 0),
+          data?.task_statistics?.overdue || 0,
+        ],
+        backgroundColor: ['#10b981', '#3b82f6', '#ef4444'],
+        borderWidth: 0,
+      },
+    ],
   };
 
   if (loading) {
@@ -241,6 +299,66 @@ export default function RequesterDashboardPage() {
               <p className="text-xs text-muted-foreground">
                 Active projects
               </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <Card className="col-span-4">
+            <CardHeader>
+              <CardTitle>Task Completion Trend</CardTitle>
+              <CardDescription>Daily completed tasks over the last week</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {data?.task_trend && data.task_trend.length > 0 ? (
+                <Line 
+                  data={taskTrendData} 
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                    },
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                      },
+                    },
+                  }}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-64 text-muted-foreground">
+                  No trend data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="col-span-3">
+            <CardHeader>
+              <CardTitle>Task Status</CardTitle>
+              <CardDescription>Current task distribution</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(data?.overview?.total_tasks || 0) > 0 ? (
+                <Doughnut 
+                  data={taskCompletionData}
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      legend: {
+                        position: 'bottom',
+                      },
+                    },
+                  }}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-64 text-muted-foreground">
+                  No tasks to display
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
