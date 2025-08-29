@@ -214,11 +214,11 @@ export default function TasksPage() {
                 <CardContent>
                   <div className="space-y-3">
                     {/* Project */}
-                    {(task.project || task.project_title) && (
+                    {task.project && (
                       <div className="flex items-center gap-2 text-sm">
                         <Tag className="h-4 w-4 text-muted-foreground" />
                         <span className="truncate text-blue-600">
-                          {task.project?.title || (task as any).project_title || 'Unnamed Project'}
+                          {task.project.title || 'Unnamed Project'}
                         </span>
                       </div>
                     )}
