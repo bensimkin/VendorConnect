@@ -53,8 +53,13 @@ class ProjectController extends BaseController
                 });
             }
 
-            if ($request->has('status')) {
-                $query->where('status', $request->status);
+            if ($request->has('status_id')) {
+                $query->where('status_id', $request->status_id);
+            } elseif ($request->has('status')) {
+                // Fallback for status by title
+                $query->whereHas('status', function ($q) use ($request) {
+                    $q->where('title', 'like', "%{$request->status}%");
+                });
             }
 
             if ($request->has('user_id')) {
@@ -63,7 +68,12 @@ class ProjectController extends BaseController
                 });
             }
 
-            // No direct client relation in current schema
+            if ($request->has('client_id')) {
+                // Filter by client through project-client relationship
+                $query->whereHas('clients', function ($q) use ($request) {
+                    $q->where('clients.id', $request->client_id);
+                });
+            }
 
             // Apply sorting
             $sortBy = $request->get('sort_by', 'created_at');
