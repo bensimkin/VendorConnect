@@ -30,11 +30,11 @@ interface Task {
   task_type_id?: number;
   status?: {
     id: number;
-    title: string;  // FIXED: Use primary database field
+    title: string;
   };
   priority?: {
     id: number;
-    title: string;  // FIXED: Use primary database field
+    title: string;
   };
   assigned_to?: {
     id: number;
@@ -105,12 +105,12 @@ interface Template {
 
 interface Status {
   id: number;
-  title: string;  // FIXED: Use primary database field
+  title: string;
 }
 
 interface Priority {
   id: number;
-  title: string;  // FIXED: Use primary database field
+  title: string;
 }
 
 interface TemplateQuestion {
@@ -164,23 +164,17 @@ export default function EditTaskPage() {
 
   // Debug: Log form data changes
   useEffect(() => {
-    console.log('Form data changed:', formData);
   }, [formData]);
 
   useEffect(() => {
-    console.log('useEffect triggered with taskId:', taskId);
     fetchData();
   }, [taskId]);
 
   const fetchData = async () => {
-    console.log('fetchData function called');
     try {
-      console.log('Starting fetchData for taskId:', taskId);
-      console.log('Auth token:', localStorage.getItem('auth_token'));
       
       // Fetch task details
       const taskRes = await apiClient.get(`/tasks/${taskId}`);
-      console.log('Task API response:', taskRes.data);
       
       if (!taskRes.data || !taskRes.data.data) {
         console.error('Invalid API response structure:', taskRes);
@@ -188,24 +182,13 @@ export default function EditTaskPage() {
       }
       
       const taskData: Task = taskRes.data.data;
-      console.log('Task object:', taskData);
       
       if (!taskData) {
         throw new Error('Task not found');
       }
 
       setTask(taskData);
-      console.log('Form data being set:');
-      console.log('Task data:', taskData);
-      console.log('Status ID:', taskData?.status?.id);
-      console.log('Priority ID:', taskData?.priority?.id);
-      console.log('Project ID:', taskData?.project?.id);
       
-      console.log('Setting form data with taskData:', {
-        status_id: taskData?.status_id,
-        priority_id: taskData?.priority_id,
-        project_id: taskData?.project_id
-      });
       
       setFormData({
            title: taskData?.title || '',
@@ -222,11 +205,6 @@ export default function EditTaskPage() {
            deliverable_quantity: taskData?.deliverable_quantity || 1,
          });
          
-         console.log('Form data set to:', {
-           status_id: taskData?.status?.id || 0,
-           priority_id: taskData?.priority?.id || 0,
-           project_id: taskData?.project?.id || 0,
-         });
 
       // Fetch dropdown data
       const [usersRes, clientsRes, projectsRes, taskTypesRes, templatesRes, statusesRes, prioritiesRes] = await Promise.all([
@@ -238,21 +216,14 @@ export default function EditTaskPage() {
         apiClient.get('/statuses'),
         apiClient.get('/priorities'),
       ]);
-
-      console.log('Dropdown data loaded:');
-      console.log('Statuses:', statusesRes.data.data);
-      console.log('Priorities:', prioritiesRes.data.data);
-      console.log('Projects:', projectsRes.data.data);
-      console.log('Projects length:', projectsRes.data.data?.length);
-      console.log('First project:', projectsRes.data.data?.[0]);
       
-      setUsers(usersRes.data.data || []);
-      setClients(clientsRes.data.data || []);
-      setProjects(projectsRes.data.data || []);
+      setUsers(usersRes.data.data?.data || usersRes.data.data || []);
+      setClients(clientsRes.data.data?.data || clientsRes.data.data || []);
+      setProjects(projectsRes.data.data?.data || projectsRes.data.data || []);
       setTaskTypes(taskTypesRes.data.data || []);
       setTemplates(templatesRes.data.data || []);
-      setStatuses(statusesRes.data.data || []);
-      setPriorities(prioritiesRes.data.data || []);
+      setStatuses(statusesRes.data.data?.data || statusesRes.data.data || []);
+      setPriorities(prioritiesRes.data.data?.data || prioritiesRes.data.data || []);
 
       // Load template questions if template exists
       if (taskData.template?.id) {
@@ -321,20 +292,21 @@ export default function EditTaskPage() {
 
     setSaving(true);
     try {
-      const payload = {
+      const payload: Record<string, any> = {
         title: formData.title,
         description: formData.description,
         note: formData.note,
-        status_id: formData.status_id || null,
-        priority_id: formData.priority_id || null,
         user_ids: formData.user_ids,
         client_ids: formData.client_ids,
-        project_id: formData.project_id || null,
         end_date: formData.end_date,
-        task_type_id: formData.task_type_id || null,
         close_deadline: formData.close_deadline,
         deliverable_quantity: formData.deliverable_quantity,
       };
+
+      if (formData.status_id) payload.status_id = formData.status_id;
+      if (formData.priority_id) payload.priority_id = formData.priority_id;
+      if (formData.project_id) payload.project_id = formData.project_id;
+      if (formData.task_type_id) payload.task_type_id = formData.task_type_id;
 
       await apiClient.put(`/tasks/${taskId}`, payload);
       toast.success('Task updated successfully');
@@ -400,43 +372,21 @@ export default function EditTaskPage() {
   }
 
   // Debug: Check if data is loaded
-  console.log('Loading state:', loading);
-  console.log('Task loaded:', !!task);
-  console.log('Statuses loaded:', statuses.length > 0);
-  console.log('Priorities loaded:', priorities.length > 0);
-  console.log('Projects loaded:', projects.length > 0);
 
   // Debug: Log current state before render
-  console.log('=== RENDERING EDIT TASK PAGE ===');
-  console.log('formData.status_id:', formData.status_id, 'type:', typeof formData.status_id);
-  console.log('formData.priority_id:', formData.priority_id, 'type:', typeof formData.priority_id);
-  console.log('formData.project_id:', formData.project_id, 'type:', typeof formData.project_id);
-  console.log('statuses array length:', statuses.length);
-  console.log('priorities array length:', priorities.length);
-  console.log('projects array length:', projects.length);
-  console.log('statuses with ID 21:', statuses.find(s => s.id === 21));
-  console.log('priorities with ID 3:', priorities.find(p => p.id === 3));
-  console.log('projects with ID 7:', projects.find(p => p.id === 7));
-  console.log('=== END DEBUG ===');
 
   // Test API calls
   const testAPIs = async () => {
     try {
-      console.log('Testing API calls...');
       const token = localStorage.getItem('auth_token');
-      console.log('Auth token:', token ? 'Present' : 'Missing');
       
       const taskRes = await apiClient.get(`/tasks/${taskId}`);
-      console.log('Task API response:', taskRes.data);
       
       const statusesRes = await apiClient.get('/statuses');
-      console.log('Statuses API response:', statusesRes.data);
       
       const prioritiesRes = await apiClient.get('/priorities');
-      console.log('Priorities API response:', prioritiesRes.data);
       
       const projectsRes = await apiClient.get('/projects');
-      console.log('Projects API response:', projectsRes.data);
     } catch (error) {
       console.error('API test error:', error);
     }
