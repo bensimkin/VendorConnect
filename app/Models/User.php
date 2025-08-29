@@ -169,6 +169,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return str($this->first_name . " " . $this->last_name);
     }
 
+    public function getNameAttribute()
+    {
+        return trim($this->first_name . ' ' . $this->last_name);
+    }
+
     public function leave_requests()
     {
         return $this->hasMany(LeaveRequest::class)->where('workspace_id', session()->get('workspace_id'));
