@@ -21,8 +21,28 @@ class ProjectController extends BaseController
     public function index(Request $request)
     {
         try {
+            $user = Auth::user();
             $query = Project::with(['users', 'tasks', 'status', 'clients']);
             // Removed workspace filtering for single-tenant system
+
+            // Role-based filtering
+            if ($user->hasRole('Requester')) {
+                // Requesters see projects they created OR are involved in via tasks
+                $query->where(function($q) use ($user) {
+                    $q->where('created_by', $user->id)
+                      ->orWhereHas('tasks', function($subQ) use ($user) {
+                          $subQ->where('created_by', $user->id);
+                      });
+                });
+            } elseif ($user->hasRole('tasker')) {
+                // Taskers only see projects they're involved in via assigned tasks
+                $query->whereHas('tasks', function($q) use ($user) {
+                    $q->whereHas('users', function($subQ) use ($user) {
+                        $subQ->where('users.id', $user->id);
+                    });
+                });
+            }
+            // Admins and sub-admins see all projects (no additional filtering)
 
             // Apply filters
             if ($request->has('search')) {
