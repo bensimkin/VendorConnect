@@ -231,6 +231,8 @@ export default function EditTaskPage() {
       console.log('Statuses:', statusesRes.data.data);
       console.log('Priorities:', prioritiesRes.data.data);
       console.log('Projects:', projectsRes.data.data);
+      console.log('Projects length:', projectsRes.data.data?.length);
+      console.log('First project:', projectsRes.data.data?.[0]);
       
       setUsers(usersRes.data.data || []);
       setClients(clientsRes.data.data || []);
@@ -391,6 +393,8 @@ export default function EditTaskPage() {
   console.log('statuses:', statuses);
   console.log('priorities:', priorities);
   console.log('projects:', projects);
+  console.log('projects.length:', projects.length);
+  console.log('formData.project_id:', formData.project_id);
 
   return (
     <MainLayout>
