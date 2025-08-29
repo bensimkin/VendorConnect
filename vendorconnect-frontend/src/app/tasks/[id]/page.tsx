@@ -985,7 +985,9 @@ export default function TaskDetailPage() {
                       {task.clients.map((client) => (
                         <div key={client.id} className="flex items-center gap-2">
                           <User className="h-3 w-3 text-muted-foreground" />
-                          <p className="text-sm text-green-600">{`${client.first_name || ''} ${client.last_name || ''}`.trim()}</p>
+                          <p className="text-sm text-green-600">
+                            {`${client.first_name || ''} ${client.last_name || ''}`.trim() || client.name || 'Unknown Client'}
+                          </p>
                         </div>
                       ))}
                     </div>
