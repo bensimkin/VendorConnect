@@ -220,13 +220,32 @@ export default function EditTaskPage() {
         apiClient.get('/priorities?per_page=all'),
       ]);
       
-      setUsers(usersRes.data.data || usersRes.data || []);
-      setClients(clientsRes.data.data || clientsRes.data || []);
-      setProjects(projectsRes.data.data || projectsRes.data || []);
-      setTaskTypes(taskTypesRes.data.data || taskTypesRes.data || []);
-      setTemplates(templatesRes.data.data || templatesRes.data || []);
-      setStatuses(statusesRes.data.data || statusesRes.data || []);
-      setPriorities(prioritiesRes.data.data || prioritiesRes.data || []);
+      // Debug API responses
+      console.log('Statuses API Response:', statusesRes.data);
+      console.log('Priorities API Response:', prioritiesRes.data);
+      console.log('Projects API Response:', projectsRes.data);
+      console.log('Clients API Response:', clientsRes.data);
+      
+      const statusesData = statusesRes.data.data || statusesRes.data || [];
+      const prioritiesData = prioritiesRes.data.data || prioritiesRes.data || [];
+      const projectsData = projectsRes.data.data || projectsRes.data || [];
+      const clientsData = clientsRes.data.data || clientsRes.data || [];
+      const usersData = usersRes.data.data || usersRes.data || [];
+      const taskTypesData = taskTypesRes.data.data || taskTypesRes.data || [];
+      const templatesData = templatesRes.data.data || templatesRes.data || [];
+      
+      console.log('Processed Statuses Data:', statusesData);
+      console.log('Processed Priorities Data:', prioritiesData);
+      console.log('Processed Projects Data:', projectsData);
+      console.log('Processed Clients Data:', clientsData);
+      
+      setUsers(usersData);
+      setClients(clientsData);
+      setProjects(projectsData);
+      setTaskTypes(taskTypesData);
+      setTemplates(templatesData);
+      setStatuses(statusesData);
+      setPriorities(prioritiesData);
 
       // Load template questions if template exists
       if (taskData.template?.id) {
