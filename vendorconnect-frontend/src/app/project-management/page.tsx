@@ -187,7 +187,7 @@ export default function ProjectManagementPage() {
     const tasks = project.tasks || [];
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(task => 
-      task.status?.name?.toLowerCase() === 'completed'
+      task.status?.title?.toLowerCase() === 'completed'
     ).length;
     const activeTasks = totalTasks - completedTasks;
     
