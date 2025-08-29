@@ -53,8 +53,8 @@ interface DashboardData {
     description?: string;
     note?: string;
     deliverable_quantity?: number;
-      status?: { name: string };
-  priority?: { name: string };
+      status?: { title: string };  // FIXED: Use primary database field
+  priority?: { title: string };  // FIXED: Use primary database field
     project?: { title: string };
     template?: {
       id: number;
