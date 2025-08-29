@@ -23,11 +23,11 @@ interface TaskDetail {
   description?: string;
   status?: {
     id: number;
-    name: string;
+    title: string;
   };
   priority?: {
     id: number;
-    name: string;
+    title: string;
   };
   users?: Array<{
     id: number;
@@ -946,9 +946,9 @@ export default function TaskDetailPage() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      {getStatusIcon(task.status?.name)}
+                      {getStatusIcon(task.status?.title)}
                       <Badge className="bg-green-100 text-green-800">
-                        {task.status?.name || 'No Status'}
+                        {task.status?.title || 'No Status'}
                       </Badge>
                     </div>
                   )}
@@ -996,7 +996,7 @@ export default function TaskDetailPage() {
                     </div>
                   ) : (
                     <Badge className="bg-blue-100 text-blue-800">
-                      {task.priority?.name || 'No Priority'}
+                      {task.priority?.title || 'No Priority'}
                     </Badge>
                   )}
                 </div>
