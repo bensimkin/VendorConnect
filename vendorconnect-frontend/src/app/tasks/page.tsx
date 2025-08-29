@@ -207,7 +207,7 @@ export default function TasksPage() {
                         </CardDescription>
                       )}
                     </div>
-                    {getStatusIcon(task.status?.name)}
+                    {getStatusIcon(task.status?.title)}
                   </div>
                 </CardHeader>
                 <CardContent>
