@@ -20,7 +20,7 @@ class Status extends Model
 
     public function projects()
     {
-        return $this->hasMany(Project::class)->where('projects.workspace_id', session()->get('workspace_id'));
+        return $this->hasMany(Project::class);
     }
 
     // public function tasks()
@@ -34,8 +34,7 @@ class Status extends Model
 
     public function user_tasks()
     {
-        return $this->belongsToMany(Task::class, 'task_user')
-            ->where('tasks.workspace_id', session()->get('workspace_id'));
+        return $this->belongsToMany(Task::class, 'task_user');
     }
     public function roles()
     {

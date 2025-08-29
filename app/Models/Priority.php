@@ -37,15 +37,9 @@ class Priority extends Model
     //     return $prioritiesCollection;
     // }
 
-    public function projects($considerWorkspace = true)
+    public function projects()
     {
-        $query = $this->hasMany(Project::class);
-
-        if ($considerWorkspace) {
-            $query->where('projects.workspace_id', session()->get('workspace_id'));
-        }
-
-        return $query;
+        return $this->hasMany(Project::class);
     }
 
     // public function tasks($considerWorkspace = true)
