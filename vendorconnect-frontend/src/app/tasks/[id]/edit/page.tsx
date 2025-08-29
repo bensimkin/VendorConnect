@@ -158,6 +158,11 @@ export default function EditTaskPage() {
     deliverable_quantity: 1,
   });
 
+  // Debug: Log form data changes
+  useEffect(() => {
+    console.log('Form data changed:', formData);
+  }, [formData]);
+
   useEffect(() => {
     fetchData();
   }, [taskId]);
@@ -423,6 +428,9 @@ export default function EditTaskPage() {
                     onChange={(e) => setFormData({ ...formData, status_id: e.target.value })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
+                    {/* Debug: Show current value */}
+                    {console.log('Status dropdown - formData.status_id:', formData.status_id)}
+                    {console.log('Status dropdown - statuses:', statuses)}
                     <option value="">Select Status</option>
                     {statuses.map((status) => (
                       <option key={status.id} value={status.id.toString()}>
