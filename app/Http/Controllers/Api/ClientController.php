@@ -385,40 +385,10 @@ class ClientController extends BaseController
             \Log::info('Fetching tasks for client: ' . $client->id);
             \Log::info('Client projects count: ' . $client->projects()->count());
             
-            // Debug: Check what relationships exist
-            $directTasks = $client->tasks()->count();
-            $projectTasks = Task::whereHas('project', function($q) use ($client) {
-                $q->where('client_id', $client->id);
-            })->count();
-            $pivotTasks = Task::whereHas('project', function($q) use ($client) {
+            // Get tasks for this client via projects
+            $tasks = Task::whereHas('project', function($q) use ($client) {
                 $q->whereHas('clients', function($subQ) use ($client) {
                     $subQ->where('clients.id', $client->id);
-                });
-            })->count();
-            
-            \Log::info('Direct client tasks count: ' . $directTasks);
-            \Log::info('Project tasks count (direct client_id): ' . $projectTasks);
-            \Log::info('Pivot tasks count (via client_project): ' . $pivotTasks);
-            
-            // Get tasks for this client - try multiple approaches
-            $tasks = Task::where(function($query) use ($client) {
-                // Method 1: Direct relationship via task_client table
-                $query->whereHas('clients', function($q) use ($client) {
-                    $q->where('clients.id', $client->id);
-                });
-            })
-            ->orWhere(function($query) use ($client) {
-                // Method 2: Indirect relationship via projects
-                $query->whereHas('project', function($q) use ($client) {
-                    $q->whereHas('clients', function($subQ) use ($client) {
-                        $subQ->where('clients.id', $client->id);
-                    });
-                });
-            })
-            ->orWhere(function($query) use ($client) {
-                // Method 3: Direct project relationship (if project has client_id)
-                $query->whereHas('project', function($q) use ($client) {
-                    $q->where('client_id', $client->id);
                 });
             })
             ->with(['status', 'priority', 'project'])
