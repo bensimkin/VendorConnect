@@ -27,7 +27,8 @@ class ClientController extends BaseController
             if ($request->has('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search, $user) {
-                    $q->where('name', 'like', "%{$search}%")
+                    $q->where('first_name', 'like', "%{$search}%")
+                      ->orWhere('last_name', 'like', "%{$search}%")
                       ->orWhere('company', 'like', "%{$search}%");
 
                     // Only admins and sub-admins can search by email
@@ -89,7 +90,8 @@ class ClientController extends BaseController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
                 'email' => 'required|email|unique:clients,email',
                 'phone' => 'nullable|string|max:20',
                 'company' => 'nullable|string|max:255',
@@ -111,7 +113,8 @@ class ClientController extends BaseController
             DB::beginTransaction();
 
             $client = Client::create([
-                'name' => $request->name,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'company' => $request->company,
@@ -217,7 +220,8 @@ class ClientController extends BaseController
             }
 
             $validator = Validator::make($request->all(), [
-                'name' => 'sometimes|required|string|max:255',
+                'first_name' => 'sometimes|required|string|max:255',
+                'last_name' => 'sometimes|required|string|max:255',
                 'email' => 'sometimes|required|email|unique:clients,email,' . $id,
                 'phone' => 'nullable|string|max:20',
                 'company' => 'nullable|string|max:255',
@@ -238,7 +242,7 @@ class ClientController extends BaseController
 
             DB::beginTransaction();
 
-            $updateData = $request->only(['name', 'email', 'phone', 'company', 'address', 'status', 'city', 'state', 'country', 'zip', 'dob']);
+            $updateData = $request->only(['first_name', 'last_name', 'email', 'phone', 'company', 'address', 'status', 'city', 'state', 'country', 'zip', 'dob']);
 
             if ($request->has('notes')) {
                 $updateData['notes'] = $request->notes;
