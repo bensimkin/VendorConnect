@@ -401,7 +401,7 @@ export default function EditTaskPage() {
                     <option value="">Select Status</option>
                     {statuses.map((status) => (
                       <option key={status.id} value={status.id}>
-                        {status.name}
+                        {status.title}
                       </option>
                     ))}
                   </select>
@@ -418,7 +418,7 @@ export default function EditTaskPage() {
                     <option value="">Select Priority</option>
                     {priorities.map((priority) => (
                       <option key={priority.id} value={priority.id}>
-                        {priority.name}
+                        {priority.title}
                       </option>
                     ))}
                   </select>
