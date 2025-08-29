@@ -19,7 +19,7 @@ class TaskBriefTemplateController extends BaseController
             $user = Auth::user();
             
             // Role-based access control - only admins, sub-admins, and requesters can access templates
-            if ($user->hasRole('tasker')) {
+            if ($user->hasRole('Tasker')) {
                 return $this->sendError('Access denied. Taskers cannot access task templates.', [], 403);
             }
             
@@ -94,7 +94,7 @@ class TaskBriefTemplateController extends BaseController
             $user = Auth::user();
             
             // Role-based access control - only admins, sub-admins, and requesters can access templates
-            if ($user->hasRole('tasker')) {
+            if ($user->hasRole('Tasker')) {
                 return $this->sendError('Access denied. Taskers cannot access task templates.', [], 403);
             }
             

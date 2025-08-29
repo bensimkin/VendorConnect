@@ -34,7 +34,7 @@ class ProjectController extends BaseController
                           $subQ->where('created_by', $user->id);
                       });
                 });
-            } elseif ($user->hasRole('tasker')) {
+            } elseif ($user->hasRole('Tasker')) {
                 // Taskers only see projects they're involved in via assigned tasks
                 $query->whereHas('tasks', function($q) use ($user) {
                     $q->whereHas('users', function($subQ) use ($user) {
@@ -271,7 +271,7 @@ class ProjectController extends BaseController
             if ($user->hasRole('Requester')) {
                 // Requesters only see tasks they created
                 $taskQuery->where('created_by', $user->id);
-            } elseif ($user->hasRole('tasker')) {
+            } elseif ($user->hasRole('Tasker')) {
                 // Taskers only see tasks they're assigned to
                 $taskQuery->whereHas('users', function ($q) use ($user) {
                     $q->where('users.id', $user->id);

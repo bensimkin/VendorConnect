@@ -28,7 +28,7 @@ class DashboardController extends BaseController
             
             if ($user->hasRole('Requester')) {
                 $totalTasksQuery->where('created_by', $user->id);
-            } elseif ($user->hasRole('tasker')) {
+            } elseif ($user->hasRole('Tasker')) {
                 $totalTasksQuery->whereHas('users', function ($q) use ($user) {
                     $q->where('users.id', $user->id);
                 });
@@ -49,7 +49,7 @@ class DashboardController extends BaseController
             if ($user->hasRole('Requester')) {
                 // Requesters only see tasks they created
                 $recentTasksQuery->where('created_by', $user->id);
-            } elseif ($user->hasRole('tasker')) {
+            } elseif ($user->hasRole('Tasker')) {
                 // Taskers only see tasks they're assigned to
                 $recentTasksQuery->whereHas('users', function ($q) use ($user) {
                     $q->where('users.id', $user->id);
@@ -112,11 +112,11 @@ class DashboardController extends BaseController
         if ($user->hasRole('Requester')) {
             // Requesters only see tasks they created
             $taskQuery->where('created_by', $user->id);
-        } elseif ($user->hasRole('tasker')) {
-            // Taskers only see tasks they're assigned to
-            $taskQuery->whereHas('users', function ($q) use ($user) {
-                $q->where('users.id', $user->id);
-            });
+                    } elseif ($user->hasRole('Tasker')) {
+                // Taskers only see tasks they're assigned to
+                $taskQuery->whereHas('users', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                });
         }
         // Admins and sub-admins see all tasks (no additional filtering)
         
@@ -257,7 +257,7 @@ class DashboardController extends BaseController
         try {
             $user = Auth::user();
             
-            if (!$user->hasRole('tasker')) {
+            if (!$user->hasRole('Tasker')) {
                 return $this->sendError('Unauthorized access', [], 403);
             }
 
@@ -577,7 +577,7 @@ class DashboardController extends BaseController
                           $q->where('users.id', $user->id);
                       });
             });
-        } elseif ($user->hasRole('tasker')) {
+        } elseif ($user->hasRole('Tasker')) {
             // Taskers only see overdue tasks they're assigned to
             $overdueQuery->whereHas('users', function ($q) use ($user) {
                 $q->where('users.id', $user->id);

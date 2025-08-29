@@ -30,7 +30,7 @@ class PortfolioController extends BaseController
                 $query->whereHas('task', function($q) use ($user) {
                     $q->where('created_by', $user->id);
                 });
-            } elseif ($user->hasRole('tasker')) {
+            } elseif ($user->hasRole('Tasker')) {
                 // Taskers see portfolio items related to clients whose tasks they're assigned to
                 $query->whereHas('task', function($q) use ($user) {
                     $q->whereHas('users', function($subQ) use ($user) {

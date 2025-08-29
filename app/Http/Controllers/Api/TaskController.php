@@ -43,7 +43,7 @@ class TaskController extends BaseController
                           $subQ->where('users.id', $user->id);
                       });
                 });
-            } elseif ($user->hasRole('tasker')) {
+            } elseif ($user->hasRole('Tasker')) {
                 // Taskers only see tasks they're assigned to
                 $query->whereHas('users', function ($q) use ($user) {
                     $q->where('users.id', $user->id);
@@ -284,7 +284,7 @@ class TaskController extends BaseController
                 if (!$isCreated && !$isAssigned) {
                     return $this->sendError('Access denied', [], 403);
                 }
-            } elseif ($user->hasRole('tasker')) {
+            } elseif ($user->hasRole('Tasker')) {
                 // Taskers can only access tasks they're assigned to
                 $isAssigned = $task->users()->where('users.id', $user->id)->exists();
                 if (!$isAssigned) {
@@ -353,7 +353,7 @@ class TaskController extends BaseController
                 if (!$isCreated && !$isAssigned) {
                     return $this->sendError('Access denied', [], 403);
                 }
-            } elseif ($user->hasRole('tasker')) {
+            } elseif ($user->hasRole('Tasker')) {
                 // Taskers can only update tasks they're assigned to
                 $isAssigned = $task->users()->where('users.id', $user->id)->exists();
                 if (!$isAssigned) {
