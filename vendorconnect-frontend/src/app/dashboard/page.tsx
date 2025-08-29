@@ -175,6 +175,7 @@ export default function DashboardPage() {
           overdue: 0,
         },
         recent_tasks: [],
+        overdue_tasks: [],
         user_activity: [],
         task_trend: [],
       });
