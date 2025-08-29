@@ -49,7 +49,8 @@ interface Portfolio {
   };
   createdBy: {
     id: number;
-    name: string;
+    first_name?: string;
+    last_name?: string;
   };
   taskType?: {
     id: number;
@@ -278,7 +279,7 @@ export default function PortfolioDetailPage() {
                     <h3 className="font-medium">Created By</h3>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <User className="h-4 w-4" />
-                      <span>{portfolio.createdBy.name}</span>
+                      <span>{`${portfolio.createdBy.first_name || ''} ${portfolio.createdBy.last_name || ''}`.trim()}</span>
                     </div>
                   </div>
 
