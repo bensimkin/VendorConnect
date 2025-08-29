@@ -73,7 +73,7 @@ interface Task {
   due_date?: string;         // ❌ MISMATCH: API has 'end_date', frontend expects 'due_date'
   assigned_to?: { id: number; first_name: string; last_name: string; }; // ❌ MISMATCH: API has 'users' array, frontend expects 'assigned_to' object
   client?: { id: number; name: string; };      // ❌ MISMATCH: API has 'clients' array, frontend expects 'client' object
-  question_answers?: Array<{ question_id: number; question_answer: string; }>; // ✅ MATCHES API
+  question_answers?: Array<{ question_id: number; question_answer: string; }>; // ❌ MISMATCH: API has complex structure with brief_questions, answer_by, etc.
   checklist_answers?: Array<{ completed: boolean; }>; // ❌ MISMATCH: API has complex structure with item_index, notes, etc.
 }
 ```
@@ -164,7 +164,149 @@ interface Client {
 2. **name field**: Frontend has optional `name` field that doesn't exist in API (uses `first_name` + `last_name`)
 3. **Core fields match**: `id`, `first_name`, `last_name`, `company` match correctly
 
-## 4. Dropdown Value Type Mismatch (FIXED)
+## 4. Nested Object Field Mismatches
+
+### Priority Object API vs Frontend:
+**API Response:**
+```json
+{
+  "id": 3,
+  "admin_id": 1,
+  "title": "High",
+  "slug": "high",
+  "created_at": null,
+  "updated_at": null
+}
+```
+
+**Frontend Interface:**
+```typescript
+priority?: {
+  id: number;
+  title: string;
+}
+```
+
+**MISMATCH:** Frontend missing `admin_id`, `slug`, `created_at`, `updated_at`
+
+### Project Object API vs Frontend:
+**API Response:**
+```json
+{
+  "id": 7,
+  "admin_id": null,
+  "workspace_id": 1,
+  "title": "Summer Marketing Campaign",
+  "description": "Facebook advertising campaign for summer product launch",
+  "status_id": 20,
+  "priority_id": null,
+  "budget": null,
+  "start_date": "2025-08-28",
+  "end_date": "2025-09-15",
+  "created_by": 1,
+  "is_favorite": 0,
+  "task_accessibility": "assigned_users",
+  "note": null,
+  "created_at": "2025-08-28T00:54:05.000000Z",
+  "updated_at": "2025-08-28T00:58:26.000000Z"
+}
+```
+
+**Frontend Interface:**
+```typescript
+project?: {
+  id: number;
+  title: string;
+}
+```
+
+**MISMATCH:** Frontend missing 14 fields including `description`, `status_id`, `start_date`, `end_date`, etc.
+
+### TaskType Object API vs Frontend:
+**API Response:**
+```json
+{
+  "id": 7,
+  "task_type": "Graphics",
+  "created_at": "2024-08-24T01:54:36.000000Z",
+  "updated_at": "2025-08-24T11:37:35.000000Z"
+}
+```
+
+**Frontend Interface:**
+```typescript
+task_type?: {
+  id: number;
+  task_type: string;
+}
+```
+
+**MISMATCH:** Frontend missing `created_at`, `updated_at`
+
+## 5. Question Answers Structure Mismatch
+
+### API Response:
+```json
+{
+  "id": 29,
+  "task_id": 67,
+  "question_id": 29,
+  "question_answer": "Updated: Deep Blue",
+  "answer_by": 1,
+  "check_brief": 0,
+  "created_at": "2025-08-28T23:17:41.000000Z",
+  "updated_at": "2025-08-28T23:28:29.000000Z",
+  "brief_questions": {
+    "id": 29,
+    "task_brief_templates_id": 13,
+    "question_text": "What is your brand color?",
+    "question_type": "text",
+    "options": null,
+    "created_at": "2025-08-28T23:14:01.000000Z",
+    "updated_at": "2025-08-28T23:14:01.000000Z"
+  }
+}
+```
+
+### Frontend Interface:
+```typescript
+question_answers?: Array<{
+  question_id: number;
+  question_answer: string;
+}>;
+```
+
+**MISMATCH:** Frontend missing `id`, `task_id`, `answer_by`, `check_brief`, `created_at`, `updated_at`, and entire `brief_questions` object
+
+## 6. Checklist Answers Structure Mismatch
+
+### API Response:
+```json
+{
+  "id": 10,
+  "task_id": 67,
+  "checklist_id": 19,
+  "checklist_answer": {
+    "completed": true,
+    "notes": "Get client feedback",
+    "item_index": 2
+  },
+  "answer_by": 1,
+  "created_at": "2025-08-28T23:21:01.000000Z",
+  "updated_at": "2025-08-28T23:27:07.000000Z"
+}
+```
+
+### Frontend Interface:
+```typescript
+checklist_answers?: Array<{
+  completed: boolean;
+}>;
+```
+
+**MISMATCH:** Frontend missing `id`, `task_id`, `checklist_id`, `answer_by`, `created_at`, `updated_at`, and `notes`/`item_index` in the answer object
+
+## 7. Dropdown Value Type Mismatch (FIXED)
 
 ### Issue Found:
 - **Form data**: Uses numbers (`status_id: 20`)
@@ -183,6 +325,8 @@ interface Client {
 4. **❌ UNFIXED**: `assigned_to` vs `users` structure mismatch
 5. **❌ UNFIXED**: `client` vs `clients` structure mismatch
 6. **❌ UNFIXED**: `checklist_answers` structure mismatch
+7. **❌ UNFIXED**: `question_answers` structure mismatch
+8. **❌ UNFIXED**: Missing fields in nested objects (priority, project, task_type)
 
 ## Recommendations:
 
@@ -191,4 +335,6 @@ interface Client {
 3. Update frontend to handle `users` array instead of `assigned_to` object
 4. Update frontend to handle `clients` array instead of `client` object
 5. Update `checklist_answers` interface to match API structure
-6. Consider adding missing fields to interfaces for completeness
+6. Update `question_answers` interface to match API structure
+7. Add missing fields to nested object interfaces (priority, project, task_type)
+8. Consider adding missing fields to interfaces for completeness
