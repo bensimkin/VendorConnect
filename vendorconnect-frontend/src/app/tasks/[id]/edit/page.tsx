@@ -197,17 +197,23 @@ export default function EditTaskPage() {
       console.log('Priority ID:', taskData?.priority?.id);
       console.log('Project ID:', taskData?.project?.id);
       
+      console.log('Setting form data with taskData:', {
+        status_id: taskData?.status_id,
+        priority_id: taskData?.priority_id,
+        project_id: taskData?.project_id
+      });
+      
       setFormData({
            title: taskData?.title || '',
            description: taskData?.description || '',
            note: taskData?.note || '',
-           status_id: taskData?.status?.id || 0,
-           priority_id: taskData?.priority?.id || 0,
+           status_id: taskData?.status_id || 0,
+           priority_id: taskData?.priority_id || 0,
            user_ids: taskData?.assigned_to?.id ? [taskData.assigned_to.id] : [],
            client_ids: taskData?.client?.id ? [taskData.client.id] : [],
-           project_id: taskData?.project?.id || 0,
+           project_id: taskData?.project_id || 0,
            end_date: taskData?.due_date ? taskData.due_date.split('T')[0] : '',
-           task_type_id: taskData?.task_type?.id || 0,
+           task_type_id: taskData?.task_type_id || 0,
            close_deadline: taskData?.close_deadline || false,
            deliverable_quantity: taskData?.deliverable_quantity || 1,
          });
