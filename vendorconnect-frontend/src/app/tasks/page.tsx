@@ -91,13 +91,10 @@ export default function TasksPage() {
       if (searchQuery) {
         params.append('search', searchQuery);
       }
-      
+
       const response = await apiClient.get(`/tasks?${params.toString()}`);
-      // Handle paginated response
-      const taskData = response.data.data || [];
-      console.log('Tasks API Response:', response.data);
-      console.log('Task Data:', taskData);
-      console.log('First task project:', taskData[0]?.project);
+      // Handle varying pagination structures
+      const taskData = response.data?.data?.data || response.data?.data || response.data || [];
       setTasks(Array.isArray(taskData) ? taskData : []);
     } catch (error) {
       console.error('Failed to fetch tasks:', error);
@@ -217,11 +214,11 @@ export default function TasksPage() {
                 <CardContent>
                   <div className="space-y-3">
                     {/* Project */}
-                    {task.project && (
+                    {(task.project || task.project_title) && (
                       <div className="flex items-center gap-2 text-sm">
                         <Tag className="h-4 w-4 text-muted-foreground" />
                         <span className="truncate text-blue-600">
-                          {task.project.title || 'Unnamed Project'}
+                          {task.project?.title || (task as any).project_title || 'Unnamed Project'}
                         </span>
                       </div>
                     )}
