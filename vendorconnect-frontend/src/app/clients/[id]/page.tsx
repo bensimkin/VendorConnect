@@ -39,7 +39,7 @@ interface Project {
   title: string;
   description?: string;
   status?: {
-    name: string;
+    title: string;  // FIXED: Use primary database field
     color?: string;
   };
   start_date?: string;
@@ -53,15 +53,13 @@ interface Task {
   description?: string;
   status?: {
     id: number;
-    title: string;
+    title: string;  // FIXED: Use primary database field
     slug: string;
-    name: string;
   };
   priority?: {
     id: number;
-    title: string;
+    title: string;  // FIXED: Use primary database field
     slug: string;
-    name: string;
   };
   created_at: string;
 }
