@@ -21,11 +21,11 @@ interface Task {
   deliverable_quantity?: number;
   status?: {
     id: number;
-    name: string;
+    title: string;  // FIXED: Use primary database field
   };
   priority?: {
     id: number;
-    name: string;
+    title: string;  // FIXED: Use primary database field
   };
   assigned_to?: {
     id: number;
@@ -93,12 +93,12 @@ interface Template {
 
 interface Status {
   id: number;
-  name: string;
+  title: string;  // FIXED: Use primary database field
 }
 
 interface Priority {
   id: number;
-  name: string;
+  title: string;  // FIXED: Use primary database field
 }
 
 interface TemplateQuestion {
