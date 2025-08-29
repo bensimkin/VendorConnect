@@ -466,9 +466,6 @@ export default function EditTaskPage() {
                     onChange={(e) => setFormData({ ...formData, status_id: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
-                    {/* Debug: Show current value */}
-                    {console.log('Status dropdown - current value:', formData.status_id)}
-                    {console.log('Status dropdown - available options:', statuses.map(s => ({id: s.id, title: s.title})))}
                     <option value="">Select Status</option>
                     {statuses.map((status) => (
                       <option key={status.id} value={status.id}>
