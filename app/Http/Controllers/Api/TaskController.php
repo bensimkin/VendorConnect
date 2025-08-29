@@ -338,10 +338,10 @@ class TaskController extends BaseController
             $validator = Validator::make($request->all(), [
                 'title' => 'sometimes|required|string|max:255',
                 'description' => 'nullable|string',
-                'status_id' => 'sometimes|required|exists:statuses,id',
-                'priority_id' => 'sometimes|required|exists:priorities,id',
+                'status_id' => 'required|exists:statuses,id',
+                'priority_id' => 'required|exists:priorities,id',
                 'task_type_id' => 'nullable|exists:task_types,id',
-                'project_id' => 'sometimes|required|exists:projects,id',
+                'project_id' => 'nullable|exists:projects,id',
                 'user_ids' => 'nullable|array',
                 'user_ids.*' => 'exists:users,id',
                 'client_ids' => 'nullable|array',
