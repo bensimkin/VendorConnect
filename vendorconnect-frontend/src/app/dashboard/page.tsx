@@ -410,7 +410,7 @@ export default function DashboardPage() {
                         <span className="font-medium">{task.title || 'Unnamed Task'}</span>
                         {task.priority && (
                           <span className="ml-2 text-xs px-2 py-1 rounded-full bg-secondary">
-                            {task.priority.name}
+                            {task.priority.title}
                           </span>
                         )}
                         {task.template && (
@@ -425,7 +425,7 @@ export default function DashboardPage() {
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {task.status ? `Status: ${task.status.name}` : 'No status'} •{' '}
+                        {task.status ? `Status: ${task.status.title}` : 'No status'} •{' '}
                         {new Date(task.created_at).toLocaleDateString()}
                       </p>
                       {task.note && (

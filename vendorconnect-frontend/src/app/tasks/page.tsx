@@ -281,12 +281,12 @@ export default function TasksPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       {task.priority && (
                         <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                          {task.priority.name || 'No Priority'}
+                          {task.priority.title || 'No Priority'}
                         </span>
                       )}
                       {task.status && (
                         <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                          {task.status.name || 'No Status'}
+                          {task.status.title || 'No Status'}
                         </span>
                       )}
                     </div>

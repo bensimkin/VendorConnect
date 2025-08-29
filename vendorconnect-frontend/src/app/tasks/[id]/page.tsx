@@ -927,8 +927,8 @@ export default function TaskDetailPage() {
                           {statuses.map((status) => (
                             <SelectItem key={status.id} value={status.id.toString()}>
                               <div className="flex items-center gap-2">
-                                {getStatusIcon(status.name)}
-                                <span>{status.name}</span>
+                                                    {getStatusIcon(status.title)}
+                    <span>{status.title}</span>
                               </div>
                             </SelectItem>
                           ))}
@@ -979,7 +979,7 @@ export default function TaskDetailPage() {
                         <SelectContent>
                           {priorities.map((priority) => (
                             <SelectItem key={priority.id} value={priority.id.toString()}>
-                              <span>{priority.name}</span>
+                              <span>{priority.title}</span>
                             </SelectItem>
                           ))}
                         </SelectContent>
