@@ -559,7 +559,7 @@ export default function NewTaskPage() {
                     <option value="">Select Task Type</option>
                     {taskTypes.map((type) => (
                       <option key={type.id} value={type.id}>
-                        {type.name}
+                        {type.task_type}
                       </option>
                     ))}
                   </select>
