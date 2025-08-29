@@ -38,9 +38,15 @@ interface Project {
 
 interface Client {
   id: number;
-  name: string;
+  first_name: string;
+  last_name: string;
   company?: string;
 }
+
+const getClientDisplayName = (client: Client) => {
+  const fullName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
+  return client.company ? `${fullName} (${client.company})` : fullName;
+};
 
 interface Template {
   id: number;
@@ -115,27 +121,29 @@ export default function NewTaskPage() {
   const fetchFormData = async () => {
     try {
       const [statusRes, priorityRes, userRes, projectRes, clientRes, taskTypeRes, templateRes] = await Promise.all([
-        apiClient.get('/statuses'),
-        apiClient.get('/priorities'),
+        apiClient.get('/statuses?per_page=all'),
+        apiClient.get('/priorities?per_page=all'),
         apiClient.get('/users'),
-        apiClient.get('/projects'),
+        apiClient.get('/projects?per_page=all'),
         apiClient.get('/clients'),
         apiClient.get('/task-types?per_page=all'),
         apiClient.get('/task-brief-templates'),
       ]);
 
-      setStatuses(statusRes.data.data || []);
-      setPriorities(priorityRes.data.data || []);
+      setStatuses(statusRes.data.data?.data || statusRes.data.data || statusRes.data || []);
+      setPriorities(priorityRes.data.data?.data || priorityRes.data.data || priorityRes.data || []);
       setUsers(userRes.data.data?.data || userRes.data.data || []);
-      setProjects(projectRes.data.data?.data || projectRes.data.data || []);
+      setProjects(projectRes.data.data?.data || projectRes.data.data || projectRes.data || []);
       setAllClients(clientRes.data.data?.data || clientRes.data.data || []);
       setClients(clientRes.data.data?.data || clientRes.data.data || []); // Initially show all clients
-      setTaskTypes(taskTypeRes.data.data || []);
-      setTemplates(templateRes.data.data || []);
+      setTaskTypes(taskTypeRes.data.data || taskTypeRes.data || []);
+      setTemplates(templateRes.data.data || templateRes.data || []);
 
       // Set default values
-      const pendingStatus = statusRes.data.data?.find((s: Status) => s.title === 'Pending');
-      const mediumPriority = priorityRes.data.data?.find((p: Priority) => p.title === 'Medium');
+      const statusArr: Status[] = statusRes.data.data?.data || statusRes.data.data || statusRes.data || [];
+      const priorityArr: Priority[] = priorityRes.data.data?.data || priorityRes.data.data || priorityRes.data || [];
+      const pendingStatus = statusArr.find((s: Status) => s.title === 'Pending');
+      const mediumPriority = priorityArr.find((p: Priority) => p.title === 'Medium');
       
       if (pendingStatus) {
         setFormData(prev => ({ ...prev, status_id: pendingStatus.id.toString() }));
@@ -166,38 +174,9 @@ export default function NewTaskPage() {
   };
 
   const handleProjectChange = async (projectId: string) => {
-    setFormData({ ...formData, project_id: projectId, client_ids: [] }); // Clear client selection when project changes
-    
-    if (projectId) {
-      try {
-        // Fetch project details to get associated clients
-        const projectRes = await apiClient.get(`/projects/${projectId}`);
-        const projectClients = projectRes.data.data.clients || [];
-        
-        if (projectClients.length > 0) {
-          // Filter clients to only show those associated with the selected project
-          setClients(projectClients);
-          // Auto-select the first client if only one is associated
-          if (projectClients.length === 1) {
-            setFormData(prev => ({ 
-              ...prev, 
-              project_id: projectId, 
-              client_ids: [projectClients[0].id] 
-            }));
-          }
-        } else {
-          // If no clients associated with project, show all clients
-          setClients(allClients);
-        }
-      } catch (error) {
-        console.error('Failed to fetch project details:', error);
-        // Fallback to showing all clients
-        setClients(allClients);
-      }
-    } else {
-      // If no project selected, show all clients
-      setClients(allClients);
-    }
+    // Clear client selection; show all clients (no reliable per-project client relation)
+    setFormData({ ...formData, project_id: projectId, client_ids: [] });
+    setClients(allClients);
   };
 
   const handleTemplateChange = async (templateId: string) => {
@@ -619,7 +598,7 @@ export default function NewTaskPage() {
                     </option>
                     {clients.map((client) => (
                       <option key={client.id} value={client.id}>
-                        {client.name} {client.company && `(${client.company})`}
+                        {getClientDisplayName(client)}
                       </option>
                     ))}
                   </select>
