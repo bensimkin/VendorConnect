@@ -147,13 +147,13 @@ export default function EditTaskPage() {
     title: '',
     description: '',
     note: '',
-    status_id: 0,
-    priority_id: 0,
+    status_id: '',
+    priority_id: '',
     user_ids: [] as number[],
     client_ids: [] as number[],
-    project_id: 0,
+    project_id: '',
     end_date: '',
-    task_type_id: 0,
+    task_type_id: '',
     close_deadline: false,
     deliverable_quantity: 1,
   });
@@ -188,13 +188,13 @@ export default function EditTaskPage() {
            title: taskData?.title || '',
            description: taskData?.description || '',
            note: taskData?.note || '',
-           status_id: taskData?.status?.id || 0,
-           priority_id: taskData?.priority?.id || 0,
+           status_id: taskData?.status?.id || '',
+           priority_id: taskData?.priority?.id || '',
            user_ids: taskData?.assigned_to?.id ? [taskData.assigned_to.id] : [],
            client_ids: taskData?.client?.id ? [taskData.client.id] : [],
-           project_id: taskData?.project?.id || 0,
+           project_id: taskData?.project?.id || '',
            end_date: taskData?.due_date ? taskData.due_date.split('T')[0] : '',
-           task_type_id: taskData?.task_type?.id || 0,
+           task_type_id: taskData?.task_type?.id || '',
            close_deadline: taskData?.close_deadline || false,
            deliverable_quantity: taskData?.deliverable_quantity || 1,
          });
@@ -289,13 +289,13 @@ export default function EditTaskPage() {
         title: formData.title,
         description: formData.description,
         note: formData.note,
-        status_id: formData.status_id,
-        priority_id: formData.priority_id,
+        status_id: formData.status_id ? parseInt(formData.status_id) : null,
+        priority_id: formData.priority_id ? parseInt(formData.priority_id) : null,
         user_ids: formData.user_ids,
         client_ids: formData.client_ids,
-        project_id: formData.project_id,
+        project_id: formData.project_id ? parseInt(formData.project_id) : null,
         end_date: formData.end_date,
-        task_type_id: formData.task_type_id,
+        task_type_id: formData.task_type_id ? parseInt(formData.task_type_id) : null,
         close_deadline: formData.close_deadline,
         deliverable_quantity: formData.deliverable_quantity,
       };
@@ -403,7 +403,7 @@ export default function EditTaskPage() {
                   <select
                     id="status"
                     value={formData.status_id}
-                    onChange={(e) => setFormData({ ...formData, status_id: parseInt(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, status_id: e.target.value })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
                     <option value="">Select Status</option>
@@ -420,7 +420,7 @@ export default function EditTaskPage() {
                   <select
                     id="priority"
                     value={formData.priority_id}
-                    onChange={(e) => setFormData({ ...formData, priority_id: parseInt(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, priority_id: e.target.value })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
                     <option value="">Select Priority</option>
@@ -477,7 +477,7 @@ export default function EditTaskPage() {
                   <select
                     id="project"
                     value={formData.project_id}
-                    onChange={(e) => setFormData({ ...formData, project_id: parseInt(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
                     className="w-full px-3 py-2 border rounded-md"
                   >
                     <option value="">Select Project</option>
