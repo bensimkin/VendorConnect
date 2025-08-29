@@ -388,45 +388,7 @@ export default function EditTaskPage() {
 
   // Debug: Log current state before render
 
-  // Test API calls
-  const testAPIs = async () => {
-    try {
-      console.log('=== TESTING APIs ===');
-      
-      const taskRes = await apiClient.get(`/tasks/${taskId}`);
-      console.log('Task API Response:', taskRes.data);
-      
-      const statusesRes = await apiClient.get('/statuses');
-      console.log('Statuses API Response:', statusesRes.data);
-      console.log('Statuses count:', statusesRes.data.data?.length);
-      
-      const prioritiesRes = await apiClient.get('/priorities');
-      console.log('Priorities API Response:', prioritiesRes.data);
-      console.log('Priorities count:', prioritiesRes.data.data?.length);
-      
-      const projectsRes = await apiClient.get('/projects');
-      console.log('Projects API Response:', projectsRes.data);
-      console.log('Projects count:', projectsRes.data.data?.length);
-      
-      const usersRes = await apiClient.get('/users');
-      console.log('Users API Response:', usersRes.data);
-      console.log('Users count:', usersRes.data.data?.data?.length || usersRes.data.data?.length);
-      
-      const clientsRes = await apiClient.get('/clients');
-      console.log('Clients API Response:', clientsRes.data);
-      console.log('Clients count:', clientsRes.data.data?.data?.length || clientsRes.data.data?.length);
-      
-      console.log('=== CURRENT STATE ===');
-      console.log('Statuses state:', statuses);
-      console.log('Priorities state:', priorities);
-      console.log('Projects state:', projects);
-      console.log('Users state:', users);
-      console.log('Clients state:', clients);
-      
-    } catch (error) {
-      console.error('API test error:', error);
-    }
-  };
+
 
   return (
     <MainLayout>
@@ -442,9 +404,6 @@ export default function EditTaskPage() {
               Back to Task
             </Button>
             <h1 className="text-2xl font-bold">Edit Task</h1>
-            <Button onClick={testAPIs} variant="outline" size="sm">
-              Test APIs
-            </Button>
           </div>
         </div>
 
