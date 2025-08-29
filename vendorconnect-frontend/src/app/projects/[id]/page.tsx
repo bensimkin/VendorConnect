@@ -347,8 +347,7 @@ export default function ProjectDetailPage() {
                 <div className="text-center p-3 bg-secondary rounded-md">
                   <p className="text-2xl font-bold">
                     {project.tasks?.filter(task => 
-                      task.status?.title?.toLowerCase() === 'completed' || 
-                      task.status?.name?.toLowerCase() === 'completed'
+                      task.status?.title?.toLowerCase() === 'completed'
                     ).length || 0}
                   </p>
                   <p className="text-muted-foreground">Completed</p>
