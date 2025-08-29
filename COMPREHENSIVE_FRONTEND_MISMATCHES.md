@@ -87,15 +87,20 @@ This document contains ALL mismatches found between API responses and frontend i
 
 ### `/users/[id]/page.tsx` (User Detail)
 **MISMATCHES:**
-- ❌ **UNFIXED**: Need to check interface vs API response
+- ✅ **FIXED**: `first_name` + `last_name` (matches API)
+- ❌ **UNFIXED**: `roles` array expects `name` field but API may have different structure
+- ❌ **UNFIXED**: `permissions` array structure (API may have different structure)
 
 ### `/users/[id]/edit/page.tsx` (User Edit)
 **MISMATCHES:**
-- ❌ **UNFIXED**: Need to check interface vs API response
+- ✅ **FIXED**: `first_name` + `last_name` (matches API)
+- ❌ **UNFIXED**: `roles` array expects `name` field but API may have different structure
+- ❌ **UNFIXED**: Form expects `role_ids` but API may expect different field name
 
 ### `/users/new/page.tsx` (New User)
 **MISMATCHES:**
-- ❌ **UNFIXED**: Need to check interface vs API response
+- ✅ **FIXED**: `first_name` + `last_name` (matches API)
+- ❌ **UNFIXED**: Form expects `role` field but API may expect `role_ids` array
 
 ## 5. PORTFOLIO PAGES
 
@@ -127,15 +132,17 @@ This document contains ALL mismatches found between API responses and frontend i
 
 ### `/templates/[id]/page.tsx` (Template Detail)
 **MISMATCHES:**
-- ❌ **UNFIXED**: Need to check interface vs API response
+- ❌ **UNFIXED**: Page doesn't exist (only edit page exists)
 
 ### `/templates/[id]/edit/page.tsx` (Template Edit)
 **MISMATCHES:**
-- ❌ **UNFIXED**: Need to check interface vs API response
+- ✅ **FIXED**: `task_type.task_type` (matches API)
+- ❌ **UNFIXED**: `Question` interface expects `task_brief_templates_id` but API may use `template_id`
+- ❌ **UNFIXED**: `ChecklistItem` interface expects `task_brief_templates_id` but API may use `template_id`
 
 ### `/templates/new/page.tsx` (New Template)
 **MISMATCHES:**
-- ❌ **UNFIXED**: Need to check interface vs API response
+- ✅ **FIXED**: `task_type.task_type` (matches API)
 
 ## 7. DASHBOARD PAGES
 
@@ -157,6 +164,19 @@ This document contains ALL mismatches found between API responses and frontend i
 **MISMATCHES:**
 - ✅ **FIXED**: `status.title` and `priority.title` (matches API)
 
+## 9. TASK TYPES PAGE
+
+### `/task-types/page.tsx`
+**MISMATCHES:**
+- ✅ **FIXED**: `task_type` field (matches API)
+
+## 10. SETTINGS PAGE
+
+### `/settings/page.tsx`
+**MISMATCHES:**
+- ✅ **FIXED**: `first_name` + `last_name` (matches API)
+- ❌ **UNFIXED**: Notification settings structure (API may have different field names)
+
 ## SUMMARY OF CRITICAL ISSUES
 
 ### 1. CLIENT NAME FIELD MISMATCH (MOST CRITICAL)
@@ -171,19 +191,31 @@ This document contains ALL mismatches found between API responses and frontend i
 - **Frontend**: Expects `name` field
 - **Impact**: Shows undefined/empty names
 
-### 3. DATA TYPE MISMATCHES
+### 3. ROLE FIELD MISMATCHES
+**Affects:** User pages, role assignments
+- **API**: May use `role_ids` array or different structure
+- **Frontend**: Expects `role` field or `roles` array with `name`
+- **Impact**: Role assignments may not work correctly
+
+### 4. DATA TYPE MISMATCHES
 **Affects:** Task edit page
 - **API**: `close_deadline` as number (1/0)
 - **Frontend**: Expects boolean
 - **Impact**: Form validation issues
 
-### 4. STRUCTURE MISMATCHES
+### 5. STRUCTURE MISMATCHES
 **Affects:** Task detail page
 - **API**: Complex `question_answers` and `checklist_answers` structures
 - **Frontend**: Expects simple structures
 - **Impact**: Data not displaying correctly
 
-### 5. WORKSPACE_ID ISSUE
+### 6. TEMPLATE FIELD MISMATCHES
+**Affects:** Template edit page
+- **API**: May use `template_id` instead of `task_brief_templates_id`
+- **Frontend**: Expects `task_brief_templates_id`
+- **Impact**: Template questions and checklists may not save correctly
+
+### 7. WORKSPACE_ID ISSUE
 **Affects:** All API responses
 - **API**: Still includes `workspace_id: 1`
 - **System**: Single tenant (should not appear)
@@ -194,9 +226,11 @@ This document contains ALL mismatches found between API responses and frontend i
 ### IMMEDIATE FIXES NEEDED:
 1. **Fix Client Name Fields**: Update all client interfaces to use `first_name` + `last_name`
 2. **Fix User Name Fields**: Update all user interfaces to use `first_name` + `last_name`
-3. **Fix Data Types**: Update `close_deadline` handling in frontend
-4. **Fix Answer Structures**: Update `question_answers` and `checklist_answers` interfaces
-5. **Remove workspace_id**: Clean up API responses for single tenancy
+3. **Fix Role Fields**: Update role assignment interfaces to match API structure
+4. **Fix Data Types**: Update `close_deadline` handling in frontend
+5. **Fix Answer Structures**: Update `question_answers` and `checklist_answers` interfaces
+6. **Fix Template Fields**: Update template question/checklist interfaces to use correct field names
+7. **Remove workspace_id**: Clean up API responses for single tenancy
 
 ### PAGES WITH MOST MISMATCHES:
 1. **Task Edit Page** - Multiple field mismatches
