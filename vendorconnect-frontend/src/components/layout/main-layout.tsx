@@ -108,10 +108,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               );
             })}
             
-            {/* Debug: User roles */}
-            <div className="px-3 py-2 text-xs text-red-500">
-              Debug: Component loaded! User = {user ? 'YES' : 'NO'}, Roles = {JSON.stringify(user?.roles)}
-            </div>
+
             
             {/* Admin Navigation */}
             {user?.roles?.some(role => normalizeRole(role.name) === 'admin') && (
