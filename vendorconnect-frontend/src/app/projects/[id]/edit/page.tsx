@@ -169,6 +169,9 @@ export default function EditProjectPage() {
         status_id: parseInt(formData.status_id) || 20, // Default to Active (ID: 20)
       };
 
+      console.log('Project update payload:', payload);
+      console.log('Project settings:', settings);
+
       await apiClient.put(`/projects/${projectId}`, payload);
       toast.success('Project updated successfully');
       router.push(`/projects/${projectId}?refresh=${Date.now()}`);
