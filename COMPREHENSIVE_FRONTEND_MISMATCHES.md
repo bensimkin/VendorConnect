@@ -857,3 +857,546 @@ WHERE id = ?;
 5. **Client Model**: Correct but not used by controller
 
 **Priority**: CRITICAL - Client functionality is completely broken due to field mismatches
+
+---
+
+## REAL CURRENT SQL SCHEMA
+
+### **ACTUAL DATABASE STRUCTURE (FROM PRODUCTION)**
+
+```sql
+-- =============================================================================
+-- VENDORCONNECT ACTUAL DATABASE SCHEMA (PRODUCTION)
+-- =============================================================================
+-- 
+-- This is the REAL current database structure from the production server
+-- Generated: August 28, 2025
+-- Database: vendorconnect
+-- 
+-- ⚠️ CRITICAL: This differs significantly from database_schema.sql documentation
+-- 
+-- =============================================================================
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+-- =============================================================================
+-- CORE USER MANAGEMENT TABLES
+-- =============================================================================
+
+-- Users table - Core user data
+CREATE TABLE `users` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `client_id` bigint unsigned DEFAULT NULL,
+  `first_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `last_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(56) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `city` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `state` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `country` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `zip` int DEFAULT NULL,
+  `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `dob` date DEFAULT NULL,
+  `doj` date DEFAULT NULL,
+  `photo` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `avatar` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'avatar.png',
+  `active_status` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'For chatify messenger',
+  `dark_mode` tinyint(1) NOT NULL DEFAULT '0',
+  `messenger_color` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `lang` varchar(28) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en',
+  `remember_token` text COLLATE utf8mb4_unicode_ci,
+  `email_verified_at` timestamp NULL DEFAULT NULL,
+  `last_login_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `status` tinyint NOT NULL DEFAULT '0',
+  `country_code` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `users_email_unique` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Password resets table
+CREATE TABLE `password_resets` (
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  KEY `password_resets_email_index` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Personal access tokens table
+CREATE TABLE `personal_access_tokens` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `tokenable_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tokenable_id` bigint unsigned NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `abilities` text COLLATE utf8mb4_unicode_ci,
+  `last_used_at` timestamp NULL DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
+  KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- ROLE AND PERMISSION TABLES
+-- =============================================================================
+
+-- Roles table
+CREATE TABLE `roles` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `guard_name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `roles_name_guard_name_unique` (`name`,`guard_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Permissions table
+CREATE TABLE `permissions` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `guard_name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `permissions_name_guard_name_unique` (`name`,`guard_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=192 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Model has roles table
+CREATE TABLE `model_has_roles` (
+  `role_id` bigint unsigned NOT NULL,
+  `model_type` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `model_id` bigint unsigned NOT NULL,
+  PRIMARY KEY (`role_id`,`model_id`,`model_type`),
+  KEY `model_has_roles_model_id_model_type_index` (`model_id`,`model_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Model has permissions table
+CREATE TABLE `model_has_permissions` (
+  `permission_id` bigint unsigned NOT NULL,
+  `model_type` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `model_id` bigint unsigned NOT NULL,
+  PRIMARY KEY (`permission_id`,`model_id`,`model_type`),
+  KEY `model_has_permissions_model_id_model_type_index` (`model_id`,`model_type`),
+  CONSTRAINT `model_has_permissions_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Role has permissions table
+CREATE TABLE `role_has_permissions` (
+  `permission_id` bigint unsigned NOT NULL,
+  `role_id` bigint unsigned NOT NULL,
+  PRIMARY KEY (`permission_id`,`role_id`),
+  KEY `role_has_permissions_role_id_foreign` (`role_id`),
+  CONSTRAINT `role_has_permissions_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `role_has_permissions_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- CLIENT MANAGEMENT TABLES
+-- =============================================================================
+
+-- Clients table - CRITICAL: Has first_name and last_name, NOT name
+CREATE TABLE `clients` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `admin_id` bigint unsigned DEFAULT NULL,
+  `first_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `last_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `company` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `dob` date DEFAULT NULL,
+  `doj` date DEFAULT NULL,
+  `address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `city` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `state` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `country` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `zip` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `photo` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` tinyint NOT NULL DEFAULT '0',
+  `lang` varchar(28) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en',
+  `remember_token` text COLLATE utf8mb4_unicode_ci,
+  `email_verification_mail_sent` tinyint DEFAULT NULL,
+  `email_verified_at` timestamp NULL DEFAULT NULL,
+  `internal_purpose` tinyint NOT NULL DEFAULT '0',
+  `acct_create_mail_sent` tinyint NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `country_code` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `client_note` longtext COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- PROJECT MANAGEMENT TABLES
+-- =============================================================================
+
+-- Projects table
+CREATE TABLE `projects` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `admin_id` bigint unsigned DEFAULT NULL,
+  `workspace_id` bigint unsigned NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` longtext COLLATE utf8mb4_unicode_ci,
+  `status_id` bigint unsigned NOT NULL DEFAULT '1',
+  `priority_id` bigint unsigned DEFAULT NULL,
+  `budget` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `created_by` bigint unsigned NOT NULL,
+  `is_favorite` tinyint NOT NULL DEFAULT '0',
+  `task_accessibility` varchar(28) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'assigned_users',
+  `note` longtext COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `project_status_id_foreign` (`status_id`),
+  KEY `projects_admin_id_foreign` (`admin_id`),
+  KEY `projects_priority_id_foreign` (`priority_id`),
+  CONSTRAINT `projects_admin_id_foreign` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `projects_priority_id_foreign` FOREIGN KEY (`priority_id`) REFERENCES `priorities` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Project user table
+CREATE TABLE `project_user` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `admin_id` bigint unsigned DEFAULT NULL,
+  `project_id` bigint unsigned NOT NULL,
+  `user_id` bigint unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `project_user_project_id_user_id_unique` (`project_id`,`user_id`),
+  KEY `project_user_user_id_foreign` (`user_id`),
+  KEY `project_user_admin_id_foreign` (`admin_id`),
+  CONSTRAINT `project_user_admin_id_foreign` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `project_user_project_id_foreign` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `project_user_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- TASK MANAGEMENT TABLES
+-- =============================================================================
+
+-- Tasks table
+CREATE TABLE `tasks` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `admin_id` bigint unsigned DEFAULT NULL,
+  `task_type_id` bigint unsigned DEFAULT NULL,
+  `template_id` bigint unsigned DEFAULT NULL,
+  `project_id` bigint unsigned DEFAULT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` longtext COLLATE utf8mb4_unicode_ci,
+  `standard_brief` text COLLATE utf8mb4_unicode_ci,
+  `start_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `status_id` int NOT NULL,
+  `priority_id` int NOT NULL,
+  `close_deadline` int NOT NULL,
+  `note` longtext COLLATE utf8mb4_unicode_ci,
+  `deliverable_quantity` int DEFAULT '1',
+  `is_repeating` tinyint(1) DEFAULT '0',
+  `repeat_frequency` enum('daily','weekly','monthly','yearly') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `repeat_interval` int DEFAULT '1',
+  `repeat_until` date DEFAULT NULL,
+  `repeat_active` tinyint(1) DEFAULT '1',
+  `parent_task_id` bigint unsigned DEFAULT NULL,
+  `last_repeated_at` timestamp NULL DEFAULT NULL,
+  `created_by` bigint unsigned NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `template_questions` json DEFAULT NULL,
+  `template_checklist` json DEFAULT NULL,
+  `template_standard_brief` text COLLATE utf8mb4_unicode_ci,
+  `template_description` text COLLATE utf8mb4_unicode_ci,
+  `template_deliverable_quantity` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tasks_admin_id_foreign` (`admin_id`),
+  KEY `task_type_id` (`task_type_id`),
+  KEY `tasks_project_id_foreign` (`project_id`),
+  KEY `fk_tasks_parent_task_id` (`parent_task_id`),
+  KEY `tasks_template_id_foreign` (`template_id`),
+  CONSTRAINT `fk_tasks_parent_task_id` FOREIGN KEY (`parent_task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `tasks_admin_id_foreign` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tasks_project_id_foreign` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tasks_template_id_foreign` FOREIGN KEY (`template_id`) REFERENCES `task_brief_templates` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=69 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Task user table
+CREATE TABLE `task_user` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `task_id` bigint unsigned NOT NULL,
+  `user_id` bigint unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `task_user_task_id_user_id_unique` (`task_id`,`user_id`),
+  KEY `task_user_user_id_foreign` (`user_id`),
+  CONSTRAINT `task_user_task_id_foreign` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `task_user_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=68 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Task types table
+CREATE TABLE `task_types` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `task_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- STATUS AND PRIORITY TABLES
+-- =============================================================================
+
+-- Statuses table
+CREATE TABLE `statuses` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `admin_id` bigint unsigned DEFAULT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `statuses_admin_id_foreign` (`admin_id`),
+  CONSTRAINT `statuses_admin_id_foreign` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Priorities table
+CREATE TABLE `priorities` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `admin_id` bigint unsigned DEFAULT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `priorities_admin_id_foreign` (`admin_id`),
+  CONSTRAINT `priorities_admin_id_foreign` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- TEMPLATE TABLES
+-- =============================================================================
+
+-- Task brief templates table
+CREATE TABLE `task_brief_templates` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `standard_brief` text COLLATE utf8mb4_unicode_ci,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `deliverable_quantity` int DEFAULT '1',
+  `task_type_id` bigint unsigned NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `task_brief_templates_task_type_id_foreign` (`task_type_id`),
+  CONSTRAINT `task_brief_templates_task_type_id_foreign` FOREIGN KEY (`task_type_id`) REFERENCES `task_types` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Task brief questions table
+CREATE TABLE `task_brief_questions` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `task_brief_templates_id` bigint unsigned NOT NULL,
+  `question_text` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `question_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `options` json DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `task_brief_questions_task_brief_templates_id_foreign` (`task_brief_templates_id`),
+  CONSTRAINT `task_brief_questions_task_brief_templates_id_foreign` FOREIGN KEY (`task_brief_templates_id`) REFERENCES `task_brief_templates` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Task brief checklists table
+CREATE TABLE `task_brief_checklists` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `task_brief_templates_id` bigint unsigned NOT NULL,
+  `checklist` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `task_brief_questions_task_brief_templates_id_foreign` (`task_brief_templates_id`),
+  CONSTRAINT `task_brief_checklists_chk_1` CHECK (json_valid(`checklist`))
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- ANSWER TABLES
+-- =============================================================================
+
+-- Question answered table
+CREATE TABLE `question_answereds` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `task_id` bigint unsigned NOT NULL,
+  `question_id` bigint unsigned NOT NULL,
+  `question_answer` longtext COLLATE utf8mb4_general_ci,
+  `answer_by` bigint unsigned NOT NULL,
+  `check_brief` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- =============================================================================
+-- PORTFOLIO TABLES
+-- =============================================================================
+
+-- Portfolios table
+CREATE TABLE `portfolios` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `client_id` bigint unsigned NOT NULL,
+  `task_id` bigint unsigned DEFAULT NULL,
+  `project_id` bigint unsigned DEFAULT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `deliverable_type` enum('design','document','presentation','other') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'other',
+  `status` enum('completed','in_progress','review') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'completed',
+  `created_by` bigint unsigned NOT NULL,
+  `completed_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `portfolios_created_by_foreign` (`created_by`),
+  KEY `portfolios_client_id_deliverable_type_index` (`client_id`,`deliverable_type`),
+  KEY `portfolios_client_id_status_index` (`client_id`,`status`),
+  KEY `portfolios_task_id_index` (`task_id`),
+  KEY `portfolios_project_id_index` (`project_id`),
+  CONSTRAINT `portfolios_client_id_foreign` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `portfolios_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `portfolios_project_id_foreign` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `portfolios_task_id_foreign` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- WORKSPACE TABLES
+-- =============================================================================
+
+-- Workspaces table
+CREATE TABLE `workspaces` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `admin_id` bigint unsigned DEFAULT NULL,
+  `user_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `is_primary` tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `workspaces_admin_id_foreign` (`admin_id`),
+  CONSTRAINT `workspaces_admin_id_foreign` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- User workspace table
+CREATE TABLE `user_workspace` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `admin_id` bigint unsigned DEFAULT NULL,
+  `workspace_id` bigint unsigned NOT NULL,
+  `user_id` bigint unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_workspace_workspace_id_user_id_unique` (`workspace_id`,`user_id`),
+  KEY `user_workspace_user_id_foreign` (`user_id`),
+  KEY `user_workspace_admin_id_foreign` (`admin_id`),
+  CONSTRAINT `user_workspace_admin_id_foreign` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `user_workspace_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `user_workspace_workspace_id_foreign` FOREIGN KEY (`workspace_id`) REFERENCES `workspaces` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- NOTIFICATION TABLES
+-- =============================================================================
+
+-- Notifications table
+CREATE TABLE `notifications` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `workspace_id` bigint unsigned NOT NULL,
+  `from_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type_id` bigint unsigned NOT NULL,
+  `action` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `message` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `notifications_workspace_id_foreign` (`workspace_id`),
+  CONSTRAINT `notifications_workspace_id_foreign` FOREIGN KEY (`workspace_id`) REFERENCES `workspaces` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Notification user table
+CREATE TABLE `notification_user` (
+  `user_id` bigint unsigned NOT NULL,
+  `notification_id` bigint unsigned NOT NULL,
+  `read_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`user_id`,`notification_id`),
+  KEY `notification_user_notification_id_foreign` (`notification_id`),
+  CONSTRAINT `notification_user_notification_id_foreign` FOREIGN KEY (`notification_id`) REFERENCES `notifications` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `notification_user_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- SETTINGS TABLES
+-- =============================================================================
+
+-- Settings table
+CREATE TABLE `settings` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `value` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  `type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'string',
+  `group` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'general',
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_key` (`key`)
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- MIGRATIONS TABLE
+-- =============================================================================
+
+-- Migrations table
+CREATE TABLE `migrations` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `batch` int NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=145 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================================
+-- CRITICAL DIFFERENCES FROM DOCUMENTATION
+-- =============================================================================
+
+-- 1. CLIENTS TABLE: Has first_name and last_name, NOT name field
+-- 2. MISSING TABLES: client_task, project_client, client_project relationships
+-- 3. TASK RELATIONSHIPS: Uses task_user table, not direct relationships
+-- 4. PROJECT RELATIONSHIPS: Uses project_user table, not direct relationships
+-- 5. CLIENT RELATIONSHIPS: No direct client-task or client-project tables
+-- 6. WORKSPACE SYSTEM: Multi-tenant workspace system in place
+-- 7. ADMIN SYSTEM: Admin_id fields throughout for multi-admin support
+
+-- =============================================================================
+-- CORRECTED API QUERIES BASED ON REAL SCHEMA
+-- =============================================================================
+
+-- Client queries (corrected for real schema)
+-- SELECT * FROM clients WHERE first_name LIKE ? OR last_name LIKE ? OR company LIKE ?;
+-- INSERT INTO clients (first_name, last_name, email, phone, company, ...) VALUES (?, ?, ?, ?, ?, ...);
+
+-- Task queries (corrected for real schema)
+-- SELECT * FROM tasks LEFT JOIN task_user ON tasks.id = task_user.task_id LEFT JOIN users ON task_user.user_id = users.id;
+-- INSERT INTO task_user (task_id, user_id) VALUES (?, ?);
+
+-- Project queries (corrected for real schema)
+-- SELECT * FROM projects LEFT JOIN project_user ON projects.id = project_user.project_id LEFT JOIN users ON project_user.user_id = users.id;
+-- INSERT INTO project_user (project_id, user_id) VALUES (?, ?);
+
+-- =============================================================================
+-- CONCLUSION
+-- =============================================================================
+
+-- The real database schema is significantly different from the documentation
+-- All SQL queries in the documentation need to be updated to match this real schema
+-- The API controllers need to be updated to use the correct field names and relationships
+-- The frontend needs to be updated to handle the correct data structures
