@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import apiClient from '@/lib/api-client';
-import { Plus, Search, Filter, Calendar, User, CheckCircle, Clock, AlertCircle, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
+import { Plus, Search, Filter, Calendar, User, CheckCircle, Clock, AlertCircle, ChevronDown, ChevronRight, ExternalLink, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Project {
@@ -55,6 +55,12 @@ interface Task {
   created_at: string;
 }
 
+interface FilterOption {
+  id: number;
+  title?: string;
+  name?: string;
+}
+
 export default function ProjectManagementPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -63,9 +69,21 @@ export default function ProjectManagementPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [expandedProjects, setExpandedProjects] = useState<Set<number>>(new Set());
   const [projectTasks, setProjectTasks] = useState<Record<number, Task[]>>({});
+  
+  // Enhanced filter states
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedClient, setSelectedClient] = useState<string>('all');
+  
+  // Filter options
+  const [statuses, setStatuses] = useState<FilterOption[]>([]);
+  const [clients, setClients] = useState<FilterOption[]>([]);
+  
+  // Filter panel state
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchProjects();
+    fetchFilterOptions();
   }, []);
 
   // Debounced search effect
@@ -77,11 +95,36 @@ export default function ProjectManagementPage() {
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
+  // Refetch projects when filters change
+  useEffect(() => {
+    fetchProjects(searchTerm);
+  }, [selectedStatus, selectedClient]);
+
+  const fetchFilterOptions = async () => {
+    try {
+      const [statusesRes, clientsRes] = await Promise.all([
+        apiClient.get('/statuses?per_page=all'),
+        apiClient.get('/clients?per_page=all')
+      ]);
+
+      setStatuses(statusesRes.data?.data || []);
+      setClients(clientsRes.data?.data || []);
+    } catch (error) {
+      console.error('Failed to fetch filter options:', error);
+    }
+  };
+
   const fetchProjects = async (searchQuery = '') => {
     try {
       const params = new URLSearchParams();
       if (searchQuery) {
         params.append('search', searchQuery);
+      }
+      if (selectedStatus !== 'all') {
+        params.append('status_id', selectedStatus);
+      }
+      if (selectedClient !== 'all') {
+        params.append('client_id', selectedClient);
       }
       
       const response = await apiClient.get(`/projects?${params.toString()}`);
@@ -202,14 +245,18 @@ export default function ProjectManagementPage() {
     return { totalTasks, activeTasks, overdueTasks };
   };
 
-  // Filter projects based on status
-  const filteredProjects = projects.filter(project => {
-    const matchesStatus = 
-      statusFilter === 'all' || 
-      (project.status?.title?.toLowerCase() || '') === statusFilter.toLowerCase();
-    
-    return matchesStatus;
-  });
+  // Use projects directly since filtering is now server-side
+  const filteredProjects = projects;
+
+  const clearAllFilters = () => {
+    setSelectedStatus('all');
+    setSelectedClient('all');
+    setSearchTerm('');
+  };
+
+  const hasActiveFilters = selectedStatus !== 'all' || 
+    selectedClient !== 'all' || 
+    searchTerm !== '';
 
   if (loading) {
     return (
@@ -244,27 +291,110 @@ export default function ProjectManagementPage() {
         {/* Filters */}
         <Card>
           <CardContent className="p-4">
-            <div className="flex gap-4 items-center">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search projects..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="space-y-4">
+              {/* Search and Filter Toggle */}
+              <div className="flex gap-4 items-center">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search projects..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filters
+                </Button>
+                {hasActiveFilters && (
+                  <Button 
+                    variant="outline" 
+                    onClick={clearAllFilters}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Clear All
+                  </Button>
+                )}
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
+
+              {/* Filter Options */}
+              {showFilters && (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {/* Status Filter */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Status</label>
+                    <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        {statuses.map((status) => (
+                          <SelectItem key={status.id} value={status.id.toString()}>
+                            {status.title || status.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Client Filter */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Client</label>
+                    <Select value={selectedClient} onValueChange={setSelectedClient}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Clients" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Clients</SelectItem>
+                        {clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id.toString()}>
+                            {client.title || client.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
+              {/* Active Filters Display */}
+              {hasActiveFilters && (
+                <div className="flex flex-wrap gap-2">
+                  {selectedStatus !== 'all' && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      Status: {statuses.find(s => s.id.toString() === selectedStatus)?.title || selectedStatus}
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => setSelectedStatus('all')}
+                      />
+                    </Badge>
+                  )}
+                  {selectedClient !== 'all' && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      Client: {clients.find(c => c.id.toString() === selectedClient)?.title || selectedClient}
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => setSelectedClient('all')}
+                      />
+                    </Badge>
+                  )}
+                  {searchTerm && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      Search: "{searchTerm}"
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => setSearchTerm('')}
+                      />
+                    </Badge>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
