@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('subscriptions:check')->everyFifteenMinutes();// Adjust this as per your needs (e.g., hourly, twice daily, etc.)
         // $schedule->command('auth:clear-resets')->everyFifteenMinutes();
         $schedule->command('tasks:check-deadlines')->everyMinute();
+        $schedule->command('tasks:generate-repeating')->daily();
     }
 
     /**

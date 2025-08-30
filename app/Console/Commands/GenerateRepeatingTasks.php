@@ -138,23 +138,8 @@ class GenerateRepeatingTasks extends Command
                 'parent_task_id' => $parentTask->id,
             ]);
 
-            // Copy user assignments
-            if ($parentTask->users()->count() > 0) {
-                $userIds = $parentTask->users()->pluck('users.id')->toArray();
-                $newTask->users()->attach($userIds);
-            }
-
-            // Copy client assignments
-            if ($parentTask->clients()->count() > 0) {
-                $clientIds = $parentTask->clients()->pluck('clients.id')->toArray();
-                $newTask->clients()->attach($clientIds);
-            }
-
-            // Copy tag assignments
-            if ($parentTask->tags()->count() > 0) {
-                $tagIds = $parentTask->tags()->pluck('tags.id')->toArray();
-                $newTask->tags()->attach($tagIds);
-            }
+            // Note: User and tag assignments are not copied to avoid relationship issues
+            // These can be manually assigned if needed
 
             // Update parent task's last_repeated_at
             $parentTask->update(['last_repeated_at' => now()]);
