@@ -23,6 +23,22 @@ class ClientController extends BaseController
             $query = Client::query();
             // Removed workspace filtering for single-tenant system
 
+            // Role-based filtering
+            if ($user->hasRole('Requester')) {
+                // Requesters only see clients related to their projects
+                $query->whereHas('projects', function($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                });
+            } elseif ($user->hasRole('Tasker')) {
+                // Taskers only see clients related to projects they're assigned to
+                $query->whereHas('projects.tasks', function($q) use ($user) {
+                    $q->whereHas('users', function($subQ) use ($user) {
+                        $subQ->where('users.id', $user->id);
+                    });
+                });
+            }
+            // Admins and sub-admins see all clients (no additional filtering)
+
             // Apply filters
             if ($request->has('search')) {
                 $search = $request->search;
