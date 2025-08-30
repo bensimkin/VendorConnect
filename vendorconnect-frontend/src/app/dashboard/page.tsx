@@ -53,6 +53,7 @@ interface DashboardData {
     description?: string;
     note?: string;
     deliverable_quantity?: number;
+    deliverables_count?: number;
     status?: { title: string };  // FIXED: Use primary database field
     priority?: { title: string };  // FIXED: Use primary database field
     project?: { title: string };
@@ -531,6 +532,11 @@ export default function DashboardPage() {
                         {task.deliverable_quantity && task.deliverable_quantity > 1 && (
                           <span className="ml-2 text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
                             Qty: {task.deliverable_quantity}
+                          </span>
+                        )}
+                        {task.deliverables_count && task.deliverables_count > 0 && (
+                          <span className="ml-2 text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">
+                            📎 {task.deliverables_count}
                           </span>
                         )}
                       </p>

@@ -49,6 +49,7 @@ interface RequesterDashboardData {
     description?: string;
     note?: string;
     deliverable_quantity?: number;
+    deliverables_count?: number;
       status?: { title: string };  // FIXED: Use primary database field
   priority?: { title: string };  // FIXED: Use primary database field
     end_date?: string;
@@ -428,6 +429,13 @@ export default function RequesterDashboardPage() {
                           <div className="text-xs text-green-600 mt-1">
                             <span className="bg-green-100 text-green-800 px-1 py-0.5 rounded">
                               Qty: {task.deliverable_quantity}
+                            </span>
+                          </div>
+                        )}
+                        {task.deliverables_count && task.deliverables_count > 0 && (
+                          <div className="text-xs text-purple-600 mt-1">
+                            <span className="bg-purple-100 text-purple-800 px-1 py-0.5 rounded">
+                              📎 {task.deliverables_count}
                             </span>
                           </div>
                         )}
