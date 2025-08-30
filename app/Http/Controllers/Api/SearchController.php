@@ -37,7 +37,7 @@ class SearchController extends Controller
             $results = [];
 
             // Search Clients (only for Admin users)
-            if ($user->hasRole(['Admin', 'sub admin'])) {
+            if ($user->hasRole(['admin', 'sub admin'])) {
                 $clients = Client::where(function($q) use ($searchTerm) {
                     $q->where('name', 'like', $searchTerm)
                       ->orWhere('first_name', 'like', $searchTerm)
