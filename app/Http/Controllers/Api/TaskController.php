@@ -21,6 +21,7 @@ use App\Models\ChMessage;
 use App\Models\TaskBriefQuestion;
 use App\Models\TaskBriefChecklist;
 use App\Models\Portfolio;
+use App\Models\TaskAssignmentHistory;
 use App\Services\NotificationService;
 
 class TaskController extends BaseController
@@ -230,9 +231,14 @@ class TaskController extends BaseController
                 'template_deliverable_quantity' => $template ? $template->deliverable_quantity : null,
             ]);
 
-            // Attach users
+            // Attach users and track assignment history
             if ($request->has('user_ids')) {
                 $task->users()->attach($request->user_ids);
+                
+                // Track assignment history for portfolio access control
+                foreach ($request->user_ids as $userId) {
+                    $this->trackAssignmentHistory($task, $userId, 'assigned');
+                }
             }
 
             // Attach clients
@@ -401,8 +407,24 @@ class TaskController extends BaseController
                 'note', 'deliverable_quantity'
             ]));
 
-            // Sync users
+            // Sync users and track assignment history
             if ($request->has('user_ids')) {
+                // Get current assignments before sync
+                $currentUserIds = $task->users()->pluck('users.id')->toArray();
+                $newUserIds = $request->user_ids;
+                
+                // Track removals
+                $removedUserIds = array_diff($currentUserIds, $newUserIds);
+                foreach ($removedUserIds as $userId) {
+                    $this->trackAssignmentHistory($task, $userId, 'removed');
+                }
+                
+                // Track new assignments
+                $addedUserIds = array_diff($newUserIds, $currentUserIds);
+                foreach ($addedUserIds as $userId) {
+                    $this->trackAssignmentHistory($task, $userId, 'assigned');
+                }
+                
                 $task->users()->sync($request->user_ids);
             }
 
@@ -1118,6 +1140,42 @@ class TaskController extends BaseController
             return $this->sendResponse($task, 'Task repetition resumed successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error resuming task repetition: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Track task assignment history for portfolio access control
+     */
+    private function trackAssignmentHistory($task, $userId, $action, $actionBy = null)
+    {
+        try {
+            // Get the client through the project relationship
+            $client = $task->project->clients->first();
+            if (!$client) {
+                return; // No client associated with this task
+            }
+
+            // Check if this combination already exists
+            $existingRecord = TaskAssignmentHistory::where([
+                'task_id' => $task->id,
+                'user_id' => $userId,
+                'client_id' => $client->id,
+                'action' => $action
+            ])->first();
+
+            if (!$existingRecord) {
+                TaskAssignmentHistory::create([
+                    'task_id' => $task->id,
+                    'user_id' => $userId,
+                    'client_id' => $client->id,
+                    'action' => $action,
+                    'action_date' => now(),
+                    'action_by' => $actionBy ?? Auth::user()->id,
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the main operation
+            \Log::error('Error tracking assignment history: ' . $e->getMessage());
         }
     }
 
