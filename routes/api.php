@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\ClientCredentialController;
+use App\Http\Controllers\Api\SearchController;
 
 /*
 |--------------------------------------------------------------------------
@@ -293,6 +294,9 @@ Route::prefix('priorities')->group(function () {
             Route::delete('/{id}', [TaskBriefChecklistController::class, 'destroy']);
         });
         
+        // Global Search
+        Route::get('/search', [SearchController::class, 'globalSearch']);
+
         // Notifications
         Route::prefix('notifications')->group(function () {
             Route::get('/', [NotificationController::class, 'index']);

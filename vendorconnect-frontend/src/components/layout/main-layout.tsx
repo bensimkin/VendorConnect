@@ -27,6 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 import NotificationBell from '@/components/notifications/NotificationBell';
+import GlobalSearch from '@/components/search/GlobalSearch';
 
 // Navigation items with role restrictions
 const navigation = [
@@ -235,14 +236,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </Button>
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-            <div className="relative flex flex-1">
-              <Search className="pointer-events-none absolute inset-y-0 left-0 h-full w-5 text-muted-foreground ml-3" />
-              <input
-                type="search"
-                placeholder="Search..."
-                className="block h-full w-full border-0 py-0 pl-10 pr-0 text-foreground placeholder:text-muted-foreground focus:ring-0 sm:text-sm bg-transparent"
-              />
-            </div>
+            <GlobalSearch />
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               <Button
                 variant="ghost"
