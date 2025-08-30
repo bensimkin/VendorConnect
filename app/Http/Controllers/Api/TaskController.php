@@ -753,7 +753,8 @@ class TaskController extends BaseController
             }
 
             $validator = Validator::make($request->all(), [
-                'message' => 'required|string',
+                'message' => 'sometimes|required|string',
+                'message_text' => 'sometimes|required|string',
                 'message_type' => 'sometimes|string|in:text,file,image',
                 'file' => 'nullable|file|mimes:jpeg,png,jpg,gif,pdf,doc,docx|max:5120',
             ]);
@@ -763,7 +764,7 @@ class TaskController extends BaseController
             }
 
             $messageData = [
-                'message_text' => $request->message,
+                'message_text' => $request->message ?? $request->message_text,
                 'sender_id' => Auth::user()->id,
             ];
 
