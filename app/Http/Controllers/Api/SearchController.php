@@ -39,8 +39,7 @@ class SearchController extends BaseController
             // Search Clients (only for Admin users)
             if ($user->hasRole(['admin', 'sub admin'])) {
                 $clients = Client::where(function($q) use ($searchTerm) {
-                    $q->where('name', 'like', $searchTerm)
-                      ->orWhere('first_name', 'like', $searchTerm)
+                    $q->where('first_name', 'like', $searchTerm)
                       ->orWhere('last_name', 'like', $searchTerm)
                       ->orWhere('email', 'like', $searchTerm)
                       ->orWhere('company', 'like', $searchTerm)
@@ -53,7 +52,7 @@ class SearchController extends BaseController
                     return [
                         'id' => $client->id,
                         'type' => 'client',
-                        'title' => $client->name ?: ($client->first_name . ' ' . $client->last_name),
+                        'title' => trim($client->first_name . ' ' . $client->last_name),
                         'subtitle' => $client->company ?: $client->email,
                         'url' => '/clients/' . $client->id,
                         'icon' => 'Building2',
@@ -180,11 +179,11 @@ class SearchController extends BaseController
                         'id' => $item->id,
                         'type' => 'portfolio',
                         'title' => $item->title,
-                        'subtitle' => $item->client?->name ?: 'No Client',
+                        'subtitle' => $item->client ? trim($item->client->first_name . ' ' . $item->client->last_name) : 'No Client',
                         'url' => '/portfolio/' . $item->id,
                         'icon' => 'Briefcase',
                         'description' => $item->description ?: 'No description',
-                        'client' => $item->client?->name,
+                        'client' => $item->client ? trim($item->client->first_name . ' ' . $item->client->last_name) : null,
                         'task' => $item->task?->title
                     ];
                 });
