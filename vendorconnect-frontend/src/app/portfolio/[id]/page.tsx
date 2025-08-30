@@ -249,8 +249,14 @@ export default function PortfolioDetailPage() {
                     <h3 className="font-medium">Client</h3>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <User className="h-4 w-4" />
-                      <span>{`${portfolio.client.first_name || ''} ${portfolio.client.last_name || ''}`.trim() || portfolio.client.name}</span>
-                      {portfolio.client.company && (
+                      <span>
+                        {portfolio.client ? (
+                          `${portfolio.client.first_name || ''} ${portfolio.client.last_name || ''}`.trim() || portfolio.client.name || 'No name'
+                        ) : (
+                          'No client assigned'
+                        )}
+                      </span>
+                      {portfolio.client?.company && (
                         <span className="text-sm">({portfolio.client.company})</span>
                       )}
                     </div>
@@ -280,7 +286,13 @@ export default function PortfolioDetailPage() {
                     <h3 className="font-medium">Created By</h3>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <User className="h-4 w-4" />
-                      <span>{`${portfolio.createdBy.first_name || ''} ${portfolio.createdBy.last_name || ''}`.trim()}</span>
+                      <span>
+                        {portfolio.createdBy ? (
+                          `${portfolio.createdBy.first_name || ''} ${portfolio.createdBy.last_name || ''}`.trim() || 'Unknown user'
+                        ) : (
+                          'Unknown user'
+                        )}
+                      </span>
                     </div>
                   </div>
 

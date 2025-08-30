@@ -417,12 +417,12 @@ export default function DashboardPage() {
                         {task.project && (
                           <span>Project: {task.project.title}</span>
                         )}
-                        {task.clients && task.clients.length > 0 && (
+                        {task.clients && task.clients.length > 0 && task.clients[0] && (
                           <span>Client: {task.clients[0].first_name && task.clients[0].last_name ? 
                             `${task.clients[0].first_name} ${task.clients[0].last_name}` : 
                             task.clients[0].name || 'Unknown'}</span>
                         )}
-                        {task.users && task.users.length > 0 && (
+                        {task.users && task.users.length > 0 && task.users[0] && (
                           <span>Assigned: {task.users[0].first_name} {task.users[0].last_name}</span>
                         )}
                       </div>
@@ -537,12 +537,12 @@ export default function DashboardPage() {
                       <p className="text-xs text-muted-foreground">
                         {task.status ? `Status: ${task.status.title}` : 'No status'} •{' '}
                         {new Date(task.created_at).toLocaleDateString()}
-                        {task.clients && task.clients.length > 0 && (
+                        {task.clients && task.clients.length > 0 && task.clients[0] && (
                           <span> • Client: {task.clients[0].first_name && task.clients[0].last_name ? 
                             `${task.clients[0].first_name} ${task.clients[0].last_name}` : 
                             task.clients[0].name || 'Unknown'}</span>
                         )}
-                        {task.users && task.users.length > 0 && (
+                        {task.users && task.users.length > 0 && task.users[0] && (
                           <span> • Tasker: {task.users[0].first_name} {task.users[0].last_name}</span>
                         )}
                       </p>
