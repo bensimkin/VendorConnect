@@ -23,6 +23,7 @@ interface Task {
   id: number;
   title: string;
   description?: string;
+  standard_brief?: string;
   note?: string;
   deliverable_quantity?: number;
   status_id?: number;
@@ -153,6 +154,7 @@ export default function EditTaskPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    standard_brief: '',
     note: '',
     status_id: null as number | null,
     priority_id: null as number | null,
@@ -196,6 +198,7 @@ export default function EditTaskPage() {
       setFormData({
            title: taskData?.title || '',
            description: taskData?.description || '',
+           standard_brief: taskData?.standard_brief || '',
            note: taskData?.note || '',
            status_id: taskData?.status?.id || null,
            priority_id: taskData?.priority?.id || null,
@@ -309,6 +312,7 @@ export default function EditTaskPage() {
       const payload: Record<string, any> = {
         title: formData.title,
         description: formData.description,
+        standard_brief: formData.standard_brief,
         note: formData.note,
         status_id: formData.status_id || 15, // Default to "Pending" status
         priority_id: formData.priority_id || 2, // Default to "Medium" priority
@@ -586,6 +590,18 @@ export default function EditTaskPage() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={4}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="standard_brief">Standard Brief</Label>
+                <Textarea
+                  id="standard_brief"
+                  value={formData.standard_brief}
+                  onChange={(e) => setFormData({ ...formData, standard_brief: e.target.value })}
+                  placeholder="Enter standard brief for this task"
+                  rows={4}
+                />
+                <p className="text-xs text-muted-foreground">Standard brief that will be applied to this task</p>
               </div>
 
               <div className="space-y-2">
