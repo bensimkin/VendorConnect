@@ -564,7 +564,7 @@ class DashboardController extends BaseController
         $completedStatusId = $completedStatus ? $completedStatus->id : null;
         
         // Base query for overdue tasks
-        $overdueQuery = Task::with(['users', 'status', 'priority', 'project', 'clients'])
+        $overdueQuery = Task::with(['users', 'status', 'priority', 'project.clients'])
             ->where('end_date', '<', Carbon::now())
             ->where('status_id', '!=', $completedStatusId);
         
@@ -607,7 +607,7 @@ class DashboardController extends BaseController
                         'id' => $task->project->id,
                         'title' => $task->project->title,
                     ] : null,
-                    'clients' => $task->clients ? $task->clients->map(function ($client) {
+                    'clients' => $task->project && $task->project->clients ? $task->project->clients->map(function ($client) {
                         return [
                             'id' => $client->id,
                             'first_name' => $client->first_name,
