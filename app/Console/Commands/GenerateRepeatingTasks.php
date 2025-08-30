@@ -121,8 +121,14 @@ class GenerateRepeatingTasks extends Command
             $duration = $originalStart->diffInDays($originalEnd);
             $newEndDate = $nextDate->copy()->addDays($duration);
 
+            // Format the date for the title (e.g., "5 Aug 2025")
+            $formattedDate = $nextDate->format('j M Y');
+            $newTitle = $parentTask->title . ' ' . $formattedDate;
+            
+            $this->info("Creating task with title: {$newTitle}");
+            
             $newTask = Task::create([
-                'title' => $parentTask->title,
+                'title' => $newTitle,
                 'description' => $parentTask->description,
                 'status_id' => $parentTask->status_id,
                 'priority_id' => $parentTask->priority_id,
