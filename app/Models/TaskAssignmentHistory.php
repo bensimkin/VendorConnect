@@ -9,6 +9,8 @@ class TaskAssignmentHistory extends Model
 {
     use HasFactory;
 
+    protected $table = 'task_assignment_history';
+
     protected $fillable = [
         'task_id',
         'user_id',
