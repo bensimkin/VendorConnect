@@ -147,8 +147,7 @@ class SearchController extends BaseController
             // Search Portfolio Items (with role-based filtering)
             $portfolioQuery = Portfolio::where(function($q) use ($searchTerm) {
                 $q->where('title', 'like', $searchTerm)
-                  ->orWhere('description', 'like', $searchTerm)
-                  ->orWhere('content', 'like', $searchTerm);
+                  ->orWhere('description', 'like', $searchTerm);
             });
 
             // Apply role-based filtering
