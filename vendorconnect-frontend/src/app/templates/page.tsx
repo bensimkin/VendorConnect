@@ -130,18 +130,16 @@ export default function TemplatesPage() {
             {filteredTemplates.map((template) => (
               <Card key={template.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <CardTitle className="text-lg flex items-center gap-2 overflow-hidden">
-                        <FileText className="h-5 w-5 text-muted-foreground" />
-                        <span className="truncate">{template.title}</span>
-                      </CardTitle>
-                      {template.task_type && (
-                        <CardDescription>
-                          Task Type: {template.task_type.task_type}
-                        </CardDescription>
-                      )}
-                    </div>
+                  <div className="space-y-1">
+                    <CardTitle className="text-lg flex items-start gap-2 min-w-0">
+                      <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                      <span className="truncate leading-tight">{template.title}</span>
+                    </CardTitle>
+                    {template.task_type && (
+                      <CardDescription>
+                        Task Type: {template.task_type.task_type}
+                      </CardDescription>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
