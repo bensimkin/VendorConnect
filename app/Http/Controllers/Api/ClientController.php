@@ -32,7 +32,7 @@ class ClientController extends BaseController
                       ->orWhere('company', 'like', "%{$search}%");
 
                     // Only admins and sub-admins can search by email
-                    if ($user->hasRole(['admin', 'sub_admin'])) {
+                    if ($user->hasRole(['admin', 'sub admin'])) {
                         $q->orWhere('email', 'like', "%{$search}%");
                     }
                 });
@@ -71,7 +71,7 @@ class ClientController extends BaseController
             }
 
             // Apply role-based data protection to the response
-            if (!$user->hasRole(['admin', 'sub_admin'])) {
+            if (!$user->hasRole(['admin', 'sub admin'])) {
                 // Remove sensitive data for requesters and taskers
                 if ($request->get('per_page') === 'all') {
                     $clients->transform(function ($client) {
