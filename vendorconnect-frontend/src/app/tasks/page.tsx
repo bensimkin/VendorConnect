@@ -18,6 +18,7 @@ interface Task {
   description?: string;
   note?: string;
   deliverable_quantity?: number;
+  deliverables_count?: number;
   status?: {
     id: number;
     title: string;  // FIXED: Use primary database field
@@ -594,6 +595,15 @@ function TasksPageContent() {
                       <div className="flex items-center gap-2 text-sm">
                         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
                           Qty: {task.deliverable_quantity}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Deliverables Count */}
+                    {task.deliverables_count && task.deliverables_count > 0 && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                          📎 {task.deliverables_count} deliverable{task.deliverables_count > 1 ? 's' : ''}
                         </span>
                       </div>
                     )}
