@@ -53,31 +53,61 @@ class ClientController extends BaseController
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
-            $clients = $query->withCount(['projects as projects_count'])
-                ->withCount(['tasks as tasks_count'])
-                ->withCount(['projects as active_projects' => function($query) {
-                    $query->where('status_id', 20); // Active status ID
-                }])
-                ->paginate($request->get('per_page', 15));
+            // Support returning all records without pagination for dropdowns
+            if ($request->get('per_page') === 'all') {
+                $clients = $query->withCount(['projects as projects_count'])
+                    ->withCount(['tasks as tasks_count'])
+                    ->withCount(['projects as active_projects' => function($query) {
+                        $query->where('status_id', 20); // Active status ID
+                    }])
+                    ->get();
+            } else {
+                $clients = $query->withCount(['projects as projects_count'])
+                    ->withCount(['tasks as tasks_count'])
+                    ->withCount(['projects as active_projects' => function($query) {
+                        $query->where('status_id', 20); // Active status ID
+                    }])
+                    ->paginate($request->get('per_page', 15));
+            }
 
             // Apply role-based data protection to the response
             if (!$user->hasRole(['admin', 'sub_admin'])) {
                 // Remove sensitive data for requesters and taskers
-                $clients->getCollection()->transform(function ($client) {
-                    unset($client->email);
-                    unset($client->phone);
-                    unset($client->address);
-                    unset($client->city);
-                    unset($client->state);
-                    unset($client->country);
-                    unset($client->zip);
-                    unset($client->dob);
-                    unset($client->notes);
-                    return $client;
-                });
+                if ($request->get('per_page') === 'all') {
+                    $clients->transform(function ($client) {
+                        unset($client->email);
+                        unset($client->phone);
+                        unset($client->address);
+                        unset($client->city);
+                        unset($client->state);
+                        unset($client->country);
+                        unset($client->zip);
+                        unset($client->dob);
+                        unset($client->notes);
+                        return $client;
+                    });
+                } else {
+                    $clients->getCollection()->transform(function ($client) {
+                        unset($client->email);
+                        unset($client->phone);
+                        unset($client->address);
+                        unset($client->city);
+                        unset($client->state);
+                        unset($client->country);
+                        unset($client->zip);
+                        unset($client->dob);
+                        unset($client->notes);
+                        return $client;
+                    });
+                }
             }
 
-            return $this->sendPaginatedResponse($clients, 'Clients retrieved successfully');
+            // Return appropriate response based on pagination
+            if ($request->get('per_page') === 'all') {
+                return $this->sendResponse($clients, 'Clients retrieved successfully');
+            } else {
+                return $this->sendPaginatedResponse($clients, 'Clients retrieved successfully');
+            }
         } catch (\Exception $e) {
             return $this->sendServerError('Error retrieving clients: ' . $e->getMessage());
         }
