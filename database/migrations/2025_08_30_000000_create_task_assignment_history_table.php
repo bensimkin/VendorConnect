@@ -19,6 +19,7 @@ return new class extends Migration
             $table->enum('action', ['assigned', 'removed'])->default('assigned');
             $table->timestamp('action_date')->useCurrent();
             $table->foreignId('action_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->timestamps();
             
             // Indexes for better performance
             $table->index(['user_id', 'client_id']);
