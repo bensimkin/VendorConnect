@@ -14,8 +14,9 @@ import { apiClient } from '@/lib/api-client';
 
 interface Client {
   id: number;
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
+  name?: string;
   email?: string;
   phone?: string;
   address?: string;
@@ -68,8 +69,8 @@ export default function EditClientPage() {
       
       setClient(clientData);
       setFormData({
-        first_name: clientData.first_name,
-        last_name: clientData.last_name,
+        first_name: clientData.first_name || '',
+        last_name: clientData.last_name || '',
         email: clientData.email || '',
         phone: clientData.phone || '',
         address: clientData.address || '',
