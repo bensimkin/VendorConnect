@@ -33,7 +33,7 @@ class TaskController extends BaseController
     {
         try {
             $user = Auth::user();
-            $query = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'project.clients']);
+            $query = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'project.clients', 'deliverables']);
             
             // Role-based filtering
             if ($user->hasRole('Requester')) {
@@ -115,6 +115,9 @@ class TaskController extends BaseController
                 } else {
                     $task->clients = collect();
                 }
+                
+                // Add deliverables count
+                $task->deliverables_count = $task->deliverables ? $task->deliverables->count() : 0;
                 
                 return $task;
             });
