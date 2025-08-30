@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,16 +63,31 @@ interface FilterOption {
 
 export default function ProjectManagementPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Initialize filter states from URL params or localStorage
+  const getInitialFilterValue = (key: string, defaultValue: string = 'all') => {
+    const urlValue = searchParams.get(key);
+    if (urlValue !== null) return urlValue;
+    
+    // Fallback to localStorage
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(`project_management_filter_${key}`);
+      return stored || defaultValue;
+    }
+    return defaultValue;
+  };
+
+  const [searchTerm, setSearchTerm] = useState(getInitialFilterValue('search', ''));
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [expandedProjects, setExpandedProjects] = useState<Set<number>>(new Set());
   const [projectTasks, setProjectTasks] = useState<Record<number, Task[]>>({});
   
   // Enhanced filter states
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [selectedClient, setSelectedClient] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState(getInitialFilterValue('status'));
+  const [selectedClient, setSelectedClient] = useState(getInitialFilterValue('client'));
   
   // Filter options
   const [statuses, setStatuses] = useState<FilterOption[]>([]);
@@ -248,10 +263,39 @@ export default function ProjectManagementPage() {
   // Use projects directly since filtering is now server-side
   const filteredProjects = projects;
 
+  // Function to update URL and localStorage
+  const updateFilterPersistence = (key: string, value: string) => {
+    // Update localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`project_management_filter_${key}`, value);
+    }
+    
+    // Update URL params
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === 'all' || value === '') {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+    
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    router.replace(newUrl, { scroll: false });
+  };
+
   const clearAllFilters = () => {
     setSelectedStatus('all');
     setSelectedClient('all');
     setSearchTerm('');
+    
+    // Clear all persistent storage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('project_management_filter_status');
+      localStorage.removeItem('project_management_filter_client');
+      localStorage.removeItem('project_management_filter_search');
+    }
+    
+    // Clear URL params
+    router.replace(window.location.pathname, { scroll: false });
   };
 
   const hasActiveFilters = selectedStatus !== 'all' || 
@@ -299,7 +343,10 @@ export default function ProjectManagementPage() {
                   <Input
                     placeholder="Search projects..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      updateFilterPersistence('search', e.target.value);
+                    }}
                     className="pl-10"
                   />
                 </div>
@@ -328,7 +375,10 @@ export default function ProjectManagementPage() {
                   {/* Status Filter */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Status</label>
-                    <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <Select value={selectedStatus} onValueChange={(value) => {
+                      setSelectedStatus(value);
+                      updateFilterPersistence('status', value);
+                    }}>
                       <SelectTrigger>
                         <SelectValue placeholder="All Statuses" />
                       </SelectTrigger>
@@ -346,7 +396,10 @@ export default function ProjectManagementPage() {
                   {/* Client Filter */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Client</label>
-                    <Select value={selectedClient} onValueChange={setSelectedClient}>
+                    <Select value={selectedClient} onValueChange={(value) => {
+                      setSelectedClient(value);
+                      updateFilterPersistence('client', value);
+                    }}>
                       <SelectTrigger>
                         <SelectValue placeholder="All Clients" />
                       </SelectTrigger>
@@ -371,7 +424,10 @@ export default function ProjectManagementPage() {
                       Status: {statuses.find(s => s.id.toString() === selectedStatus)?.title || selectedStatus}
                       <X 
                         className="h-3 w-3 cursor-pointer" 
-                        onClick={() => setSelectedStatus('all')}
+                        onClick={() => {
+                          setSelectedStatus('all');
+                          updateFilterPersistence('status', 'all');
+                        }}
                       />
                     </Badge>
                   )}
@@ -380,7 +436,10 @@ export default function ProjectManagementPage() {
                       Client: {clients.find(c => c.id.toString() === selectedClient)?.title || selectedClient}
                       <X 
                         className="h-3 w-3 cursor-pointer" 
-                        onClick={() => setSelectedClient('all')}
+                        onClick={() => {
+                          setSelectedClient('all');
+                          updateFilterPersistence('client', 'all');
+                        }}
                       />
                     </Badge>
                   )}
@@ -389,7 +448,10 @@ export default function ProjectManagementPage() {
                       Search: "{searchTerm}"
                       <X 
                         className="h-3 w-3 cursor-pointer" 
-                        onClick={() => setSearchTerm('')}
+                        onClick={() => {
+                          setSearchTerm('');
+                          updateFilterPersistence('search', '');
+                        }}
                       />
                     </Badge>
                   )}
