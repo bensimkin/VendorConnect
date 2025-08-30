@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -73,7 +73,7 @@ interface FilterOption {
   name?: string;
 }
 
-export default function TasksPage() {
+function TasksPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -639,5 +639,22 @@ export default function TasksPage() {
         )}
       </div>
     </MainLayout>
+  );
+}
+
+export default function TasksPage() {
+  return (
+    <Suspense fallback={
+      <MainLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-muted-foreground">Loading tasks...</p>
+          </div>
+        </div>
+      </MainLayout>
+    }>
+      <TasksPageContent />
+    </Suspense>
   );
 }
