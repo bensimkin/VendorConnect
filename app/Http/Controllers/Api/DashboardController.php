@@ -43,7 +43,7 @@ class DashboardController extends BaseController
             $taskStats = $this->getTaskStatistics();
             
             // Get recent tasks with role-based filtering
-            $recentTasksQuery = Task::with(['users', 'status', 'priority', 'taskType', 'template']);
+            $recentTasksQuery = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'deliverables']);
             
             // Apply role-based filtering for recent tasks
             if ($user->hasRole('Requester')) {
@@ -61,6 +61,11 @@ class DashboardController extends BaseController
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
                 ->get();
+
+            // Add deliverables count to recent tasks
+            $recentTasks->each(function ($task) {
+                $task->deliverables_count = $task->deliverables ? $task->deliverables->count() : 0;
+            });
 
             // Get user activity
             $userActivity = $this->getUserActivity();
@@ -564,7 +569,7 @@ class DashboardController extends BaseController
         $completedStatusId = $completedStatus ? $completedStatus->id : null;
         
         // Base query for overdue tasks
-        $overdueQuery = Task::with(['users', 'status', 'priority', 'project.clients'])
+        $overdueQuery = Task::with(['users', 'status', 'priority', 'project.clients', 'deliverables'])
             ->where('end_date', '<', Carbon::now())
             ->where('status_id', '!=', $completedStatusId);
         
@@ -622,6 +627,7 @@ class DashboardController extends BaseController
                             'last_name' => $user->last_name,
                         ];
                     }) : [],
+                    'deliverables_count' => $task->deliverables ? $task->deliverables->count() : 0,
                     'created_at' => $task->created_at,
                 ];
             });
