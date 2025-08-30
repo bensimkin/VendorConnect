@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -75,16 +75,29 @@ interface FilterOption {
 
 export default function TasksPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   
-  // Filter states
-  const [selectedProject, setSelectedProject] = useState<string>('all');
-  const [selectedClient, setSelectedClient] = useState<string>('all');
-  const [selectedTaskType, setSelectedTaskType] = useState<string>('all');
-  const [selectedPriority, setSelectedPriority] = useState<string>('all');
+  // Initialize filter states from URL params or localStorage
+  const getInitialFilterValue = (key: string, defaultValue: string = 'all') => {
+    const urlValue = searchParams.get(key);
+    if (urlValue !== null) return urlValue;
+    
+    // Fallback to localStorage
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(`tasks_filter_${key}`);
+      return stored || defaultValue;
+    }
+    return defaultValue;
+  };
+
+  const [searchTerm, setSearchTerm] = useState(getInitialFilterValue('search', ''));
+  const [selectedStatus, setSelectedStatus] = useState(getInitialFilterValue('status'));
+  const [selectedProject, setSelectedProject] = useState(getInitialFilterValue('project'));
+  const [selectedClient, setSelectedClient] = useState(getInitialFilterValue('client'));
+  const [selectedTaskType, setSelectedTaskType] = useState(getInitialFilterValue('taskType'));
+  const [selectedPriority, setSelectedPriority] = useState(getInitialFilterValue('priority'));
   
   // Filter options
   const [projects, setProjects] = useState<FilterOption[]>([]);
@@ -187,6 +200,25 @@ export default function TasksPage() {
   // Use tasks directly since filtering is now server-side
   const filteredTasks = tasks;
 
+  // Function to update URL and localStorage
+  const updateFilterPersistence = (key: string, value: string) => {
+    // Update localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`tasks_filter_${key}`, value);
+    }
+    
+    // Update URL params
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === 'all' || value === '') {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+    
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    router.replace(newUrl, { scroll: false });
+  };
+
   const clearAllFilters = () => {
     setSelectedStatus('all');
     setSelectedProject('all');
@@ -194,6 +226,19 @@ export default function TasksPage() {
     setSelectedTaskType('all');
     setSelectedPriority('all');
     setSearchTerm('');
+    
+    // Clear all persistent storage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('tasks_filter_status');
+      localStorage.removeItem('tasks_filter_project');
+      localStorage.removeItem('tasks_filter_client');
+      localStorage.removeItem('tasks_filter_taskType');
+      localStorage.removeItem('tasks_filter_priority');
+      localStorage.removeItem('tasks_filter_search');
+    }
+    
+    // Clear URL params
+    router.replace(window.location.pathname, { scroll: false });
   };
 
   const hasActiveFilters = selectedStatus !== 'all' || 
@@ -252,7 +297,10 @@ export default function TasksPage() {
                   <Input
                     placeholder="Search tasks..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      updateFilterPersistence('search', e.target.value);
+                    }}
                     className="pl-10"
                   />
                 </div>
@@ -281,7 +329,10 @@ export default function TasksPage() {
                   {/* Status Filter */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Status</label>
-                    <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                                          <Select value={selectedStatus} onValueChange={(value) => {
+                        setSelectedStatus(value);
+                        updateFilterPersistence('status', value);
+                      }}>
                       <SelectTrigger>
                         <SelectValue placeholder="All Statuses" />
                       </SelectTrigger>
@@ -299,7 +350,10 @@ export default function TasksPage() {
                   {/* Project Filter */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Project</label>
-                    <Select value={selectedProject} onValueChange={setSelectedProject}>
+                    <Select value={selectedProject} onValueChange={(value) => {
+                      setSelectedProject(value);
+                      updateFilterPersistence('project', value);
+                    }}>
                       <SelectTrigger>
                         <SelectValue placeholder="All Projects" />
                       </SelectTrigger>
@@ -317,7 +371,10 @@ export default function TasksPage() {
                   {/* Client Filter */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Client</label>
-                    <Select value={selectedClient} onValueChange={setSelectedClient}>
+                    <Select value={selectedClient} onValueChange={(value) => {
+                      setSelectedClient(value);
+                      updateFilterPersistence('client', value);
+                    }}>
                       <SelectTrigger>
                         <SelectValue placeholder="All Clients" />
                       </SelectTrigger>
@@ -335,7 +392,10 @@ export default function TasksPage() {
                   {/* Task Type Filter */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Task Type</label>
-                    <Select value={selectedTaskType} onValueChange={setSelectedTaskType}>
+                    <Select value={selectedTaskType} onValueChange={(value) => {
+                      setSelectedTaskType(value);
+                      updateFilterPersistence('taskType', value);
+                    }}>
                       <SelectTrigger>
                         <SelectValue placeholder="All Task Types" />
                       </SelectTrigger>
@@ -353,7 +413,10 @@ export default function TasksPage() {
                   {/* Priority Filter */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Priority</label>
-                    <Select value={selectedPriority} onValueChange={setSelectedPriority}>
+                    <Select value={selectedPriority} onValueChange={(value) => {
+                      setSelectedPriority(value);
+                      updateFilterPersistence('priority', value);
+                    }}>
                       <SelectTrigger>
                         <SelectValue placeholder="All Priorities" />
                       </SelectTrigger>
@@ -378,7 +441,10 @@ export default function TasksPage() {
                       Status: {statuses.find(s => s.id.toString() === selectedStatus)?.title || selectedStatus}
                       <X 
                         className="h-3 w-3 cursor-pointer" 
-                        onClick={() => setSelectedStatus('all')}
+                        onClick={() => {
+                          setSelectedStatus('all');
+                          updateFilterPersistence('status', 'all');
+                        }}
                       />
                     </Badge>
                   )}
@@ -387,7 +453,10 @@ export default function TasksPage() {
                       Project: {projects.find(p => p.id.toString() === selectedProject)?.title || selectedProject}
                       <X 
                         className="h-3 w-3 cursor-pointer" 
-                        onClick={() => setSelectedProject('all')}
+                        onClick={() => {
+                          setSelectedProject('all');
+                          updateFilterPersistence('project', 'all');
+                        }}
                       />
                     </Badge>
                   )}
@@ -396,7 +465,10 @@ export default function TasksPage() {
                       Client: {clients.find(c => c.id.toString() === selectedClient)?.title || selectedClient}
                       <X 
                         className="h-3 w-3 cursor-pointer" 
-                        onClick={() => setSelectedClient('all')}
+                        onClick={() => {
+                          setSelectedClient('all');
+                          updateFilterPersistence('client', 'all');
+                        }}
                       />
                     </Badge>
                   )}
@@ -405,7 +477,10 @@ export default function TasksPage() {
                       Task Type: {taskTypes.find(t => t.id.toString() === selectedTaskType)?.title || selectedTaskType}
                       <X 
                         className="h-3 w-3 cursor-pointer" 
-                        onClick={() => setSelectedTaskType('all')}
+                        onClick={() => {
+                          setSelectedTaskType('all');
+                          updateFilterPersistence('taskType', 'all');
+                        }}
                       />
                     </Badge>
                   )}
@@ -414,7 +489,10 @@ export default function TasksPage() {
                       Priority: {priorities.find(p => p.id.toString() === selectedPriority)?.title || selectedPriority}
                       <X 
                         className="h-3 w-3 cursor-pointer" 
-                        onClick={() => setSelectedPriority('all')}
+                        onClick={() => {
+                          setSelectedPriority('all');
+                          updateFilterPersistence('priority', 'all');
+                        }}
                       />
                     </Badge>
                   )}
@@ -423,7 +501,10 @@ export default function TasksPage() {
                       Search: "{searchTerm}"
                       <X 
                         className="h-3 w-3 cursor-pointer" 
-                        onClick={() => setSearchTerm('')}
+                        onClick={() => {
+                          setSearchTerm('');
+                          updateFilterPersistence('search', '');
+                        }}
                       />
                     </Badge>
                   )}
