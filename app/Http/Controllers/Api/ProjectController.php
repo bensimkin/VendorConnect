@@ -27,13 +27,8 @@ class ProjectController extends BaseController
 
             // Role-based filtering
             if ($user->hasRole('Requester')) {
-                // Requesters see projects they created OR are involved in via tasks
-                $query->where(function($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhereHas('tasks', function($subQ) use ($user) {
-                          $subQ->where('created_by', $user->id);
-                      });
-                });
+                // Requesters only see projects they created
+                $query->where('created_by', $user->id);
             } elseif ($user->hasRole('Tasker')) {
                 // Taskers only see projects they're involved in via assigned tasks
                 $query->whereHas('tasks', function($q) use ($user) {
