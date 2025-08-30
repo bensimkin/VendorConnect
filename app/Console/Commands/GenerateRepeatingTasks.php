@@ -125,8 +125,6 @@ class GenerateRepeatingTasks extends Command
             $formattedDate = $nextDate->format('j M Y');
             $newTitle = $parentTask->title . ' ' . $formattedDate;
             
-            $this->info("Creating task with title: {$newTitle}");
-            
             $newTask = Task::create([
                 'title' => $newTitle,
                 'description' => $parentTask->description,
