@@ -119,7 +119,7 @@ export default function ClientDetailPage() {
         apiClient.get(`/clients/${clientId}`),
         apiClient.get(`/clients/${clientId}/projects`),
         apiClient.get(`/clients/${clientId}/tasks`),
-        apiClient.get(`/clients/${clientId}/portfolios`)
+        apiClient.get(`/clients/${clientId}/portfolio`)
       ]);
 
       console.log('🔍 [DEBUG] Client API Response:', clientResponse);
