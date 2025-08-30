@@ -11,6 +11,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Models\User;
+use App\Models\TaskAssignmentHistory;
 
 
 class Client extends Authenticatable implements MustVerifyEmail
@@ -111,6 +112,11 @@ class Client extends Authenticatable implements MustVerifyEmail
     public function portfolio()
     {
         return $this->hasMany(Portfolio::class);
+    }
+
+    public function taskAssignmentHistory()
+    {
+        return $this->hasMany(TaskAssignmentHistory::class);
     }
 
     public function credentials()
