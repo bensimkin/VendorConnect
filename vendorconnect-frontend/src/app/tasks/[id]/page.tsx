@@ -409,7 +409,7 @@ export default function TaskDetailPage() {
     if (!task || !confirm('Are you sure you want to delete this comment?')) return;
 
     try {
-      await apiClient.delete(`/tasks/${task.id}/messages/${commentId}`);
+      await apiClient.delete(`/messages/${commentId}`);
       toast.success('Comment deleted successfully');
       fetchTaskDetail(task.id.toString());
     } catch (error) {
