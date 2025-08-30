@@ -402,7 +402,7 @@ class TaskController extends BaseController
             DB::beginTransaction();
 
             $task->update($request->only([
-                'title', 'description', 'status_id', 'priority_id', 
+                'title', 'description', 'standard_brief', 'status_id', 'priority_id', 
                 'task_type_id', 'project_id', 'start_date', 'end_date', 'close_deadline',
                 'note', 'deliverable_quantity'
             ]));
