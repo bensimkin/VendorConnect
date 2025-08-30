@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\BaseController;
 use App\Models\Client;
 use App\Models\Project;
 use App\Models\Task;
@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class SearchController extends Controller
+class SearchController extends BaseController
 {
     /**
      * Global search across multiple entities
