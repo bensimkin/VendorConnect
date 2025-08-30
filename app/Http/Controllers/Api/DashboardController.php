@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Client;
 use App\Models\Project;
 use App\Models\Status;
+use App\Models\TaskDeliverable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -402,7 +403,7 @@ class DashboardController extends BaseController
             })->count();
 
             // Recent tasks - include both created and assigned tasks
-            $recentTasks = Task::with(['status', 'priority', 'project', 'users', 'template'])
+            $recentTasks = Task::with(['status', 'priority', 'project', 'users', 'template', 'deliverables'])
                 ->where(function($query) use ($user) {
                     $query->where('created_by', $user->id)
                           ->orWhereHas('users', function($q) use ($user) {
@@ -412,6 +413,11 @@ class DashboardController extends BaseController
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
                 ->get();
+
+            // Add deliverables count to recent tasks
+            $recentTasks->each(function ($task) {
+                $task->deliverables_count = $task->deliverables ? $task->deliverables->count() : 0;
+            });
 
             // Recent projects - include both created and assigned projects
             $recentProjects = Project::with(['status'])
