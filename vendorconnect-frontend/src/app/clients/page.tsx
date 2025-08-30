@@ -15,14 +15,16 @@ import { useAuthStore } from '@/lib/auth-store';
 import { filterSensitiveClientDataArray, hasAdminPrivileges } from '@/lib/utils/role-utils';
 
 // Helper function to get client display name
-const getClientDisplayName = (client: { first_name: string; last_name: string; name?: string }) => {
-  return `${client.first_name} ${client.last_name}`.trim();
+const getClientDisplayName = (client: { first_name?: string; last_name?: string; name?: string }) => {
+  const fullName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
+  return fullName || client.name || 'Unnamed Client';
 };
 
 interface Client {
   id: number;
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
+  name?: string;
   email?: string;
   phone?: string;
   address?: string;
