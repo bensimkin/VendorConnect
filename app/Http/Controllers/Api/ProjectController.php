@@ -260,7 +260,13 @@ class ProjectController extends BaseController
     {
         try {
             $user = Auth::user();
-            $project = Project::with(['users', 'tasks.status', 'status', 'clients'])
+            $project = Project::with([
+                'users', 
+                'status', 
+                'clients',
+                'createdBy:id,first_name,last_name,email',
+                'tasks.status'
+            ])
                 ->find($id);
 
             if (!$project) {
