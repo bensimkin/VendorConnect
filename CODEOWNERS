@@ -1,0 +1,53 @@
+# VendorConnect CODEOWNERS
+# This file defines who is responsible for code in the repository
+# Each line is a file pattern followed by one or more owners
+# Order is important; the last matching pattern takes precedence
+
+# Global ownership - @bensimkin owns everything by default
+* @bensimkin
+
+# Specific file patterns can override global ownership if needed
+# For example, if you want different owners for specific areas:
+
+# Documentation
+*.md @bensimkin
+docs/ @bensimkin
+
+# Configuration files
+.env* @bensimkin
+*.config.js @bensimkin
+*.config.ts @bensimkin
+package.json @bensimkin
+composer.json @bensimkin
+
+# Deployment and server scripts
+*.sh @bensimkin
+deploy/ @bensimkin
+
+# Database files
+*.sql @bensimkin
+database/ @bensimkin
+
+# API and backend files
+app/ @bensimkin
+routes/ @bensimkin
+config/ @bensimkin
+database/ @bensimkin
+
+# Frontend files
+vendorconnect-frontend/ @bensimkin
+src/ @bensimkin
+public/ @bensimkin
+
+# Test files
+tests/ @bensimkin
+__tests__/ @bensimkin
+*.test.js @bensimkin
+*.test.ts @bensimkin
+*.spec.js @bensimkin
+*.spec.ts @bensimkin
+
+# Git and GitHub specific files
+.gitignore @bensimkin
+.github/ @bensimkin
+README.md @bensimkin
