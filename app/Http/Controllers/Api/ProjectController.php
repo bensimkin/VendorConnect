@@ -22,7 +22,21 @@ class ProjectController extends BaseController
     {
         try {
             $user = Auth::user();
-            $query = Project::with(['users', 'tasks', 'status', 'clients']);
+            $query = Project::with([
+                'users', 
+                'status', 
+                'clients',
+                'createdBy:id,first_name,last_name,email',
+                'tasks' => function($q) {
+                    $q->with([
+                        'users:id,first_name,last_name,email,phone',
+                        'status:id,title',
+                        'priority:id,title',
+                        'createdBy:id,first_name,last_name,email',
+                        'deliverables'
+                    ]);
+                }
+            ]);
             // Removed workspace filtering for single-tenant system
 
             // Role-based filtering
@@ -111,6 +125,13 @@ class ProjectController extends BaseController
                     ->where('status_id', '!=', 17) // Not completed
                     ->count();
                 $project->overdue_tasks = $overdueTasks;
+                
+                // Add deliverables count to tasks
+                if ($project->tasks) {
+                    $project->tasks->each(function ($task) {
+                        $task->deliverables_count = $task->deliverables ? $task->deliverables->count() : 0;
+                    });
+                }
             }
 
             if ($request->get('per_page') === 'all') {
