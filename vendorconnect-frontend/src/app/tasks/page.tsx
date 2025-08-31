@@ -600,13 +600,11 @@ function TasksPageContent() {
                     )}
                     
                     {/* Deliverables Count */}
-                    {task.deliverables_count && task.deliverables_count > 0 && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
-                          📎 {task.deliverables_count} deliverable{task.deliverables_count > 1 ? 's' : ''}
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                        📎 {task.deliverables_count || 0} deliverable{(task.deliverables_count || 0) !== 1 ? 's' : ''}
+                      </span>
+                    </div>
                     
                     {/* Priority and Status */}
                     <div className="flex items-center gap-2 flex-wrap">
