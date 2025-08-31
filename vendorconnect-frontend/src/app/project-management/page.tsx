@@ -706,7 +706,7 @@ function ProjectManagementPageContent() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => router.push(`/users/${project.created_by.id}`)}
+                                onClick={() => project.created_by && router.push(`/users/${project.created_by.id}`)}
                               >
                                 <ExternalLink className="h-4 w-4" />
                               </Button>
