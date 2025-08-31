@@ -90,6 +90,7 @@ function NewTaskPageContent() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [templateQuestions, setTemplateQuestions] = useState<TemplateQuestion[]>([]);
   const [templateChecklist, setTemplateChecklist] = useState<string[]>([]);
+  const [selectedChecklistId, setSelectedChecklistId] = useState<number | null>(null);
   const [questionAnswers, setQuestionAnswers] = useState<Record<number, string>>({});
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [googleLinks, setGoogleLinks] = useState<string[]>(['']);
@@ -226,6 +227,9 @@ function NewTaskPageContent() {
         const checklistData = checklistRes.data.data?.data || checklistRes.data.data || [];
         if (checklistData.length > 0 && checklistData[0].checklist) {
           const checklist = checklistData[0].checklist;
+          // Store the checklist ID for later use
+          setSelectedChecklistId(checklistData[0].id);
+          
           if (Array.isArray(checklist)) {
             setTemplateChecklist(checklist);
           } else if (typeof checklist === 'string') {
@@ -238,6 +242,7 @@ function NewTaskPageContent() {
           }
         } else {
           setTemplateChecklist([]);
+          setSelectedChecklistId(null);
         }
         
         toast.success('Template loaded successfully');
@@ -342,10 +347,11 @@ function NewTaskPageContent() {
           }
           
           // Save template checklist items
-          if (templateChecklist.length > 0) {
+          if (templateChecklist.length > 0 && selectedChecklistId) {
             for (let i = 0; i < templateChecklist.length; i++) {
               await apiClient.post(`/tasks/${taskId}/checklist-answer`, {
-                checklist_id: 1, // Assuming single checklist per template
+                checklist_id: selectedChecklistId,
+                item_index: i,
                 completed: false,
                 notes: templateChecklist[i],
               });
