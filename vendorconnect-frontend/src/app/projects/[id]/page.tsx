@@ -24,7 +24,18 @@ interface Project {
   status?: { id: number; title: string };
   clients?: Array<{ id: number; name: string; first_name?: string; last_name?: string; company?: string }>;
   users?: Array<{ id: number; first_name: string; last_name: string; email: string }>;
-  tasks?: Array<{ id: number; title: string; status: { title: string } }>;  // FIXED: Use only primary field
+  tasks?: Array<{ 
+    id: number; 
+    title: string; 
+    description?: string;
+    status: { title: string };
+    priority?: { title: string };
+    users?: Array<{ id: number; first_name: string; last_name: string }>;
+    start_date?: string;
+    end_date?: string;
+    created_at: string;
+    deliverables_count?: number;
+  }>;
 }
 
 export default function ProjectDetailPage() {
@@ -319,6 +330,91 @@ export default function ProjectDetailPage() {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">No team members assigned</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Tasks List */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5" />
+                  Project Tasks
+                </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push(`/tasks/new?project_id=${project.id}`)}
+                >
+                  Add Task
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {project.tasks && project.tasks.length > 0 ? (
+                <div className="space-y-3">
+                  {project.tasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
+                      onClick={() => router.push(`/tasks/${task.id}`)}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        {getStatusIcon(task.status?.title)}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-medium text-sm">{task.title}</h3>
+                            {task.priority && (
+                              <Badge variant="secondary" className="text-xs">
+                                {task.priority.title}
+                              </Badge>
+                            )}
+                            {task.deliverables_count && task.deliverables_count > 0 && (
+                              <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800">
+                                📎 {task.deliverables_count}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            {task.status && (
+                              <Badge variant="secondary" className="text-xs">
+                                {task.status.title}
+                              </Badge>
+                            )}
+                            {task.end_date && (
+                              <span>Due: {formatDate(task.end_date)}</span>
+                            )}
+                            {task.users && task.users.length > 0 && (
+                              <span>Assigned: {task.users.map(u => `${u.first_name} ${u.last_name}`).join(', ')}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/tasks/${task.id}`);
+                        }}
+                      >
+                        View
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground mb-4">No tasks created for this project yet</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push(`/tasks/new?project_id=${project.id}`)}
+                  >
+                    Create First Task
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
