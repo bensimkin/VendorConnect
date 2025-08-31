@@ -156,6 +156,9 @@ class Task extends Model implements HasMedia
         return $this->hasMany(Task::class, 'parent_task_id');
     }
 
-
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 
 }
