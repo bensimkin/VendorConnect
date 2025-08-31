@@ -128,6 +128,7 @@ export default function TaskDetailPage() {
   const [questionAnswers, setQuestionAnswers] = useState<QuestionAnswer[]>([]);
   const [checklistItems, setChecklistItems] = useState<string[]>([]);
   const [checklistCompleted, setChecklistCompleted] = useState<Record<number, boolean>>({});
+  const [checklistId, setChecklistId] = useState<number | null>(null);
   const [showDeliverableForm, setShowDeliverableForm] = useState(false);
   const [showDeliverableModal, setShowDeliverableModal] = useState(false);
   const [selectedDeliverable, setSelectedDeliverable] = useState<any>(null);
@@ -231,6 +232,9 @@ export default function TaskDetailPage() {
                // Parse checklist items from the first checklist object
                const checklistData = task.template_checklist[0];
                if (checklistData && checklistData.checklist) {
+                 // Store the checklist ID for later use
+                 setChecklistId(checklistData.id);
+                 
                  try {
                    const parsedChecklist = JSON.parse(checklistData.checklist);
                    if (Array.isArray(parsedChecklist)) {
@@ -315,19 +319,16 @@ export default function TaskDetailPage() {
   };
 
   const handleChecklistToggle = async (index: number, completed: boolean) => {
-    if (!task) return;
+    if (!task || !checklistId) return;
     
     try {
-      console.log('Checklist toggle called:', { index, completed, task_id: task.id });
+      console.log('Checklist toggle called:', { index, completed, task_id: task.id, checklist_id: checklistId });
       
       // Get the current checklist item text
       const itemText = checklistItems[index] || `Checklist item ${index + 1}`;
       
-      // Use a simple checklist_id since we're working with saved answers
-      const checklist_id = 1;
-      
       const requestData = {
-        checklist_id: checklist_id,
+        checklist_id: checklistId,
         item_index: index,
         completed: completed,
         notes: itemText,
