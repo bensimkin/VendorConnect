@@ -533,11 +533,8 @@ class TaskController extends BaseController
                     return $this->sendError('Access denied', [], 403);
                 }
             } elseif ($user->hasRole('Tasker')) {
-                // Taskers can update status of tasks they're assigned to
-                $isAssigned = $task->users()->where('users.id', $user->id)->exists();
-                if (!$isAssigned) {
-                    return $this->sendError('Access denied', [], 403);
-                }
+                // Taskers cannot update task status
+                return $this->sendError('Access denied: Taskers cannot update task status', [], 403);
             }
             // Admins and sub-admins can update all tasks
 
@@ -588,11 +585,8 @@ class TaskController extends BaseController
                     return $this->sendError('Access denied', [], 403);
                 }
             } elseif ($user->hasRole('Tasker')) {
-                // Taskers can update priority of tasks they're assigned to
-                $isAssigned = $task->users()->where('users.id', $user->id)->exists();
-                if (!$isAssigned) {
-                    return $this->sendError('Access denied', [], 403);
-                }
+                // Taskers cannot update task priority
+                return $this->sendError('Access denied: Taskers cannot update task priority', [], 403);
             }
             // Admins and sub-admins can update all tasks
 
