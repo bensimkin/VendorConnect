@@ -27,7 +27,7 @@ class ProjectController extends BaseController
                 'status', 
                 'clients',
                 'createdBy:id,first_name,last_name,email',
-                'tasks' => function($q) {
+                'tasks' => function($q) use ($user) {
                     $q->with([
                         'users:id,first_name,last_name,email,phone',
                         'status:id,title',
@@ -35,6 +35,23 @@ class ProjectController extends BaseController
                         'createdBy:id,first_name,last_name,email',
                         'deliverables'
                     ]);
+                    
+                    // Role-based filtering for tasks within projects
+                    if ($user->hasRole('Requester')) {
+                        // Requesters see tasks they created OR are assigned to
+                        $q->where(function($subQ) use ($user) {
+                            $subQ->where('created_by', $user->id)
+                                  ->orWhereHas('users', function($taskUserQ) use ($user) {
+                                      $taskUserQ->where('users.id', $user->id);
+                                  });
+                        });
+                    } elseif ($user->hasRole('Tasker')) {
+                        // Taskers only see tasks they're assigned to
+                        $q->whereHas('users', function($subQ) use ($user) {
+                            $subQ->where('users.id', $user->id);
+                        });
+                    }
+                    // Admins and sub-admins see all tasks (no additional filtering)
                 }
             ]);
             // Removed workspace filtering for single-tenant system
@@ -115,15 +132,20 @@ class ProjectController extends BaseController
                 
                 $project->team_members_count += $taskUsersCount;
                 
-                // Add additional task counts for frontend compatibility
-                $project->total_tasks = $project->tasks_count;
-                $project->active_tasks = $project->tasks_count - $project->completed_tasks;
+                // Calculate task counts based on filtered tasks (not all project tasks)
+                $filteredTasks = $project->tasks;
+                $project->total_tasks = $filteredTasks ? $filteredTasks->count() : 0;
                 
-                // Calculate overdue tasks
-                $overdueTasks = Task::where('project_id', $project->id)
-                    ->where('end_date', '<', now())
-                    ->where('status_id', '!=', 17) // Not completed
-                    ->count();
+                // Count completed tasks from filtered tasks
+                $completedTasks = $filteredTasks ? $filteredTasks->where('status_id', 17)->count() : 0;
+                $project->active_tasks = $project->total_tasks - $completedTasks;
+                
+                // Calculate overdue tasks from filtered tasks
+                $overdueTasks = $filteredTasks ? $filteredTasks->filter(function($task) {
+                    return $task->end_date && 
+                           $task->end_date < now() && 
+                           $task->status_id != 17; // Not completed
+                })->count() : 0;
                 $project->overdue_tasks = $overdueTasks;
                 
                 // Add deliverables count to tasks
