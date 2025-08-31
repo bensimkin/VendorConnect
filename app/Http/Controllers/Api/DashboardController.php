@@ -290,13 +290,18 @@ class DashboardController extends BaseController
               ->where('status_id', '!=', $completedStatusId)->count();
 
             // Recent tasks
-            $recentTasks = Task::with(['status', 'priority', 'project', 'template'])
+            $recentTasks = Task::with(['status', 'priority', 'project', 'template', 'deliverables'])
                 ->whereHas('users', function ($q) use ($user) {
                     $q->where('users.id', $user->id);
                 })
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
                 ->get();
+
+            // Add deliverables count to recent tasks
+            $recentTasks->each(function ($task) {
+                $task->deliverables_count = $task->deliverables ? $task->deliverables->count() : 0;
+            });
 
             // Upcoming deadlines (next 7 days)
             $upcomingDeadlines = Task::with(['priority'])
