@@ -124,6 +124,41 @@ interface DashboardData {
     id: number;
     title: string;
   }>;
+  rejected_tasks_trend?: Array<{
+    date: string;
+    rejected_tasks: number;
+  }>;
+  tasks_with_unchecked_checklists?: {
+    total_completed_with_checklists: number;
+    completed_with_unchecked_items: number;
+    percentage_with_unchecked: number;
+    tasks_list: Array<{
+      id: number;
+      title: string;
+      total_items: number;
+      checked_items: number;
+      unchecked_items: number;
+      completion_date: string;
+    }>;
+  };
+  average_task_completion_time?: {
+    average_days: number;
+    average_hours: number;
+    total_completed_tasks: number;
+    fastest_completion: number;
+    slowest_completion: number;
+  };
+  additional_statistics?: {
+    total_tasks: number;
+    completed_tasks: number;
+    rejected_tasks: number;
+    pending_tasks: number;
+    in_progress_tasks: number;
+    completion_rate: number;
+    rejection_rate: number;
+    tasks_with_deliverables: number;
+    deliverable_rate: number;
+  };
 }
 
 export default function DashboardPage() {

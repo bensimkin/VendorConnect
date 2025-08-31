@@ -83,6 +83,12 @@ class DashboardController extends BaseController
             // Get all statuses for frontend mapping
             $statuses = Status::select('id', 'title')->get();
 
+            // Get additional statistics for admin dashboard
+            $rejectedTasksTrend = $this->getRejectedTasksTrend();
+            $tasksWithUncheckedChecklists = $this->getTasksWithUncheckedChecklists();
+            $averageTaskCompletionTime = $this->getAverageTaskCompletionTime();
+            $additionalStats = $this->getAdditionalStatistics();
+
             $dashboardData = [
                 'overview' => [
                     'total_tasks' => $totalTasks,
@@ -97,6 +103,10 @@ class DashboardController extends BaseController
                 'task_trend' => $taskTrend,
                 'project_management' => $projectManagement,
                 'statuses' => $statuses,
+                'rejected_tasks_trend' => $rejectedTasksTrend,
+                'tasks_with_unchecked_checklists' => $tasksWithUncheckedChecklists,
+                'average_task_completion_time' => $averageTaskCompletionTime,
+                'additional_statistics' => $additionalStats,
             ];
 
             return $this->sendResponse($dashboardData, 'Dashboard data retrieved successfully');
@@ -885,5 +895,196 @@ class DashboardController extends BaseController
             });
 
         return $overdueTasks;
+    }
+
+    /**
+     * Get rejected tasks trend for the last 7 days
+     */
+    private function getRejectedTasksTrend()
+    {
+        $rejectedStatus = Status::where('title', 'Rejected')->first();
+        $rejectedStatusId = $rejectedStatus ? $rejectedStatus->id : null;
+        
+        $trend = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $count = $rejectedStatusId ? Task::where('status_id', $rejectedStatusId)
+                ->whereDate('updated_at', $date)
+                ->count() : 0;
+            
+            $trend[] = [
+                'date' => $date->format('Y-m-d'),
+                'rejected_tasks' => $count,
+            ];
+        }
+        
+        return $trend;
+    }
+
+    /**
+     * Get tasks completed with unchecked checklists
+     */
+    private function getTasksWithUncheckedChecklists()
+    {
+        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatusId = $completedStatus ? $completedStatus->id : null;
+        
+        if (!$completedStatusId) {
+            return [
+                'total_completed_with_checklists' => 0,
+                'completed_with_unchecked_items' => 0,
+                'percentage_with_unchecked' => 0,
+                'tasks_list' => []
+            ];
+        }
+
+        // Get completed tasks that have checklists
+        $completedTasksWithChecklists = Task::where('status_id', $completedStatusId)
+            ->whereHas('template', function($query) {
+                $query->whereNotNull('checklist');
+            })
+            ->with(['template', 'checklistAnswers'])
+            ->get();
+
+        $totalCompletedWithChecklists = $completedTasksWithChecklists->count();
+        $completedWithUncheckedItems = 0;
+        $tasksWithUnchecked = [];
+
+        foreach ($completedTasksWithChecklists as $task) {
+            if ($task->template && $task->template->checklist) {
+                $checklistItems = json_decode($task->template->checklist, true);
+                $checkedItems = $task->checklistAnswers ? $task->checklistAnswers->where('completed', true)->count() : 0;
+                
+                if ($checkedItems < count($checklistItems)) {
+                    $completedWithUncheckedItems++;
+                    $tasksWithUnchecked[] = [
+                        'id' => $task->id,
+                        'title' => $task->title,
+                        'total_items' => count($checklistItems),
+                        'checked_items' => $checkedItems,
+                        'unchecked_items' => count($checklistItems) - $checkedItems,
+                        'completion_date' => $task->updated_at,
+                    ];
+                }
+            }
+        }
+
+        $percentageWithUnchecked = $totalCompletedWithChecklists > 0 
+            ? round(($completedWithUncheckedItems / $totalCompletedWithChecklists) * 100, 1)
+            : 0;
+
+        return [
+            'total_completed_with_checklists' => $totalCompletedWithChecklists,
+            'completed_with_unchecked_items' => $completedWithUncheckedItems,
+            'percentage_with_unchecked' => $percentageWithUnchecked,
+            'tasks_list' => array_slice($tasksWithUnchecked, 0, 10) // Limit to 10 tasks
+        ];
+    }
+
+    /**
+     * Get average time to complete tasks
+     */
+    private function getAverageTaskCompletionTime()
+    {
+        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatusId = $completedStatus ? $completedStatus->id : null;
+        
+        if (!$completedStatusId) {
+            return [
+                'average_days' => 0,
+                'average_hours' => 0,
+                'total_completed_tasks' => 0,
+                'fastest_completion' => 0,
+                'slowest_completion' => 0
+            ];
+        }
+
+        // Get completed tasks with their completion time
+        $completedTasks = Task::where('status_id', $completedStatusId)
+            ->whereNotNull('updated_at')
+            ->get();
+
+        $totalCompleted = $completedTasks->count();
+        $totalDays = 0;
+        $completionTimes = [];
+
+        foreach ($completedTasks as $task) {
+            $createdAt = Carbon::parse($task->created_at);
+            $completedAt = Carbon::parse($task->updated_at);
+            $daysToComplete = $createdAt->diffInDays($completedAt);
+            $hoursToComplete = $createdAt->diffInHours($completedAt);
+            
+            $totalDays += $daysToComplete;
+            $completionTimes[] = $hoursToComplete;
+        }
+
+        $averageDays = $totalCompleted > 0 ? round($totalDays / $totalCompleted, 1) : 0;
+        $averageHours = $totalCompleted > 0 ? round(array_sum($completionTimes) / $totalCompleted, 1) : 0;
+        $fastestCompletion = !empty($completionTimes) ? min($completionTimes) : 0;
+        $slowestCompletion = !empty($completionTimes) ? max($completionTimes) : 0;
+
+        return [
+            'average_days' => $averageDays,
+            'average_hours' => $averageHours,
+            'total_completed_tasks' => $totalCompleted,
+            'fastest_completion' => $fastestCompletion,
+            'slowest_completion' => $slowestCompletion
+        ];
+    }
+
+    /**
+     * Get additional statistics
+     */
+    private function getAdditionalStatistics()
+    {
+        $user = Auth::user();
+        
+        // Apply role-based filtering
+        $taskQuery = Task::query();
+        if ($user->hasRole('Requester')) {
+            $taskQuery->where('created_by', $user->id);
+        } elseif ($user->hasRole('Tasker')) {
+            $taskQuery->whereHas('users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            });
+        }
+
+        // Get status IDs
+        $completedStatus = Status::where('title', 'Completed')->first();
+        $rejectedStatus = Status::where('title', 'Rejected')->first();
+        $pendingStatus = Status::where('title', 'Pending')->first();
+        $inProgressStatus = Status::where('title', 'In Progress')->first();
+
+        $completedStatusId = $completedStatus ? $completedStatus->id : null;
+        $rejectedStatusId = $rejectedStatus ? $rejectedStatus->id : null;
+        $pendingStatusId = $pendingStatus ? $pendingStatus->id : null;
+        $inProgressStatusId = $inProgressStatus ? $inProgressStatus->id : null;
+
+        // Calculate statistics
+        $totalTasks = (clone $taskQuery)->count();
+        $completedTasks = $completedStatusId ? (clone $taskQuery)->where('status_id', $completedStatusId)->count() : 0;
+        $rejectedTasks = $rejectedStatusId ? (clone $taskQuery)->where('status_id', $rejectedStatusId)->count() : 0;
+        $pendingTasks = $pendingStatusId ? (clone $taskQuery)->where('status_id', $pendingStatusId)->count() : 0;
+        $inProgressTasks = $inProgressStatusId ? (clone $taskQuery)->where('status_id', $inProgressStatusId)->count() : 0;
+
+        // Calculate percentages
+        $completionRate = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
+        $rejectionRate = $totalTasks > 0 ? round(($rejectedTasks / $totalTasks) * 100, 1) : 0;
+
+        // Get tasks with deliverables
+        $tasksWithDeliverables = (clone $taskQuery)->whereHas('deliverables')->count();
+        $deliverableRate = $totalTasks > 0 ? round(($tasksWithDeliverables / $totalTasks) * 100, 1) : 0;
+
+        return [
+            'total_tasks' => $totalTasks,
+            'completed_tasks' => $completedTasks,
+            'rejected_tasks' => $rejectedTasks,
+            'pending_tasks' => $pendingTasks,
+            'in_progress_tasks' => $inProgressTasks,
+            'completion_rate' => $completionRate,
+            'rejection_rate' => $rejectionRate,
+            'tasks_with_deliverables' => $tasksWithDeliverables,
+            'deliverable_rate' => $deliverableRate,
+        ];
     }
 }
