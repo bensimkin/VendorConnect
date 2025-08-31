@@ -745,9 +745,9 @@ export default function DashboardPage() {
                             <span> • Tasker: {task.users[0].first_name} {task.users[0].last_name}</span>
                           )}
                         </p>
-                        {task.note && (
+                        {task.description && (
                           <p className="text-xs text-muted-foreground line-clamp-1">
-                            <span className="font-medium">Notes:</span> {task.note}
+                            {task.description}
                           </p>
                         )}
                       </div>
