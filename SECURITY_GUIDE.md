@@ -23,10 +23,11 @@ This repository has been secured to prevent exposure of sensitive credentials an
    - Log files
    - Cache files
 
-2. **Example Files Created**
-   - `load_demo_data.sh.example` - Template for demo data loading
-   - `backup_database.sh.example` - Template for database backups
-   - `demo_data.sql.example` - Template for demo data
+2. **Example Files Available Locally**
+   - `load_demo_data.sh.example` - Template for demo data loading (local only)
+   - `backup_database.sh.example` - Template for database backups (local only)
+   - `demo_data.sql.example` - Template for demo data (local only)
+   - `.env.example` - Environment template (local only)
 
 3. **Files Removed from Git Tracking**
    - All sensitive files have been removed from git history
@@ -254,10 +255,10 @@ If you discover any security issues:
 ## 🔗 Related Files
 
 - `.gitignore` - Comprehensive ignore rules
-- `load_demo_data.sh.example` - Demo data template
-- `backup_database.sh.example` - Backup script template
-- `demo_data.sql.example` - Demo data template
 - `STATUSES_PRIORITIES_PROTECTION.md` - Status/priority protection
+- `SECURITY_GUIDE.md` - This security guide
+
+**Note**: Example files (`.example`) are available locally but not tracked in git for security.
 
 ---
 
