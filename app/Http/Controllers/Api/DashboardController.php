@@ -940,10 +940,8 @@ class DashboardController extends BaseController
 
         // Get completed tasks that have checklists
         $completedTasksWithChecklists = Task::where('status_id', $completedStatusId)
-            ->whereHas('template', function($query) {
-                $query->whereNotNull('checklist');
-            })
-            ->with(['template', 'checklistAnswers'])
+            ->whereHas('template.briefchecks')
+            ->with(['template.briefchecks', 'checklistAnswers'])
             ->get();
 
         $totalCompletedWithChecklists = $completedTasksWithChecklists->count();
@@ -951,8 +949,9 @@ class DashboardController extends BaseController
         $tasksWithUnchecked = [];
 
         foreach ($completedTasksWithChecklists as $task) {
-            if ($task->template && $task->template->checklist) {
-                $checklistItems = json_decode($task->template->checklist, true);
+            if ($task->template && $task->template->briefchecks && $task->template->briefchecks->count() > 0) {
+                $checklist = $task->template->briefchecks->first();
+                $checklistItems = $checklist->checklist ?? [];
                 $checkedItems = $task->checklistAnswers ? $task->checklistAnswers->where('completed', true)->count() : 0;
                 
                 if ($checkedItems < count($checklistItems)) {
