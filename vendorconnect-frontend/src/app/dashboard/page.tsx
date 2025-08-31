@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import apiClient from '@/lib/api-client';
-import { Activity, Users, CheckCircle2, Clock, TrendingUp, TrendingDown } from 'lucide-react';
+import { Activity, Users, CheckCircle2, Clock, TrendingUp, TrendingDown, XCircle, FileText } from 'lucide-react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -406,6 +406,156 @@ export default function DashboardPage() {
               ) : (
                 <div className="flex items-center justify-center h-64 text-muted-foreground">
                   No tasks to display
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* New Statistics Section */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {/* Average Completion Time */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Avg. Completion Time</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {data?.average_task_completion_time?.average_days || 0}d
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {data?.average_task_completion_time?.average_hours || 0}h average
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Completion Rate */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {data?.additional_statistics?.completion_rate || 0}%
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {data?.additional_statistics?.completed_tasks || 0} of {data?.additional_statistics?.total_tasks || 0} tasks
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Rejection Rate */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Rejection Rate</CardTitle>
+              <XCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {data?.additional_statistics?.rejection_rate || 0}%
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {data?.additional_statistics?.rejected_tasks || 0} rejected tasks
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Deliverable Rate */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Deliverable Rate</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {data?.additional_statistics?.deliverable_rate || 0}%
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {data?.additional_statistics?.tasks_with_deliverables || 0} tasks with deliverables
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Additional Charts */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          {/* Rejected Tasks Trend */}
+          <Card className="col-span-4">
+            <CardHeader>
+              <CardTitle>Rejected Tasks Trend</CardTitle>
+              <CardDescription>Daily rejected tasks over the last week</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {data?.rejected_tasks_trend && data.rejected_tasks_trend.length > 0 ? (
+                <Line 
+                  data={{
+                    labels: data.rejected_tasks_trend.map(item => new Date(item.date).toLocaleDateString()),
+                    datasets: [{
+                      label: 'Rejected Tasks',
+                      data: data.rejected_tasks_trend.map(item => item.rejected_tasks),
+                      borderColor: 'rgb(239, 68, 68)',
+                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      tension: 0.1,
+                    }]
+                  }}
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                    },
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                      },
+                    },
+                  }}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-64 text-muted-foreground">
+                  No rejected tasks data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Tasks with Unchecked Checklists */}
+          <Card className="col-span-3">
+            <CardHeader>
+              <CardTitle>Checklist Compliance</CardTitle>
+              <CardDescription>Tasks completed with unchecked items</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {data?.tasks_with_unchecked_checklists ? (
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-red-600">
+                      {data.tasks_with_unchecked_checklists.percentage_with_unchecked}%
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {data.tasks_with_unchecked_checklists.completed_with_unchecked_items} of {data.tasks_with_unchecked_checklists.total_completed_with_checklists} tasks
+                    </p>
+                  </div>
+                  {data.tasks_with_unchecked_checklists.tasks_list.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Recent examples:</p>
+                      {data.tasks_with_unchecked_checklists.tasks_list.slice(0, 3).map((task, index) => (
+                        <div key={index} className="text-xs p-2 bg-red-50 rounded">
+                          <div className="font-medium">{task.title}</div>
+                          <div className="text-red-600">
+                            {task.unchecked_items} of {task.total_items} items unchecked
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-64 text-muted-foreground">
+                  No checklist data available
                 </div>
               )}
             </CardContent>
