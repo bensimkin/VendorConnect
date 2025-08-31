@@ -336,6 +336,61 @@ class DashboardController extends BaseController
                     ];
                 });
 
+            // Get overdue tasks list
+            $overdueTasksList = Task::with(['users', 'status', 'priority', 'project.clients'])
+                ->whereHas('users', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                })
+                ->where('end_date', '<', Carbon::now())
+                ->where('status_id', '!=', $completedStatusId)
+                ->orderBy('end_date', 'asc')
+                ->limit(10)
+                ->get()
+                ->map(function ($task) {
+                    return [
+                        'id' => $task->id,
+                        'title' => $task->title,
+                        'end_date' => $task->end_date,
+                        'status' => $task->status ? [
+                            'id' => $task->status->id,
+                            'title' => $task->status->title,
+                        ] : null,
+                        'priority' => $task->priority ? [
+                            'id' => $task->priority->id,
+                            'title' => $task->priority->title,
+                        ] : null,
+                        'project' => $task->project ? [
+                            'id' => $task->project->id,
+                            'title' => $task->project->title,
+                        ] : null,
+                        'clients' => $task->project && $task->project->clients ? $task->project->clients->map(function ($client) {
+                            return [
+                                'id' => $client->id,
+                                'first_name' => $client->first_name,
+                                'last_name' => $client->last_name,
+                                'name' => $client->name,
+                            ];
+                        }) : [],
+                        'users' => $task->users ? $task->users->map(function ($user) {
+                            return [
+                                'id' => $user->id,
+                                'first_name' => $user->first_name,
+                                'last_name' => $user->last_name,
+                            ];
+                        }) : [],
+                        'created_at' => $task->created_at,
+                    ];
+                });
+
+            // Get task statistics for charts (filtered for tasker's tasks)
+            $taskStatistics = $this->getTaskerTaskStatistics($user);
+            
+            // Get task completion trend for charts (filtered for tasker's tasks)
+            $taskTrend = $this->getTaskerTaskCompletionTrend($user);
+
+            // Get user activity (filtered for tasker's tasks)
+            $userActivity = $this->getTaskerUserActivity($user);
+
             $dashboardData = [
                 'overview' => [
                     'total_tasks' => $totalTasks,
@@ -346,6 +401,10 @@ class DashboardController extends BaseController
                 'recent_tasks' => $recentTasks,
                 'upcoming_deadlines' => $upcomingDeadlines,
                 'recent_deliverables' => $recentDeliverables,
+                'overdue_tasks' => $overdueTasksList,
+                'task_statistics' => $taskStatistics,
+                'task_trend' => $taskTrend,
+                'user_activity' => $userActivity,
             ];
 
             return $this->sendResponse($dashboardData, 'Tasker dashboard data retrieved successfully');
@@ -474,6 +533,58 @@ class DashboardController extends BaseController
             // Get task completion trend for charts (filtered for requester's tasks)
             $taskTrend = $this->getRequesterTaskCompletionTrend($user);
 
+            // Get overdue tasks list
+            $overdueTasksList = Task::with(['users', 'status', 'priority', 'project.clients'])
+                ->where(function($query) use ($user) {
+                    $query->where('created_by', $user->id)
+                          ->orWhereHas('users', function($q) use ($user) {
+                              $q->where('users.id', $user->id);
+                          });
+                })
+                ->where('end_date', '<', Carbon::now())
+                ->where('status_id', '!=', $completedStatusId)
+                ->orderBy('end_date', 'asc')
+                ->limit(10)
+                ->get()
+                ->map(function ($task) {
+                    return [
+                        'id' => $task->id,
+                        'title' => $task->title,
+                        'end_date' => $task->end_date,
+                        'status' => $task->status ? [
+                            'id' => $task->status->id,
+                            'title' => $task->status->title,
+                        ] : null,
+                        'priority' => $task->priority ? [
+                            'id' => $task->priority->id,
+                            'title' => $task->priority->title,
+                        ] : null,
+                        'project' => $task->project ? [
+                            'id' => $task->project->id,
+                            'title' => $task->project->title,
+                        ] : null,
+                        'clients' => $task->project && $task->project->clients ? $task->project->clients->map(function ($client) {
+                            return [
+                                'id' => $client->id,
+                                'first_name' => $client->first_name,
+                                'last_name' => $client->last_name,
+                                'name' => $client->name,
+                            ];
+                        }) : [],
+                        'users' => $task->users ? $task->users->map(function ($user) {
+                            return [
+                                'id' => $user->id,
+                                'first_name' => $user->first_name,
+                                'last_name' => $user->last_name,
+                            ];
+                        }) : [],
+                        'created_at' => $task->created_at,
+                    ];
+                });
+
+            // Get user activity (filtered for requester's tasks)
+            $userActivity = $this->getRequesterUserActivity($user);
+
             $dashboardData = [
                 'overview' => [
                     'total_tasks' => $totalTasks,
@@ -485,8 +596,10 @@ class DashboardController extends BaseController
                 'recent_tasks' => $recentTasks,
                 'recent_projects' => $recentProjects,
                 'recent_deliverables' => $recentDeliverables,
+                'overdue_tasks' => $overdueTasksList,
                 'task_statistics' => $taskStatistics,
                 'task_trend' => $taskTrend,
+                'user_activity' => $userActivity,
             ];
 
             return $this->sendResponse($dashboardData, 'Requester dashboard data retrieved successfully');
@@ -568,6 +681,134 @@ class DashboardController extends BaseController
         }
 
         return $trend;
+    }
+
+    /**
+     * Get task statistics for tasker (filtered for their tasks)
+     */
+    private function getTaskerTaskStatistics($user)
+    {
+        // Get completed status ID
+        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatusId = $completedStatus ? $completedStatus->id : null;
+        
+        // Base query for tasker's tasks (assigned only)
+        $taskQuery = Task::whereHas('users', function($q) use ($user) {
+            $q->where('users.id', $user->id);
+        });
+        
+        // Get status distribution
+        $stats = $taskQuery->select('status_id', DB::raw('count(*) as count'))
+            ->groupBy('status_id')
+            ->get();
+
+        $statusCounts = [];
+        foreach ($stats as $stat) {
+            $statusCounts[$stat->status_id] = $stat->count;
+        }
+
+        // Get completed this week
+        $completedThisWeek = $completedStatusId ? (clone $taskQuery)->where('status_id', $completedStatusId)
+            ->whereBetween('updated_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+            ->count() : 0;
+            
+        // Get overdue tasks
+        $overdue = (clone $taskQuery)->where('end_date', '<', Carbon::now())
+            ->where('status_id', '!=', $completedStatusId)
+            ->count();
+        
+        return [
+            'by_status' => $statusCounts,
+            'completed_this_week' => $completedThisWeek,
+            'overdue' => $overdue,
+        ];
+    }
+
+    /**
+     * Get task completion trend for tasker (filtered for their tasks)
+     */
+    private function getTaskerTaskCompletionTrend($user)
+    {
+        // Get completed status ID
+        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatusId = $completedStatus ? $completedStatus->id : null;
+        
+        $trend = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $count = $completedStatusId ? Task::whereHas('users', function($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                })
+                ->where('status_id', $completedStatusId)
+                ->whereDate('updated_at', $date)
+                ->count() : 0;
+            
+            $trend[] = [
+                'date' => $date->format('Y-m-d'),
+                'completed_tasks' => $count,
+            ];
+        }
+
+        return $trend;
+    }
+
+    /**
+     * Get user activity for tasker (filtered for their tasks)
+     */
+    private function getTaskerUserActivity($user)
+    {
+        // Get recent task updates for tasks assigned to this tasker
+        $recentActivity = Task::with(['users', 'status', 'priority', 'project'])
+            ->whereHas('users', function($q) use ($user) {
+                $q->where('users.id', $user->id);
+            })
+            ->orderBy('updated_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'action' => 'Task updated',
+                    'status' => $task->status ? $task->status->title : 'Unknown',
+                    'priority' => $task->priority ? $task->priority->title : 'Unknown',
+                    'project' => $task->project ? $task->project->title : 'Unknown',
+                    'updated_at' => $task->updated_at,
+                ];
+            });
+
+        return $recentActivity;
+    }
+
+    /**
+     * Get user activity for requester (filtered for their tasks)
+     */
+    private function getRequesterUserActivity($user)
+    {
+        // Get recent task updates for tasks created or assigned to this requester
+        $recentActivity = Task::with(['users', 'status', 'priority', 'project'])
+            ->where(function($query) use ($user) {
+                $query->where('created_by', $user->id)
+                      ->orWhereHas('users', function($q) use ($user) {
+                          $q->where('users.id', $user->id);
+                      });
+            })
+            ->orderBy('updated_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'action' => 'Task updated',
+                    'status' => $task->status ? $task->status->title : 'Unknown',
+                    'priority' => $task->priority ? $task->priority->title : 'Unknown',
+                    'project' => $task->project ? $task->project->title : 'Unknown',
+                    'updated_at' => $task->updated_at,
+                ];
+            });
+
+        return $recentActivity;
     }
 
     /**
