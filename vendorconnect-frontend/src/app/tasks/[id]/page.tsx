@@ -51,6 +51,12 @@ interface TaskDetail {
   close_deadline?: boolean;
   created_at: string;
   updated_at: string;
+  created_by?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
   tags?: Array<{ id: number; name: string }>;
   note?: string;
   deliverable_quantity?: number;
@@ -1027,18 +1033,18 @@ export default function TaskDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Assigned Users */}
+            {/* Tasker (Assigned To) */}
             {task.users && task.users.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Assigned To</CardTitle>
+                  <CardTitle>Tasker (Assigned To)</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {task.users.map((user) => (
                       <div key={user.id} className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-xs font-medium">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                          <span className="text-xs font-medium text-blue-700">
                             {user.first_name?.[0]}{user.last_name?.[0]}
                           </span>
                         </div>
@@ -1050,6 +1056,30 @@ export default function TaskDetailPage() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Requester (Created By) */}
+            {task.created_by && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Requester (Created By)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <span className="text-xs font-medium text-green-700">
+                        {task.created_by.first_name?.[0]}{task.created_by.last_name?.[0]}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">
+                        {task.created_by.first_name} {task.created_by.last_name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{task.created_by.email}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
