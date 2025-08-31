@@ -26,9 +26,14 @@ class PortfolioController extends BaseController
 
             // Role-based filtering
             if ($user->hasRole('Requester')) {
-                // Requesters see portfolio items related to clients whose tasks they created
+                // Requesters see portfolio items related to tasks they created OR were assigned to
                 $query->whereHas('task', function($q) use ($user) {
-                    $q->where('created_by', $user->id);
+                    $q->where(function($subQ) use ($user) {
+                        $subQ->where('created_by', $user->id)
+                              ->orWhereHas('users', function($taskUserQ) use ($user) {
+                                  $taskUserQ->where('users.id', $user->id);
+                              });
+                    });
                 });
             } elseif ($user->hasRole('Tasker')) {
                 // Taskers see portfolio items related to clients whose tasks they're currently assigned to
