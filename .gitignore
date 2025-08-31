@@ -9,12 +9,13 @@
 .env.production
 .env.staging
 .env.test
-!.env.example
+*.env.example
 
 # ===========================================
 # DATABASE FILES (CONTAIN SENSITIVE DATA)
 # ===========================================
 *.sql
+*.sql.example
 *.sqlite
 *.sqlite3
 *.db
@@ -26,6 +27,7 @@ real_schema.sql
 # SHELL SCRIPTS (CONTAIN CREDENTIALS)
 # ===========================================
 *.sh
+*.sh.example
 !vendorconnect-website-clean-header/
 !vendorconnect-website-final/
 
@@ -196,7 +198,5 @@ config/services.php
 # ===========================================
 # APPLICATION SPECIFIC
 # ===========================================
-# Keep example files but ignore actual data
-!demo_data.sql.example
-!load_demo_data.sh.example
-!backup_database.sh.example
+# All example files are ignored for security
+# Create your own files locally based on documentation
