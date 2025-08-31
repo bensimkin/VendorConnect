@@ -373,7 +373,17 @@ export default function EditPortfolioPage() {
                     onValueChange={(value) => setFormData({ ...formData, client_id: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a client" />
+                      <SelectValue placeholder="Select a client">
+                        {formData.client_id && clients.find(c => c.id.toString() === formData.client_id) && (
+                          (() => {
+                            const selectedClient = clients.find(c => c.id.toString() === formData.client_id);
+                            const displayName = selectedClient ? 
+                              `${selectedClient.first_name || ''} ${selectedClient.last_name || ''}`.trim() || selectedClient.name || 'Unknown Client' : 
+                              'Select a client';
+                            return displayName + (selectedClient?.company ? ` (${selectedClient.company})` : '');
+                          })()
+                        )}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {clients.map((client) => (
