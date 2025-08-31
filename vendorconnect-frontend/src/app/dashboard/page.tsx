@@ -692,57 +692,76 @@ export default function DashboardPage() {
         {/* Recent Tasks */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Tasks</CardTitle>
-            <CardDescription>Latest tasks created in the system</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Recent Tasks</CardTitle>
+                <CardDescription>Latest tasks created in the system</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => router.push('/tasks')}>
+                View All Tasks
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {data?.recent_tasks && data.recent_tasks.length > 0 ? (
                 data.recent_tasks.slice(0, 5).map((task, index: number) => (
-                  <div key={index} className="flex items-center space-x-4">
-                    <div className="w-2 h-2 bg-primary rounded-full" />
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm">
-                        <span className="font-medium">{task.title || 'Unnamed Task'}</span>
-                        {task.priority && (
-                          <span className="ml-2 text-xs px-2 py-1 rounded-full bg-secondary">
-                            {task.priority.title}
-                          </span>
-                        )}
-                        {task.template && (
-                          <span className="ml-2 text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
-                            {task.template.title}
-                          </span>
-                        )}
-                        {task.deliverable_quantity && task.deliverable_quantity > 1 && (
-                          <span className="ml-2 text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
-                            Qty: {task.deliverable_quantity}
-                          </span>
-                        )}
-                        {task.deliverables_count && task.deliverables_count > 0 && (
-                          <span className="ml-2 text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">
-                            📎 {task.deliverables_count}
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {task.status ? `Status: ${task.status.title}` : 'No status'} •{' '}
-                        {new Date(task.created_at).toLocaleDateString()}
-                        {task.clients && task.clients.length > 0 && task.clients[0] && (
-                          <span> • Client: {task.clients[0].first_name && task.clients[0].last_name ? 
-                            `${task.clients[0].first_name} ${task.clients[0].last_name}` : 
-                            task.clients[0].name || 'Unknown'}</span>
-                        )}
-                        {task.users && task.users.length > 0 && task.users[0] && (
-                          <span> • Tasker: {task.users[0].first_name} {task.users[0].last_name}</span>
-                        )}
-                      </p>
-                      {task.note && (
-                        <p className="text-xs text-muted-foreground line-clamp-1">
-                          <span className="font-medium">Notes:</span> {task.note}
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/tasks/${task.id}`)}>
+                    <div className="flex items-center space-x-4">
+                      <div className="w-2 h-2 bg-primary rounded-full" />
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm">
+                          <span className="font-medium">{task.title || 'Unnamed Task'}</span>
+                          {task.priority && (
+                            <span className="ml-2 text-xs px-2 py-1 rounded-full bg-secondary">
+                              {task.priority.title}
+                            </span>
+                          )}
+                          {task.template && (
+                            <span className="ml-2 text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                              {task.template.title}
+                            </span>
+                          )}
+                          {task.deliverable_quantity && task.deliverable_quantity > 1 && (
+                            <span className="ml-2 text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
+                              Qty: {task.deliverable_quantity}
+                            </span>
+                          )}
+                          {task.deliverables_count && task.deliverables_count > 0 && (
+                            <span className="ml-2 text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">
+                              📎 {task.deliverables_count}
+                            </span>
+                          )}
                         </p>
-                      )}
+                        <p className="text-xs text-muted-foreground">
+                          {task.status ? `Status: ${task.status.title}` : 'No status'} •{' '}
+                          {new Date(task.created_at).toLocaleDateString()}
+                          {task.clients && task.clients.length > 0 && task.clients[0] && (
+                            <span> • Client: {task.clients[0].first_name && task.clients[0].last_name ? 
+                              `${task.clients[0].first_name} ${task.clients[0].last_name}` : 
+                              task.clients[0].name || 'Unknown'}</span>
+                          )}
+                          {task.users && task.users.length > 0 && task.users[0] && (
+                            <span> • Tasker: {task.users[0].first_name} {task.users[0].last_name}</span>
+                          )}
+                        </p>
+                        {task.note && (
+                          <p className="text-xs text-muted-foreground line-clamp-1">
+                            <span className="font-medium">Notes:</span> {task.note}
+                          </p>
+                        )}
+                      </div>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/tasks/${task.id}`);
+                      }}
+                    >
+                      View
+                    </Button>
                   </div>
                 ))
               ) : (
