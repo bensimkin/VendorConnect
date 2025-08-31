@@ -20,10 +20,15 @@ class SearchController extends BaseController
     public function globalSearch(Request $request)
     {
         try {
+            \Log::info('Search request received', ['query' => $request->get('q')]);
+            
             $user = Auth::user();
+            \Log::info('User authenticated', ['user_id' => $user->id, 'email' => $user->email]);
+            
             $query = $request->get('q', '');
             
             if (empty($query) || strlen($query) < 2) {
+                \Log::info('Query too short, returning empty results');
                 return $this->sendResponse([
                     'clients' => [],
                     'projects' => [],
@@ -36,6 +41,8 @@ class SearchController extends BaseController
             $searchTerm = '%' . $query . '%';
             $results = [];
 
+            \Log::info('Starting search with term', ['searchTerm' => $searchTerm]);
+
             // Search Clients (only for Admin users)
             if ($user->hasRole(['admin', 'sub admin'])) {
                 $clients = Client::where(function($q) use ($searchTerm) {
@@ -45,7 +52,7 @@ class SearchController extends BaseController
                       ->orWhere('company', 'like', $searchTerm)
                       ->orWhere('phone', 'like', $searchTerm);
                 })
-                ->with(['projects', 'portfolios'])
+                ->with(['projects', 'portfolio'])
                 ->limit(5)
                 ->get()
                 ->map(function($client) {
@@ -196,10 +203,23 @@ class SearchController extends BaseController
 
             $results['total_results'] = $totalResults;
 
-            return $this->sendResponse($results, 'Search results retrieved successfully');
+            \Log::info('Search completed successfully', [
+                'total_results' => $totalResults,
+                'clients_count' => $results['clients']->count(),
+                'projects_count' => $results['projects']->count(),
+                'tasks_count' => $results['tasks']->count(),
+                'portfolio_count' => $results['portfolio']->count()
+            ]);
 
+            return $this->sendResponse($results, 'Search results retrieved successfully');
         } catch (\Exception $e) {
-            return $this->sendServerError('Error performing search: ' . $e->getMessage());
+            \Log::error('Search error occurred', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $this->sendError('Search failed: ' . $e->getMessage(), 500);
         }
     }
 }
