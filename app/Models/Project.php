@@ -123,4 +123,9 @@ class Project extends Model implements HasMedia
     {
         return $this->belongsTo(Priority::class);
     }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }
