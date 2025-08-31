@@ -519,7 +519,10 @@ function ProjectManagementPageContent() {
                           {project.clients && project.clients.length > 0 && (
                             <div className="flex items-center gap-1">
                               <User className="h-4 w-4" />
-                              <span>{project.clients.map(c => c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim()).join(', ')}</span>
+                              <span>{project.clients.map(c => {
+                                const clientName = c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim();
+                                return c.company ? `${clientName} (${c.company})` : clientName;
+                              }).join(', ')}</span>
                             </div>
                           )}
                           {project.created_by && (
@@ -528,6 +531,24 @@ function ProjectManagementPageContent() {
                               <span>Requester: {project.created_by.first_name} {project.created_by.last_name}</span>
                             </div>
                           )}
+                          {(() => {
+                            const taskers = new Set();
+                            if (project.tasks) {
+                              project.tasks.forEach(task => {
+                                if (task.users) {
+                                  task.users.forEach(user => {
+                                    taskers.add(`${user.first_name} ${user.last_name}`);
+                                  });
+                                }
+                              });
+                            }
+                            return taskers.size > 0 ? (
+                              <div className="flex items-center gap-1">
+                                <User className="h-4 w-4" />
+                                <span>Taskers: {Array.from(taskers).join(', ')}</span>
+                              </div>
+                            ) : null;
+                          })()}
                           {project.budget && (
                             <div className="flex items-center gap-1">
                               <span>Budget: ${project.budget.toLocaleString()}</span>
@@ -716,35 +737,37 @@ function ProjectManagementPageContent() {
                       )}
                       
                       {/* Tasker Information */}
-                      {project.tasks && project.tasks.length > 0 && (
-                        <div className="mb-4">
-                          <h4 className="text-sm font-medium text-muted-foreground mb-2">Taskers</h4>
-                          <div className="space-y-2">
-                            {(() => {
-                              const taskers = new Map();
-                              project.tasks.forEach(task => {
-                                if (task.users) {
-                                  task.users.forEach(user => {
-                                    if (!taskers.has(user.id)) {
-                                      taskers.set(user.id, {
-                                        ...user,
-                                        taskCount: 0,
-                                        completedTasks: 0,
-                                        overdueTasks: 0
-                                      });
-                                    }
-                                    const tasker = taskers.get(user.id);
-                                    tasker.taskCount++;
-                                    if (task.status?.title === 'Completed') {
-                                      tasker.completedTasks++;
-                                    } else if (task.end_date && new Date(task.end_date) < new Date()) {
-                                      tasker.overdueTasks++;
-                                    }
+                      {(() => {
+                        const taskers = new Map();
+                        if (project.tasks) {
+                          project.tasks.forEach(task => {
+                            if (task.users) {
+                              task.users.forEach(user => {
+                                if (!taskers.has(user.id)) {
+                                  taskers.set(user.id, {
+                                    ...user,
+                                    taskCount: 0,
+                                    completedTasks: 0,
+                                    overdueTasks: 0
                                   });
                                 }
+                                const tasker = taskers.get(user.id);
+                                tasker.taskCount++;
+                                if (task.status?.title === 'Completed') {
+                                  tasker.completedTasks++;
+                                } else if (task.end_date && new Date(task.end_date) < new Date()) {
+                                  tasker.overdueTasks++;
+                                }
                               });
-                              return Array.from(taskers.values());
-                            })().map((tasker) => (
+                            }
+                          });
+                        }
+                        const taskersList = Array.from(taskers.values());
+                        return taskersList.length > 0 ? (
+                          <div className="mb-4">
+                            <h4 className="text-sm font-medium text-muted-foreground mb-2">Taskers</h4>
+                            <div className="space-y-2">
+                              {taskersList.map((tasker) => (
                               <div key={tasker.id} className="p-3 border rounded-lg bg-green-50">
                                 <div className="flex items-center justify-between">
                                   <div>
@@ -774,7 +797,8 @@ function ProjectManagementPageContent() {
                             ))}
                           </div>
                         </div>
-                      )}
+                        ) : null;
+                      })()}
                       
                       {/* Project Timeline */}
                       {(project.start_date || project.end_date) && (
