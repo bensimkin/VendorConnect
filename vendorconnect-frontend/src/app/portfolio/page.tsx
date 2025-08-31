@@ -50,7 +50,8 @@ interface Portfolio {
   };
   createdBy: {
     id: number;
-    name: string;
+    first_name?: string;
+    last_name?: string;
   };
   taskType?: {
     id: number;
@@ -316,6 +317,17 @@ export default function PortfolioPage() {
                           `${portfolio.client.first_name || ''} ${portfolio.client.last_name || ''}`.trim() || portfolio.client.name || 'No name'
                         ) : (
                           'No client assigned'
+                        )}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">Created by:</span>
+                      <span className="text-sm">
+                        {portfolio.createdBy ? (
+                          `${portfolio.createdBy.first_name || ''} ${portfolio.createdBy.last_name || ''}`.trim() || 'Unknown user'
+                        ) : (
+                          'Unknown user'
                         )}
                       </span>
                     </div>
