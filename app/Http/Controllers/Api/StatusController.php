@@ -48,9 +48,15 @@ class StatusController extends BaseController
 
     /**
      * Store a new status
+     * DISABLED: Statuses are system-defined and should not be created via API
+     * Use migrations to add new statuses if needed
      */
     public function store(Request $request)
     {
+        return $this->sendError('Creating new statuses is not allowed. Statuses are system-defined and should be managed through database migrations only.', 403);
+        
+        // Original code commented out to prevent accidental creation
+        /*
         try {
             $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',
@@ -71,6 +77,7 @@ class StatusController extends BaseController
         } catch (\Exception $e) {
             return $this->sendServerError('Error creating status: ' . $e->getMessage());
         }
+        */
     }
 
     /**

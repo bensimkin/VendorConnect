@@ -51,9 +51,15 @@ class PriorityController extends BaseController
 
     /**
      * Store a new priority
+     * DISABLED: Priorities are system-defined and should not be created via API
+     * Use migrations to add new priorities if needed
      */
     public function store(Request $request)
     {
+        return $this->sendError('Creating new priorities is not allowed. Priorities are system-defined and should be managed through database migrations only.', 403);
+        
+        // Original code commented out to prevent accidental creation
+        /*
         try {
             $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',
@@ -74,6 +80,7 @@ class PriorityController extends BaseController
         } catch (\Exception $e) {
             return $this->sendServerError('Error creating priority: ' . $e->getMessage());
         }
+        */
     }
 
     /**
