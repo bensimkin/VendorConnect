@@ -509,6 +509,7 @@ class TaskController extends BaseController
     public function updateStatus(Request $request, $id)
     {
         try {
+            $user = Auth::user();
             $validator = Validator::make($request->all(), [
                 'status_id' => 'required|exists:statuses,id'
             ]);
@@ -522,6 +523,23 @@ class TaskController extends BaseController
             if (!$task) {
                 return $this->sendNotFound('Task not found');
             }
+
+            // Role-based access control
+            if ($user->hasRole('Requester')) {
+                // Requesters can update status of tasks they created OR are assigned to
+                $isCreated = $task->created_by === $user->id;
+                $isAssigned = $task->users()->where('users.id', $user->id)->exists();
+                if (!$isCreated && !$isAssigned) {
+                    return $this->sendError('Access denied', [], 403);
+                }
+            } elseif ($user->hasRole('Tasker')) {
+                // Taskers can update status of tasks they're assigned to
+                $isAssigned = $task->users()->where('users.id', $user->id)->exists();
+                if (!$isAssigned) {
+                    return $this->sendError('Access denied', [], 403);
+                }
+            }
+            // Admins and sub-admins can update all tasks
 
             $oldStatus = $task->status;
             $task->update(['status_id' => $request->status_id]);
@@ -537,6 +555,53 @@ class TaskController extends BaseController
             return $this->sendResponse($task, 'Task status updated successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error updating task status: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update task priority
+     */
+    public function updatePriority(Request $request, $id)
+    {
+        try {
+            $user = Auth::user();
+            $validator = Validator::make($request->all(), [
+                'priority_id' => 'required|exists:priorities,id'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendValidationError($validator->errors());
+            }
+
+            $task = Task::find($id);
+
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+
+            // Role-based access control
+            if ($user->hasRole('Requester')) {
+                // Requesters can update priority of tasks they created OR are assigned to
+                $isCreated = $task->created_by === $user->id;
+                $isAssigned = $task->users()->where('users.id', $user->id)->exists();
+                if (!$isCreated && !$isAssigned) {
+                    return $this->sendError('Access denied', [], 403);
+                }
+            } elseif ($user->hasRole('Tasker')) {
+                // Taskers can update priority of tasks they're assigned to
+                $isAssigned = $task->users()->where('users.id', $user->id)->exists();
+                if (!$isAssigned) {
+                    return $this->sendError('Access denied', [], 403);
+                }
+            }
+            // Admins and sub-admins can update all tasks
+
+            $task->update(['priority_id' => $request->priority_id]);
+            $task->load('priority');
+
+            return $this->sendResponse($task, 'Task priority updated successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error updating task priority: ' . $e->getMessage());
         }
     }
 
