@@ -39,9 +39,9 @@ const navigation = [
   { name: 'Task Types', href: '/task-types', icon: Tag, roles: ['Admin', 'sub admin'] },
   { name: 'Users', href: '/users', icon: Users, roles: ['Admin'] },
   { name: 'Clients', href: '/clients', icon: Building2, roles: ['Admin'] },
-  { name: 'Projects', href: '/projects', icon: FolderOpen, roles: ['Admin', 'Requester', 'sub admin'] },
+  { name: 'Projects', href: '/projects', icon: FolderOpen, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
   { name: 'Project Management', href: '/project-management', icon: BarChart3, roles: ['Admin', 'Requester', 'sub admin'] },
-  { name: 'Portfolio', href: '/portfolio', icon: Briefcase, roles: ['Admin', 'Requester', 'sub admin'] },
+  { name: 'Portfolio', href: '/portfolio', icon: Briefcase, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
   { name: 'Settings', href: '/settings', icon: Settings, roles: ['Admin'] },
 ];
 
