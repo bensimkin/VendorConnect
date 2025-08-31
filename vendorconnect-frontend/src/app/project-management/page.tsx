@@ -23,7 +23,18 @@ interface Project {
   clients?: Array<{
     id: number;
     name: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    company?: string;
+    phone?: string;
   }>;
+  created_by?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
   total_tasks?: number;
   active_tasks?: number;
   overdue_tasks?: number;
@@ -31,6 +42,9 @@ interface Project {
   created_at: string;
   updated_at: string;
   tasks?: Task[];
+  budget?: number;
+  start_date?: string;
+  end_date?: string;
 }
 
 interface Task {
@@ -49,10 +63,21 @@ interface Task {
     id: number;
     first_name: string;
     last_name: string;
+    email?: string;
+    phone?: string;
   }>;
+  created_by?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
   start_date?: string;
   end_date?: string;
   created_at: string;
+  deliverables_count?: number;
+  note?: string;
+  standard_brief?: string;
 }
 
 interface FilterOption {
@@ -494,7 +519,18 @@ function ProjectManagementPageContent() {
                           {project.clients && project.clients.length > 0 && (
                             <div className="flex items-center gap-1">
                               <User className="h-4 w-4" />
-                              <span>{project.clients.map(c => c.name).join(', ')}</span>
+                              <span>{project.clients.map(c => c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim()).join(', ')}</span>
+                            </div>
+                          )}
+                          {project.created_by && (
+                            <div className="flex items-center gap-1">
+                              <User className="h-4 w-4" />
+                              <span>Requester: {project.created_by.first_name} {project.created_by.last_name}</span>
+                            </div>
+                          )}
+                          {project.budget && (
+                            <div className="flex items-center gap-1">
+                              <span>Budget: ${project.budget.toLocaleString()}</span>
                             </div>
                           )}
                         </div>
@@ -588,7 +624,17 @@ function ProjectManagementPageContent() {
                                 {task.users && task.users.length > 0 && (
                                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                     <User className="h-3 w-3" />
-                                    <span>{task.users.length} assigned</span>
+                                    <span>{task.users.map(u => `${u.first_name} ${u.last_name}`).join(', ')}</span>
+                                  </div>
+                                )}
+                                {task.created_by && (
+                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <span>Created by: {task.created_by.first_name} {task.created_by.last_name}</span>
+                                  </div>
+                                )}
+                                {task.deliverables_count && task.deliverables_count > 0 && (
+                                  <div className="flex items-center gap-1 text-xs text-purple-600">
+                                    <span>📎 {task.deliverables_count}</span>
                                   </div>
                                 )}
                               </div>
@@ -599,6 +645,158 @@ function ProjectManagementPageContent() {
                         <p className="text-center text-muted-foreground py-4">
                           No tasks found for this project
                         </p>
+                      )}
+                    </div>
+                    
+                    {/* Enhanced Project Details Section */}
+                    <div className="mt-6 border-t pt-4">
+                      <h3 className="font-medium mb-4">Project Details</h3>
+                      
+                      {/* Client Information */}
+                      {project.clients && project.clients.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-medium text-muted-foreground mb-2">Clients</h4>
+                          <div className="space-y-2">
+                            {project.clients.map((client) => (
+                              <div key={client.id} className="p-3 border rounded-lg bg-gray-50">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="font-medium text-sm">
+                                      {client.name || `${client.first_name || ''} ${client.last_name || ''}`.trim()}
+                                    </p>
+                                    {client.company && (
+                                      <p className="text-xs text-muted-foreground">{client.company}</p>
+                                    )}
+                                    {client.email && (
+                                      <p className="text-xs text-muted-foreground">{client.email}</p>
+                                    )}
+                                    {client.phone && (
+                                      <p className="text-xs text-muted-foreground">{client.phone}</p>
+                                    )}
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => router.push(`/clients/${client.id}`)}
+                                  >
+                                    <ExternalLink className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Requester Information */}
+                      {project.created_by && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-medium text-muted-foreground mb-2">Project Requester</h4>
+                          <div className="p-3 border rounded-lg bg-blue-50">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium text-sm">
+                                  {project.created_by.first_name} {project.created_by.last_name}
+                                </p>
+                                <p className="text-xs text-muted-foreground">{project.created_by.email}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Created: {formatDate(project.created_at)}
+                                </p>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => router.push(`/users/${project.created_by.id}`)}
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Tasker Information */}
+                      {project.tasks && project.tasks.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-medium text-muted-foreground mb-2">Taskers</h4>
+                          <div className="space-y-2">
+                            {(() => {
+                              const taskers = new Map();
+                              project.tasks.forEach(task => {
+                                if (task.users) {
+                                  task.users.forEach(user => {
+                                    if (!taskers.has(user.id)) {
+                                      taskers.set(user.id, {
+                                        ...user,
+                                        taskCount: 0,
+                                        completedTasks: 0,
+                                        overdueTasks: 0
+                                      });
+                                    }
+                                    const tasker = taskers.get(user.id);
+                                    tasker.taskCount++;
+                                    if (task.status?.title === 'Completed') {
+                                      tasker.completedTasks++;
+                                    } else if (task.end_date && new Date(task.end_date) < new Date()) {
+                                      tasker.overdueTasks++;
+                                    }
+                                  });
+                                }
+                              });
+                              return Array.from(taskers.values());
+                            })().map((tasker) => (
+                              <div key={tasker.id} className="p-3 border rounded-lg bg-green-50">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="font-medium text-sm">
+                                      {tasker.first_name} {tasker.last_name}
+                                    </p>
+                                    {tasker.email && (
+                                      <p className="text-xs text-muted-foreground">{tasker.email}</p>
+                                    )}
+                                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                                      <span>{tasker.taskCount} tasks assigned</span>
+                                      <span>{tasker.completedTasks} completed</span>
+                                      {tasker.overdueTasks > 0 && (
+                                        <span className="text-red-600">{tasker.overdueTasks} overdue</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => router.push(`/users/${tasker.id}`)}
+                                  >
+                                    <ExternalLink className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Project Timeline */}
+                      {(project.start_date || project.end_date) && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-medium text-muted-foreground mb-2">Timeline</h4>
+                          <div className="p-3 border rounded-lg bg-yellow-50">
+                            <div className="flex items-center gap-4 text-sm">
+                              {project.start_date && (
+                                <div>
+                                  <span className="text-muted-foreground">Start:</span>
+                                  <span className="ml-1 font-medium">{formatDate(project.start_date)}</span>
+                                </div>
+                              )}
+                              {project.end_date && (
+                                <div>
+                                  <span className="text-muted-foreground">End:</span>
+                                  <span className="ml-1 font-medium">{formatDate(project.end_date)}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </CardContent>
