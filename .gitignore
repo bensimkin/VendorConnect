@@ -5,12 +5,11 @@
 # CRITICAL SECURITY - ENVIRONMENT & CREDENTIALS
 # ===========================================
 .env
-.env.*
-!.env.example
 .env.local
 .env.production
 .env.staging
 .env.test
+!.env.example
 
 # ===========================================
 # DATABASE FILES (CONTAIN SENSITIVE DATA)
