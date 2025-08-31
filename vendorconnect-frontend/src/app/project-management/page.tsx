@@ -653,11 +653,9 @@ function ProjectManagementPageContent() {
                                     <span>Created by: {task.created_by.first_name} {task.created_by.last_name}</span>
                                   </div>
                                 )}
-                                {task.deliverables_count && task.deliverables_count > 0 && (
-                                  <div className="flex items-center gap-1 text-xs text-purple-600">
-                                    <span>📎 {task.deliverables_count}</span>
-                                  </div>
-                                )}
+                                <div className="flex items-center gap-1 text-xs text-purple-600">
+                                  <span>📎 {task.deliverables_count || 0}</span>
+                                </div>
                               </div>
                             </div>
                           ))}
