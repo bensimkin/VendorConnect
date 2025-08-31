@@ -41,12 +41,14 @@ interface Project {
 export default function ProjectsPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [statuses, setStatuses] = useState<Array<{id: number; title: string}>>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchProjects();
+    fetchStatuses();
   }, []);
 
   // Debounced search effect
@@ -57,6 +59,16 @@ export default function ProjectsPage() {
 
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
+
+  const fetchStatuses = async () => {
+    try {
+      const response = await apiClient.get('/statuses');
+      setStatuses(response.data.data || []);
+    } catch (error) {
+      console.error('Failed to fetch statuses:', error);
+      setStatuses([]);
+    }
+  };
 
   const fetchProjects = async (searchQuery = '') => {
     try {
@@ -169,9 +181,11 @@ export default function ProjectsPage() {
                 className="px-4 py-2 border rounded-md bg-background"
               >
                 <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-                <option value="on hold">On Hold</option>
+                {statuses.map((status) => (
+                  <option key={status.id} value={status.title.toLowerCase()}>
+                    {status.title}
+                  </option>
+                ))}
               </select>
             </div>
           </CardContent>
