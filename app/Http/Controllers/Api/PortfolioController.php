@@ -36,23 +36,10 @@ class PortfolioController extends BaseController
                     });
                 });
             } elseif ($user->hasRole('Tasker')) {
-                // Taskers see portfolio items related to clients whose tasks they're currently assigned to
-                // OR have ever been assigned to (for historical access)
-                $query->where(function($q) use ($user) {
-                    // Current assignments
-                    $q->whereHas('task', function($subQ) use ($user) {
-                        $subQ->whereHas('users', function($subSubQ) use ($user) {
-                            $subSubQ->where('users.id', $user->id);
-                        });
-                    })
-                    // OR historical assignments
-                    ->orWhereHas('task', function($subQ) use ($user) {
-                        $subQ->whereHas('project.clients', function($subSubQ) use ($user) {
-                            $subSubQ->whereHas('taskAssignmentHistory', function($subSubSubQ) use ($user) {
-                                $subSubSubQ->where('user_id', $user->id)
-                                          ->where('action', 'assigned');
-                            });
-                        });
+                // Taskers see portfolio items from tasks they're currently assigned to
+                $query->whereHas('task', function($q) use ($user) {
+                    $q->whereHas('users', function($subQ) use ($user) {
+                        $subQ->where('users.id', $user->id);
                     });
                 });
             }
