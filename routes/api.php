@@ -90,6 +90,7 @@ Route::prefix('v1')->group(function () {
             
             // Task status and deadline
             Route::put('/{id}/status', [TaskController::class, 'updateStatus']);
+            Route::put('/{id}/priority', [TaskController::class, 'updatePriority']);
             Route::put('/{id}/deadline', [TaskController::class, 'updateDeadline']);
             
             // Task answers
