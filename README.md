@@ -254,3 +254,7 @@ For support and questions:
 ---
 
 **VendorConnect v1.0** - Streamlining vendor collaboration with modern project management tools.
+
+---
+
+*Last Updated: December 2024*
