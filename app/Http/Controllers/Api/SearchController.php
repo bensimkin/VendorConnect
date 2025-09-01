@@ -44,7 +44,7 @@ class SearchController extends BaseController
             \Log::info('Starting search with term', ['searchTerm' => $searchTerm]);
 
             // Search Clients (only for Admin users)
-            if ($user->hasRole(['admin', 'sub admin'])) {
+            if ($user->hasRole(['admin', 'sub admin'], 'api') || $user->hasRole(['admin', 'sub admin'], 'web')) {
                 $clients = Client::where(function($q) use ($searchTerm) {
                     $q->where('first_name', 'like', $searchTerm)
                       ->orWhere('last_name', 'like', $searchTerm)
@@ -79,14 +79,14 @@ class SearchController extends BaseController
             });
 
             // Apply role-based filtering
-            if ($user->hasRole('Requester')) {
+            if ($user->hasRole('Requester', 'web')) {
                 $projectQuery->where(function($q) use ($user) {
                     $q->where('created_by', $user->id)
                       ->orWhereHas('tasks', function($subQ) use ($user) {
                           $subQ->where('created_by', $user->id);
                       });
                 });
-            } elseif ($user->hasRole('Tasker')) {
+            } elseif ($user->hasRole('Tasker', 'web')) {
                 $projectQuery->whereHas('tasks', function($q) use ($user) {
                     $q->whereHas('users', function($subQ) use ($user) {
                         $subQ->where('users.id', $user->id);
@@ -119,14 +119,14 @@ class SearchController extends BaseController
             });
 
             // Apply role-based filtering
-            if ($user->hasRole('Requester')) {
+            if ($user->hasRole('Requester', 'web')) {
                 $taskQuery->where(function($q) use ($user) {
                     $q->where('created_by', $user->id)
                       ->orWhereHas('users', function($subQ) use ($user) {
                           $subQ->where('users.id', $user->id);
                       });
                 });
-            } elseif ($user->hasRole('Tasker')) {
+            } elseif ($user->hasRole('Tasker', 'web')) {
                 $taskQuery->whereHas('users', function($q) use ($user) {
                     $q->where('users.id', $user->id);
                 });
@@ -158,7 +158,7 @@ class SearchController extends BaseController
             });
 
             // Apply role-based filtering
-            if ($user->hasRole('Requester')) {
+            if ($user->hasRole('Requester', 'web')) {
                 $portfolioQuery->where(function($q) use ($user) {
                     $q->where('created_by', $user->id)
                       ->orWhereHas('task', function($subQ) use ($user) {
@@ -168,7 +168,7 @@ class SearchController extends BaseController
                                });
                       });
                 });
-            } elseif ($user->hasRole('Tasker')) {
+            } elseif ($user->hasRole('Tasker', 'web')) {
                 $portfolioQuery->whereHas('task', function($q) use ($user) {
                     $q->whereHas('users', function($subQ) use ($user) {
                         $subQ->where('users.id', $user->id);
