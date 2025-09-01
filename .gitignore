@@ -30,6 +30,35 @@ database/migrations/
 database/migrations/*.php
 
 # ===========================================
+# SENSITIVE BUSINESS LOGIC FILES
+# ===========================================
+# Permission and admin checking scripts
+check_*.php
+check-*.sh
+clear_*.php
+assign_*.php
+
+# Deployment and server management scripts
+install_server.sh
+deploy_*.sh
+rebuild*.sh
+protect_*.sh
+monitor-*.sh
+debug_*.sh
+cleanup_*.sh
+
+# Database files (already covered but being explicit)
+*.sql
+real_schema.sql
+database_backup_*.sql
+demo_data*.sql
+
+# Load and backup scripts
+load_demo_data.sh
+backup_database.sh
+restore_database.sh
+
+# ===========================================
 # SHELL SCRIPTS (CONTAIN CREDENTIALS)
 # ===========================================
 *.sh
