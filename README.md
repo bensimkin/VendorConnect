@@ -6,6 +6,12 @@ Benjamin Simkin
 
 VendorConnect is a comprehensive project management solution designed to streamline collaboration with external contractors and vendors. It provides a structured way to manage repeatable tasks, maintain client requirements, and ensure consistent project delivery across distributed teams with modern UI/UX and advanced features.
 
+## 🌐 Live Demo
+
+**Try VendorConnect now:** [https://vendorconnect.businessnet.com.au/](https://vendorconnect.businessnet.com.au/)
+
+Experience the full functionality with demo data and explore all features in action.
+
 ## 🌟 Key Features
 
 ### 🎯 Template-Based Task Management
