@@ -77,8 +77,10 @@ export default function GlobalSearch() {
 
     setIsLoading(true);
     try {
+      console.log('Searching for:', query);
       const response = await apiClient.get(`/search?q=${encodeURIComponent(query)}`);
-      setResults(response.data);
+      console.log('Search response:', response.data);
+      setResults(response.data.data);
       setShowResults(true);
     } catch (error) {
       console.error('Search error:', error);
@@ -215,6 +217,9 @@ export default function GlobalSearch() {
               Searching...
             </div>
           ) : results && results.total_results > 0 ? (
+            (() => {
+              console.log('Rendering results:', results);
+              return (
             <div className="p-3">
               <div className="mb-3 pb-2 border-b">
                 <p className="text-sm text-muted-foreground">
@@ -227,6 +232,8 @@ export default function GlobalSearch() {
               {renderSection('Tasks', results.tasks, 'CheckSquare')}
               {renderSection('Portfolio', results.portfolio, 'Briefcase')}
             </div>
+            );
+            })()
           ) : query.length >= 2 ? (
             <div className="p-4 text-center text-muted-foreground">
               No results found for "{query}"
