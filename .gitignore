@@ -229,9 +229,119 @@ config/database.php
 config/app.php
 config/mail.php
 config/services.php
+config/broadcasting.php
+config/cache.php
+config/filesystems.php
+config/permission.php
+config/chatify.php
+config/cors.php
+config/logging.php
+config/media-library.php
+
+# ===========================================
+# LOCK FILES (CONTAIN DEPENDENCY VULNERABILITIES)
+# ===========================================
+composer.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ===========================================
+# SSL/TLS CERTIFICATES AND KEYS
+# ===========================================
+*.pem
+*.crt
+*.key
+*.p12
+*.pfx
+*.cer
+*.der
+*.p7b
+*.p7c
+
+# ===========================================
+# SENSITIVE BUSINESS DATA FILES
+# ===========================================
+# User data exports
+user_data_*.csv
+user_data_*.json
+user_data_*.xlsx
+
+# Backup files with sensitive data
+backup_*.json
+backup_*.csv
+backup_*.xlsx
+
+# API keys and tokens
+api_keys.txt
+tokens.json
+credentials.json
+secrets.json
+
+# ===========================================
+# DEVELOPMENT AND DEBUG FILES
+# ===========================================
+# Debug output files
+debug_*.log
+debug_*.txt
+debug_*.json
+
+# Test data files
+test_data_*.sql
+test_data_*.json
+test_data_*.csv
+
+# Performance profiling
+*.prof
+*.cache
+*.tmp
 
 # ===========================================
 # APPLICATION SPECIFIC
 # ===========================================
 # All example files are ignored for security
 # Create your own files locally based on documentation
+
+# Frontend build artifacts
+public/frontend/
+public/_next/
+public/build/
+
+# Laravel compiled views
+storage/framework/views/*.php
+
+# Application cache
+storage/framework/cache/data/
+
+# Session files
+storage/framework/sessions/*
+
+# ===========================================
+# MONITORING AND LOGGING
+# ===========================================
+# Application monitoring
+monitoring_*.log
+health_check_*.log
+performance_*.log
+
+# Error tracking
+error_tracking_*.json
+sentry_*.log
+
+# ===========================================
+# DEPLOYMENT AND CI/CD
+# ===========================================
+# Deployment configurations
+deploy_*.yml
+deploy_*.yaml
+deploy_*.json
+
+# CI/CD pipeline files
+.github/workflows/deploy.yml
+.github/workflows/production.yml
+.github/workflows/staging.yml
+
+# Server configurations
+server_*.conf
+nginx_*.conf
+apache_*.conf
