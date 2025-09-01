@@ -24,6 +24,12 @@ demo_data*.sql
 real_schema.sql
 
 # ===========================================
+# DATABASE MIGRATIONS (CONTAIN SENSITIVE SCHEMA)
+# ===========================================
+database/migrations/
+database/migrations/*.php
+
+# ===========================================
 # SHELL SCRIPTS (CONTAIN CREDENTIALS)
 # ===========================================
 *.sh
