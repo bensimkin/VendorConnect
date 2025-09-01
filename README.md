@@ -211,12 +211,6 @@ npm run build
 npm run dev
 ```
 
-### Production Deployment
-```bash
-# Use the provided rebuild scripts
-./rebuild.sh          # Local development
-./rebuild-server.sh   # Production server
-```
 
 ## 📋 Version History
 
@@ -248,7 +242,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 For support and questions:
 - Create an issue on GitHub
-- Contact: benjamin@businessnet.com.au
+- Contact: vendorconnect@businessnet.com.au
 - Documentation: Available in the `/docs` directory
 
 ---
