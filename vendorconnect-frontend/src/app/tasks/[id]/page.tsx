@@ -263,10 +263,11 @@ export default function TaskDetailPage() {
                    });
                    setChecklistCompleted({...completedMap});
                  }
-               } catch (error) {
-                 console.error('Failed to load checklist states:', error);
-               }
-               }
+              } catch (error) {
+                console.error('Failed to load checklist states:', error);
+              }
+              }
+            }
 
       // Load deliverables
       if (taskData.deliverables) {
