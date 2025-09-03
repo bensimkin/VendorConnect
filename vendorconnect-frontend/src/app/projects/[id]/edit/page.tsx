@@ -125,49 +125,29 @@ export default function EditProjectPage() {
     e.preventDefault();
     
     if (!formData.title.trim()) {
-      toast.error('Project title is required');
+      toast.error('Project name is required');
       return;
-    }
-
-    if (settings.require_project_client) {
-      if (settings.allow_multiple_clients_per_project) {
-        if (formData.client_ids.length === 0) {
-          toast.error('Please select at least one client');
-          return;
-        }
-      } else {
-        if (!formData.client_id) {
-          toast.error('Please select a client');
-          return;
-        }
-      }
-    }
-
-    // Show confirmation if multiple clients will be lost
-    if (!settings.allow_multiple_clients_per_project && hasMultipleClients) {
-      const confirmed = window.confirm(
-        `This project currently has ${project?.clients?.length || 0} clients. ` +
-        `Since multiple clients per project is now disabled, only the selected client will be kept. ` +
-        `All other clients will be removed. Do you want to continue?`
-      );
-      
-      if (!confirmed) {
-        return;
-      }
     }
 
     setSaving(true);
     try {
-      const payload = {
+      const payload: any = {
         title: formData.title,
         description: formData.description,
-        client_id: settings.allow_multiple_clients_per_project ? null : parseInt(formData.client_id),
-        client_ids: settings.allow_multiple_clients_per_project ? formData.client_ids : [],
         start_date: formData.start_date,
         end_date: formData.end_date || null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
         status_id: parseInt(formData.status_id) || 20, // Default to Active (ID: 20)
       };
+
+      // Only include client fields based on settings
+      if (settings.allow_multiple_clients_per_project) {
+        payload.client_ids = formData.client_ids;
+        payload.client_id = null;
+      } else {
+        payload.client_id = parseInt(formData.client_id);
+        // Don't include client_ids at all when multiple clients are disabled
+      }
 
       console.log('Project update payload:', payload);
       console.log('Project settings:', settings);

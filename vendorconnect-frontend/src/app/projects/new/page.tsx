@@ -106,12 +106,20 @@ function NewProjectPageContent() {
     try {
       const payload = {
         ...formData,
-        client_id: settings.allow_multiple_clients_per_project ? null : parseInt(formData.client_id),
-        client_ids: settings.allow_multiple_clients_per_project ? formData.client_ids : [],
-        status_id: formData.status_id ? parseInt(formData.status_id) : null,
-        budget: formData.budget ? parseFloat(formData.budget) : null,
+        start_date: formData.start_date,
         end_date: formData.end_date || null, // Set to null if empty
+        budget: formData.budget ? parseFloat(formData.budget) : null,
+        status_id: formData.status_id ? parseInt(formData.status_id) : null,
       };
+
+      // Only include client fields based on settings
+      if (settings.allow_multiple_clients_per_project) {
+        payload.client_ids = formData.client_ids;
+        payload.client_id = null;
+      } else {
+        payload.client_id = parseInt(formData.client_id);
+        // Don't include client_ids at all when multiple clients are disabled
+      }
 
       console.log('Project creation payload:', payload);
       console.log('Settings:', settings);
