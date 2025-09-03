@@ -3,7 +3,7 @@
 ## Overview
 This document provides comprehensive documentation for all VendorConnect API endpoints, including request/response formats, database operations, and frontend page associations.
 
-**Base URL**: `https://vc.themastermind.com.au/api/v1`
+**Base URL**: Configured via the `NEXT_PUBLIC_API_URL` environment variable (for example, `https://example.com/api/v1`)
 
 **Last Updated**: August 29, 2025
 
