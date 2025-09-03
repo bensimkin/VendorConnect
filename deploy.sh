@@ -1,11 +1,15 @@
 #!/bin/bash
 # =============================================================================
-# VendorConnect Deployment Script
+# VendorConnect Deployment Script - FIXED VERSION
 # =============================================================================
 # 
+# FIXED: This script now uses proper single-directory structure instead of
+# creating duplicate frontend directories. The frontend stays as a subdirectory
+# of the main project: /var/www/vendorconnect/vendorconnect-frontend/
+#
 # This script deploys a complete VendorConnect application stack including:
 # - Laravel backend API
-# - Next.js frontend
+# - Next.js frontend (as subdirectory)
 # - MySQL database
 # - Redis cache
 # - Nginx web server
@@ -324,37 +328,17 @@ main() {
     log_command "npm install -g pm2" "Installing PM2 globally"
     check_status "PM2 installation"
     
-    # CRITICAL FIX: Create correct directory structure to match working production server
+    # FIXED: Use proper single-directory structure to match VendorConnect repository
     log_info "=== Setting up Correct Directory Structure ==="
-    log_command "mkdir -p /var/www/vendorconnect" "Creating Laravel application directory"
-    log_command "mkdir -p /var/www/vendorconnect-frontend" "Creating Next.js frontend directory"
+    log_command "mkdir -p /var/www/vendorconnect" "Creating VendorConnect application directory"
     
-    # Clone VendorConnect repository to Laravel directory
+    # Clone VendorConnect repository directly to the correct location
     log_info "=== Cloning Repository ==="
-    if ! git clone https://github.com/bensimkin/VendorConnect.git /tmp/vendorconnect-temp; then
+    if ! git clone https://github.com/bensimkin/VendorConnect.git /var/www/vendorconnect; then
         log_error "Repository cloning failed"
         exit 1
     fi
     check_status "Repository cloning"
-    
-    # Move Laravel files to correct location
-    log_info "=== Moving Laravel Files ==="
-    log_command "cp -r /tmp/vendorconnect-temp/* /var/www/vendorconnect/" "Moving Laravel files"
-    log_command "cp -r /tmp/vendorconnect-temp/.* /var/www/vendorconnect/" "Moving hidden Laravel files"
-    
-    # Move frontend to separate directory (matching production server structure)
-    log_info "=== Moving Frontend Files ==="
-    if [ -d "/var/www/vendorconnect/vendorconnect-frontend" ]; then
-        log_command "mv /var/www/vendorconnect/vendorconnect-frontend/* /var/www/vendorconnect-frontend/" "Moving frontend files"
-        log_command "mv /var/www/vendorconnect/vendorconnect-frontend/.* /var/www/vendorconnect-frontend/" "Moving hidden frontend files" 2>/dev/null || true
-        log_command "rmdir /var/www/vendorconnect/vendorconnect-frontend" "Removing empty frontend directory from Laravel"
-    else
-        log_error "Frontend directory not found in repository"
-        exit 1
-    fi
-    
-    # Clean up temp directory
-    log_command "rm -rf /tmp/vendorconnect-temp" "Cleaning up temporary files"
     
     # Validate repository structure
     log_info "=== Validating Repository Structure ==="
@@ -364,11 +348,13 @@ main() {
     fi
     log_success "Laravel artisan file found - valid repository"
     
-    if [ ! -d "/var/www/vendorconnect-frontend" ]; then
+    if [ ! -d "/var/www/vendorconnect/vendorconnect-frontend" ]; then
         log_error "Frontend directory not found. Repository structure may have changed."
         exit 1
     fi
-    log_success "Frontend directory found"
+    log_success "Frontend directory found in correct location"
+    
+    # Repository structure already validated above
     
     # Install PHP dependencies
     log_info "=== Installing PHP Dependencies ==="
@@ -383,7 +369,7 @@ main() {
     
     # Install Node.js dependencies
     log_info "=== Installing Node.js Dependencies ==="
-    cd /var/www/vendorconnect-frontend
+    cd /var/www/vendorconnect/vendorconnect-frontend
     
     # Set memory limits for npm build
     mem_gb=$(free -g | grep Mem | awk '{print $2}')
@@ -616,13 +602,13 @@ server {
 
     # Next.js static assets - MUST BE BEFORE frontend proxy
     location /_next/static {
-        alias /var/www/vendorconnect-frontend/.next/static;
+        alias /var/www/vendorconnect/vendorconnect-frontend/.next/static;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
 
     location /_next {
-        alias /var/www/vendorconnect-frontend/.next;
+        alias /var/www/vendorconnect/vendorconnect-frontend/.next;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
@@ -665,8 +651,8 @@ EOF
     
     # Start Next.js frontend with PM2
     log_info "=== Starting Next.js Frontend ==="
-    cd /var/www/vendorconnect-frontend
-    log_command "pm2 start npm --name 'vendorconnect-frontend' -- start --prefix \"/var/www/vendorconnect-frontend\"" "Starting PM2 application"
+    cd /var/www/vendorconnect/vendorconnect-frontend
+    log_command "pm2 start npm --name 'vendorconnect-frontend' -- start --prefix \"/var/www/vendorconnect/vendorconnect-frontend\"" "Starting PM2 application"
     log_command "pm2 save" "Saving PM2 configuration"
     log_command "pm2 startup" "Setting up PM2 startup"
     check_status "PM2 startup"
