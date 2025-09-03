@@ -36,7 +36,7 @@ class TaskController extends BaseController
             $query = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'project.clients', 'deliverables', 'createdBy']);
             
             // Role-based filtering
-            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+            if ($this->hasAdminAccess($user)) {
                 // Admins and sub-admins see all tasks (no additional filtering)
             } elseif ($user->hasRole('Requester')) {
                 // Requesters see tasks they created OR are assigned to
@@ -101,7 +101,7 @@ class TaskController extends BaseController
             // Apply role-based data protection to task users and add clients
             $tasks->getCollection()->transform(function ($task) use ($user) {
                 if ($task->users) {
-                    if (!$user->hasRole(['admin', 'sub_admin'])) {
+                    if (!$this->hasAdminAccess($user)) {
                         // Remove sensitive data from assigned users for requesters and taskers
                         foreach ($task->users as $taskUser) {
                             unset($taskUser->email);
@@ -304,7 +304,7 @@ class TaskController extends BaseController
             }
 
             // Role-based access control
-            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+            if ($this->hasAdminAccess($user)) {
                 // Admins and sub-admins can access all tasks
             } elseif ($user->hasRole('Requester')) {
                 // Requesters can access tasks they created OR are assigned to
@@ -337,7 +337,7 @@ class TaskController extends BaseController
             }
 
             // Apply role-based data protection to task users
-            if (!$user->hasRole(['admin', 'sub_admin'])) {
+            if (!$this->hasAdminAccess($user)) {
                 // Remove sensitive data from assigned users for requesters and taskers
                 if ($task->users) {
                     foreach ($task->users as $taskUser) {
@@ -374,7 +374,7 @@ class TaskController extends BaseController
             }
 
             // Role-based access control
-            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+            if ($this->hasAdminAccess($user)) {
                 // Admins and sub-admins can update all tasks
             } elseif ($user->hasRole('Requester')) {
                 // Requesters can update tasks they created OR are assigned to
@@ -543,7 +543,7 @@ class TaskController extends BaseController
             }
 
             // Role-based access control
-            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+            if ($this->hasAdminAccess($user)) {
                 // Admins and sub-admins can update all tasks
             } elseif ($user->hasRole('Requester')) {
                 // Requesters can update status of tasks they created OR are assigned to
@@ -596,7 +596,7 @@ class TaskController extends BaseController
             }
 
             // Role-based access control
-            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+            if ($this->hasAdminAccess($user)) {
                 // Admins and sub-admins can update all tasks
             } elseif ($user->hasRole('Requester')) {
                 // Requesters can update priority of tasks they created OR are assigned to
@@ -903,7 +903,11 @@ class TaskController extends BaseController
             }
 
             // Allow user to delete their own messages, or admin/sub_admin/requester to delete any message
-            if ($message->sender_id !== Auth::user()->id && !Auth::user()->hasRole(['admin', 'sub_admin', 'requester'])) {
+            if (
+                $message->sender_id !== Auth::user()->id &&
+                !$this->hasAdminAccess(Auth::user()) &&
+                !Auth::user()->hasAnyRole(['requester', 'Requester'])
+            ) {
                 return $this->sendForbidden('You can only delete your own messages');
             }
 
@@ -939,7 +943,11 @@ class TaskController extends BaseController
 
             foreach ($messages as $message) {
                 // Allow user to delete their own messages, or admin/sub_admin/requester to delete any message
-                if ($message->sent_by !== Auth::user()->id && !Auth::user()->hasRole(['admin', 'sub_admin', 'requester'])) {
+                if (
+                    $message->sent_by !== Auth::user()->id &&
+                    !$this->hasAdminAccess(Auth::user()) &&
+                    !Auth::user()->hasAnyRole(['requester', 'Requester'])
+                ) {
                     continue;
                 }
 
@@ -1183,7 +1191,9 @@ class TaskController extends BaseController
 
             // Check if user has permission to stop repetition
             $user = Auth::user();
-            $canStop = $user->hasRole(['admin', 'requester']) || $task->created_by == $user->id;
+            $canStop = $this->hasAdminAccess($user) ||
+                $user->hasAnyRole(['requester', 'Requester']) ||
+                $task->created_by == $user->id;
 
             if (!$canStop) {
                 return $this->sendError('You do not have permission to stop task repetition', [], 403);
@@ -1215,7 +1225,9 @@ class TaskController extends BaseController
 
             // Check if user has permission to resume repetition
             $user = Auth::user();
-            $canResume = $user->hasRole(['admin', 'requester']) || $task->created_by == $user->id;
+            $canResume = $this->hasAdminAccess($user) ||
+                $user->hasAnyRole(['requester', 'Requester']) ||
+                $task->created_by == $user->id;
 
             if (!$canResume) {
                 return $this->sendError('You do not have permission to resume task repetition', [], 403);
