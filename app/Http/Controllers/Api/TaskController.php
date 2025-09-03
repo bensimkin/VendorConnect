@@ -876,7 +876,7 @@ class TaskController extends BaseController
     public function deleteMessage($messageId)
     {
         try {
-            $message = ChMessage::find($messageId);
+            $message = ChMessage::where('id', $messageId)->first();
 
             if (!$message) {
                 return $this->sendNotFound('Message not found');

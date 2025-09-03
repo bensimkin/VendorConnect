@@ -22,6 +22,7 @@ interface TaskDetail {
   id: number;
   title: string;
   description?: string;
+  standard_brief?: string;
   status?: {
     id: number;
     title: string;
@@ -162,6 +163,11 @@ export default function TaskDetailPage() {
     }
   }, [params.id]);
 
+  useEffect(() => {
+    console.log('Task state changed:', task);
+    console.log('Task state standard_brief:', task?.standard_brief);
+  }, [task]);
+
   const fetchTaskDetail = async (id: string) => {
     try {
       console.log('Fetching task details for ID:', id);
@@ -171,7 +177,12 @@ export default function TaskDetailPage() {
       const taskData = response.data.data;
       console.log('Task data received:', taskData);
       console.log('Task template ID:', taskData.task_brief_templates_id);
+      console.log('Task standard_brief:', taskData.standard_brief);
+      console.log('Task data standard_brief type:', typeof taskData.standard_brief);
+      console.log('Task data standard_brief length:', taskData.standard_brief ? taskData.standard_brief.length : 'null/undefined');
       setTask(taskData);
+      console.log('setTask called with:', taskData);
+      console.log('setTask called with standard_brief:', taskData.standard_brief);
 
       // Fetch statuses and priorities for inline editing (only once)
       if (statuses.length === 0 || priorities.length === 0) {
@@ -665,16 +676,18 @@ export default function TaskDetailPage() {
             </Card>
 
             {/* Brief */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Brief</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {task.standard_brief || task.template?.standard_brief || task.template_standard_brief || 'No brief provided'}
-                </p>
-              </CardContent>
-            </Card>
+            {task && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Brief</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {task.standard_brief || task.template?.standard_brief || task.template_standard_brief || 'No brief provided'}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Notes */}
             {task.note && (
