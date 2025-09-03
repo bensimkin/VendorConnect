@@ -163,26 +163,13 @@ export default function TaskDetailPage() {
     }
   }, [params.id]);
 
-  useEffect(() => {
-    console.log('Task state changed:', task);
-    console.log('Task state standard_brief:', task?.standard_brief);
-  }, [task]);
-
   const fetchTaskDetail = async (id: string) => {
     try {
-      console.log('Fetching task details for ID:', id);
       
       // Fetch task details
       const response = await apiClient.get(`/tasks/${id}`);
       const taskData = response.data.data;
-      console.log('Task data received:', taskData);
-      console.log('Task template ID:', taskData.task_brief_templates_id);
-      console.log('Task standard_brief:', taskData.standard_brief);
-      console.log('Task data standard_brief type:', typeof taskData.standard_brief);
-      console.log('Task data standard_brief length:', taskData.standard_brief ? taskData.standard_brief.length : 'null/undefined');
       setTask(taskData);
-      console.log('setTask called with:', taskData);
-      console.log('setTask called with standard_brief:', taskData.standard_brief);
 
       // Fetch statuses and priorities for inline editing (only once)
       if (statuses.length === 0 || priorities.length === 0) {
@@ -197,7 +184,6 @@ export default function TaskDetailPage() {
 
       // Load template questions from task data
       if (taskData.template_questions && taskData.template_questions.length > 0) {
-        console.log('Loading template questions from task data:', taskData.template_questions);
         
         const questions: TemplateQuestion[] = [];
         taskData.template_questions.forEach((q: any) => {
@@ -214,7 +200,6 @@ export default function TaskDetailPage() {
         // Load saved question answers
         try {
           const questionAnswersResponse = await apiClient.get(`/tasks/${id}/question-answers`);
-          console.log('Question answers response:', questionAnswersResponse.data);
           
           const savedAnswers = questionAnswersResponse.data.data;
           if (savedAnswers && savedAnswers.length > 0) {
@@ -232,16 +217,12 @@ export default function TaskDetailPage() {
             });
             setQuestionAnswers(answers);
           }
-        } catch (error) {
-          console.error('Failed to load question answers:', error);
-        }
-      } else {
-        console.log('No template questions found in task data');
-      }
+          } catch (error) {
+            console.error('Failed to load question answers:', error);
+          }
 
                    // Load checklist items from task template data
              if (task?.template_checklist && task.template_checklist.length > 0) {
-               console.log('Loading checklist from task template data:', task.template_checklist);
                
                const checklistItems: string[] = [];
                const completedMap: Record<number, boolean> = {};
@@ -265,16 +246,12 @@ export default function TaskDetailPage() {
                  }
                }
                
-               console.log('Setting checklist items:', checklistItems);
-               console.log('Setting completed map:', completedMap);
-               
                setChecklistItems(checklistItems);
                setChecklistCompleted(completedMap);
                
                // Load saved checklist states
                try {
                  const checklistStatusResponse = await apiClient.get(`/tasks/${id}/checklist-status`);
-                 console.log('Checklist status response:', checklistStatusResponse.data);
                  
                  const savedAnswers = checklistStatusResponse.data.data;
                  if (savedAnswers && savedAnswers.length > 0) {
@@ -289,9 +266,7 @@ export default function TaskDetailPage() {
                } catch (error) {
                  console.error('Failed to load checklist states:', error);
                }
-             } else {
-               console.log('No template checklist data found in task');
-             }
+               }
 
       // Load deliverables
       if (taskData.deliverables) {
@@ -339,7 +314,6 @@ export default function TaskDetailPage() {
     if (!task || !checklistId) return;
     
     try {
-      console.log('Checklist toggle called:', { index, completed, task_id: task.id, checklist_id: checklistId });
       
       // Get the current checklist item text
       const itemText = checklistItems[index] || `Checklist item ${index + 1}`;
@@ -351,11 +325,7 @@ export default function TaskDetailPage() {
         notes: itemText,
       };
       
-      console.log('Sending checklist answer request:', requestData);
-      
       const response = await apiClient.post(`/tasks/${task.id}/checklist-answer`, requestData);
-      
-      console.log('Checklist answer response:', response.data);
       
       // Update local state immediately for better UX
       setChecklistCompleted(prev => ({
@@ -682,9 +652,9 @@ export default function TaskDetailPage() {
                   <CardTitle>Brief</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {task.standard_brief || task.template?.standard_brief || task.template_standard_brief || 'No brief provided'}
-                  </p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {task.standard_brief ?? task.template?.standard_brief ?? task.template_standard_brief ?? 'No brief provided'}
+                    </p>
                 </CardContent>
               </Card>
             )}
@@ -794,7 +764,6 @@ export default function TaskDetailPage() {
                       <Checkbox
                         checked={checklistCompleted[index] || false}
                         onCheckedChange={(checked) => {
-                          console.log('Checkbox clicked:', { index, checked, item });
                           handleChecklistToggle(index, checked as boolean);
                         }}
                       />
