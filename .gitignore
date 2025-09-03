@@ -1,1 +1,36 @@
 .env
+
+# Database backups and data files
+*.sql
+
+# Development and debugging scripts
+check_*.php
+api_demo_script.php
+enhance_*.php
+final_summary.php
+gen_token.php
+reset_password.php
+
+# Backup and deployment scripts
+backup_*.sh
+install_server.sh
+*.cronjob.txt
+cronjobs.txt
+consolidated_cronjobs.txt
+
+# Infrastructure files
+terraform-infrastructure/
+
+# Demo and test files
+demo_*.sql
+deployment.sql
+simple_demo_reset.sh
+
+# Additional exclusions
+backup_*.sh.example
+demo_*.sql.example
+load_demo_data*.sh
+protect_statuses_*.sh
+restore_database.sh
+setup_database_backup.sh
+DATABASE_BACKUP_README.md
