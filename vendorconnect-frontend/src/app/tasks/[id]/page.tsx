@@ -671,7 +671,7 @@ export default function TaskDetailPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {task.template?.standard_brief || task.template_standard_brief || 'No brief provided'}
+                  {task.standard_brief || task.template?.standard_brief || task.template_standard_brief || 'No brief provided'}
                 </p>
               </CardContent>
             </Card>
