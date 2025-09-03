@@ -113,7 +113,7 @@ interface QuestionAnswer {
 }
 
 interface Comment {
-  id: number;
+  id: string;
   message_text: string;
   created_at: string;
   sender: {
@@ -423,11 +423,11 @@ export default function TaskDetailPage() {
     }
   };
 
-  const handleDeleteComment = async (commentId: number) => {
+  const handleDeleteComment = async (commentId: string) => {
     if (!task || !confirm('Are you sure you want to delete this comment?')) return;
 
     try {
-      await apiClient.delete(`/messages/${commentId}`);
+      await apiClient.delete(`/tasks/messages/${commentId}`);
       toast.success('Comment deleted successfully');
       fetchTaskDetail(task.id.toString());
     } catch (error) {
