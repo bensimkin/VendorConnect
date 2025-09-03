@@ -160,9 +160,8 @@ class TaskController extends BaseController
                 'project_id' => 'required|exists:projects,id',
                 'user_ids' => 'nullable|array',
                 'user_ids.*' => 'exists:users,id',
-                // 'client_ids' => 'nullable|array',
-                // 'client_ids.*' => 'exists:clients,id',
-                // NOTE: No direct client-task relationship exists in current schema
+                'client_ids' => 'nullable|array',
+                'client_ids.*' => 'exists:clients,id',
                 'tag_ids' => 'nullable|array',
                 'tag_ids.*' => 'exists:tags,id',
                 'start_date' => 'nullable|date',
@@ -247,11 +246,13 @@ class TaskController extends BaseController
                 }
             }
 
-            // Attach clients
-            // if ($request->has('client_ids')) {
-            //     $task->clients()->attach($request->client_ids);
-            // }
-            // NOTE: No direct client-task relationship exists in current schema
+            // Attach clients to the project's client list
+            if ($request->has('client_ids')) {
+                $project = Project::find($request->project_id);
+                if ($project) {
+                    $project->clients()->syncWithoutDetaching($request->client_ids);
+                }
+            }
 
             // Attach tags
             if ($request->has('tag_ids')) {
@@ -273,7 +274,13 @@ class TaskController extends BaseController
                 }
             }
 
-            $task->load(['users', 'status', 'priority', 'taskType']);
+            $task->load(['users', 'status', 'priority', 'taskType', 'project.clients']);
+
+            if ($task->project && $task->project->clients) {
+                $task->clients = $task->project->clients;
+            } else {
+                $task->clients = collect();
+            }
 
             return $this->sendResponse($task, 'Task created successfully');
         } catch (\Exception $e) {
@@ -394,9 +401,8 @@ class TaskController extends BaseController
                 'project_id' => 'nullable|exists:projects,id',
                 'user_ids' => 'nullable|array',
                 'user_ids.*' => 'exists:users,id',
-                // 'client_ids' => 'nullable|array',
-                // 'client_ids.*' => 'exists:clients,id',
-                // NOTE: No direct client-task relationship exists in current schema
+                'client_ids' => 'nullable|array',
+                'client_ids.*' => 'exists:clients,id',
                 'tag_ids' => 'nullable|array',
                 'tag_ids.*' => 'exists:tags,id',
                 'start_date' => 'nullable|date',
@@ -437,11 +443,14 @@ class TaskController extends BaseController
                 $task->users()->sync($request->user_ids);
             }
 
-            // Sync clients
-            // if ($request->has('client_ids')) {
-            //     $task->clients()->sync($request->client_ids);
-            // }
-            // NOTE: No direct client-task relationship exists in current schema
+            // Sync clients to the project's client list
+            if ($request->has('client_ids')) {
+                $projectId = $request->project_id ?? $task->project_id;
+                $project = Project::find($projectId);
+                if ($project) {
+                    $project->clients()->syncWithoutDetaching($request->client_ids);
+                }
+            }
 
             // Sync tags
             if ($request->has('tag_ids')) {
@@ -450,7 +459,13 @@ class TaskController extends BaseController
 
             DB::commit();
 
-            $task->load(['users', 'status', 'priority', 'taskType', 'project']);
+            $task->load(['users', 'status', 'priority', 'taskType', 'project.clients']);
+
+            if ($task->project && $task->project->clients) {
+                $task->clients = $task->project->clients;
+            } else {
+                $task->clients = collect();
+            }
 
             return $this->sendResponse($task, 'Task updated successfully');
         } catch (\Exception $e) {
