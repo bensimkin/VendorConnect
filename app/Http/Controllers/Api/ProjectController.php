@@ -230,11 +230,11 @@ class ProjectController extends BaseController
             }
 
             // Attach clients
-            if ($request->has('client_ids')) {
+            if ($request->filled('client_ids')) {
                 // Multiple clients mode
                 \Log::info('Attaching multiple clients to project', ['client_ids' => $request->client_ids, 'project_id' => $project->id]);
                 $project->clients()->attach($request->client_ids, ['admin_id' => 1]);
-            } elseif ($request->has('client_id')) {
+            } elseif ($request->filled('client_id')) {
                 // Single client mode
                 \Log::info('Attaching single client to project', ['client_id' => $request->client_id, 'project_id' => $project->id]);
                 $project->clients()->attach($request->client_id, ['admin_id' => 1]);
@@ -419,14 +419,14 @@ class ProjectController extends BaseController
             }
 
             // Handle client assignment - support both single client_id and client_ids array
-            if ($request->has('client_ids')) {
+            if ($request->filled('client_ids')) {
                 // Multiple clients mode - sync with admin_id
                 $clientData = [];
                 foreach ($request->client_ids as $clientId) {
                     $clientData[$clientId] = ['admin_id' => 1];
                 }
                 $project->clients()->sync($clientData);
-            } elseif ($request->has('client_id')) {
+            } elseif ($request->filled('client_id')) {
                 // Single client mode - sync with admin_id
                 $project->clients()->sync([$request->client_id => ['admin_id' => 1]]);
             }
