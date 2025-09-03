@@ -37,7 +37,9 @@ class ProjectController extends BaseController
                     ]);
                     
                     // Role-based filtering for tasks within projects
-                    if ($user->hasRole('Requester')) {
+                    if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                        // Admins and sub-admins see all tasks (no additional filtering)
+                    } elseif ($user->hasRole('Requester')) {
                         // Requesters see tasks they created OR are assigned to
                         $q->where(function($subQ) use ($user) {
                             $subQ->where('created_by', $user->id)
@@ -51,13 +53,14 @@ class ProjectController extends BaseController
                             $subQ->where('users.id', $user->id);
                         });
                     }
-                    // Admins and sub-admins see all tasks (no additional filtering)
                 }
             ]);
             // Removed workspace filtering for single-tenant system
 
             // Role-based filtering
-            if ($user->hasRole('Requester')) {
+            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                // Admins and sub-admins see all projects (no additional filtering)
+            } elseif ($user->hasRole('Requester')) {
                 // Requesters only see projects they created
                 $query->where('created_by', $user->id);
             } elseif ($user->hasRole('Tasker')) {
@@ -68,7 +71,6 @@ class ProjectController extends BaseController
                     });
                 });
             }
-            // Admins and sub-admins see all projects (no additional filtering)
 
             // Apply filters
             if ($request->has('search')) {
@@ -322,7 +324,9 @@ class ProjectController extends BaseController
                 ->where('project_id', $id);
 
             // Apply role-based filtering
-            if ($user->hasRole('Requester')) {
+            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                // Admins and sub-admins see all tasks
+            } elseif ($user->hasRole('Requester')) {
                 // Requesters only see tasks they created
                 $taskQuery->where('created_by', $user->id);
             } elseif ($user->hasRole('Tasker')) {
@@ -331,7 +335,6 @@ class ProjectController extends BaseController
                     $q->where('users.id', $user->id);
                 });
             }
-            // Admins and sub-admins see all tasks
 
             $tasks = $taskQuery->orderBy('created_at', 'desc')->get();
 
