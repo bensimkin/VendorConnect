@@ -5,7 +5,7 @@ const nextConfig = {
     domains: ['vc.themastermind.com.au', 'localhost'],
   },
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://vc.themastermind.com.au/api/v1',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
 }
 
