@@ -26,15 +26,17 @@ class DashboardController extends BaseController
 
             // Get basic counts with role-based filtering
             $totalTasksQuery = Task::query();
-            
-            if ($user->hasRole('Requester')) {
+
+            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                // Admins and sub-admins see all tasks
+            } elseif ($user->hasRole('Requester')) {
                 $totalTasksQuery->where('created_by', $user->id);
             } elseif ($user->hasRole('Tasker')) {
                 $totalTasksQuery->whereHas('users', function ($q) use ($user) {
                     $q->where('users.id', $user->id);
                 });
             }
-            
+
             $totalTasks = $totalTasksQuery->count();
             $totalUsers = User::count();
             $totalClients = Client::count();
@@ -47,7 +49,9 @@ class DashboardController extends BaseController
             $recentTasksQuery = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'deliverables']);
             
             // Apply role-based filtering for recent tasks
-            if ($user->hasRole('Requester')) {
+            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                // Admins and sub-admins see all tasks (no additional filtering)
+            } elseif ($user->hasRole('Requester')) {
                 // Requesters only see tasks they created
                 $recentTasksQuery->where('created_by', $user->id);
             } elseif ($user->hasRole('Tasker')) {
@@ -56,7 +60,6 @@ class DashboardController extends BaseController
                     $q->where('users.id', $user->id);
                 });
             }
-            // Admins and sub-admins see all tasks (no additional filtering)
             
             $recentTasks = $recentTasksQuery
                 ->orderBy('created_at', 'desc')
@@ -124,17 +127,18 @@ class DashboardController extends BaseController
         
         // Apply role-based filtering to task statistics
         $taskQuery = Task::query();
-        
-        if ($user->hasRole('Requester')) {
+
+        if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+            // Admins and sub-admins see all tasks (no additional filtering)
+        } elseif ($user->hasRole('Requester')) {
             // Requesters only see tasks they created
             $taskQuery->where('created_by', $user->id);
-                    } elseif ($user->hasRole('Tasker')) {
-                // Taskers only see tasks they're assigned to
-                $taskQuery->whereHas('users', function ($q) use ($user) {
-                    $q->where('users.id', $user->id);
-                });
+        } elseif ($user->hasRole('Tasker')) {
+            // Taskers only see tasks they're assigned to
+            $taskQuery->whereHas('users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            });
         }
-        // Admins and sub-admins see all tasks (no additional filtering)
         
         $stats = $taskQuery->select('status_id', DB::raw('count(*) as count'))
             ->groupBy('status_id')
@@ -244,7 +248,9 @@ class DashboardController extends BaseController
             }]);
 
         // Apply role-based filtering
-        if ($user->hasRole('Requester')) {
+        if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+            // Admins and sub-admins see all projects
+        } elseif ($user->hasRole('Requester')) {
             // Requesters only see projects they created or are involved with
             $projectQuery->where(function ($q) use ($user) {
                 $q->where('created_by', $user->id)
@@ -260,7 +266,6 @@ class DashboardController extends BaseController
                 });
             });
         }
-        // Admins and sub-admins see all projects
 
         return $projectQuery->orderBy('updated_at', 'desc')->limit(10)->get();
     }
@@ -836,7 +841,9 @@ class DashboardController extends BaseController
             ->where('status_id', '!=', $completedStatusId);
         
         // Apply role-based filtering
-        if ($user->hasRole('Requester')) {
+        if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+            // Admins and sub-admins see all overdue tasks (no additional filtering)
+        } elseif ($user->hasRole('Requester')) {
             // Requesters only see overdue tasks they created OR are assigned to
             $overdueQuery->where(function($query) use ($user) {
                 $query->where('created_by', $user->id)
@@ -850,7 +857,6 @@ class DashboardController extends BaseController
                 $q->where('users.id', $user->id);
             });
         }
-        // Admins and sub-admins see all overdue tasks (no additional filtering)
         
         $overdueTasks = $overdueQuery
             ->orderBy('end_date', 'asc') // Most overdue first
@@ -1040,7 +1046,9 @@ class DashboardController extends BaseController
         
         // Apply role-based filtering
         $taskQuery = Task::query();
-        if ($user->hasRole('Requester')) {
+        if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+            // Admins and sub-admins see all tasks
+        } elseif ($user->hasRole('Requester')) {
             $taskQuery->where('created_by', $user->id);
         } elseif ($user->hasRole('Tasker')) {
             $taskQuery->whereHas('users', function ($q) use ($user) {

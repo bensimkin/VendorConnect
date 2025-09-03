@@ -72,7 +72,9 @@ class SearchController extends BaseController
             });
 
             // Apply role-based filtering
-            if ($user->hasRole('Requester')) {
+            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                // Admins and sub-admins see all projects
+            } elseif ($user->hasRole('Requester')) {
                 $projectQuery->where(function($q) use ($user) {
                     $q->where('created_by', $user->id)
                       ->orWhereHas('tasks', function($subQ) use ($user) {
@@ -86,7 +88,6 @@ class SearchController extends BaseController
                     });
                 });
             }
-            // Admins and sub-admins see all projects
 
             $projects = $projectQuery->with(['status', 'clients'])
                 ->limit(5)
@@ -112,7 +113,9 @@ class SearchController extends BaseController
             });
 
             // Apply role-based filtering
-            if ($user->hasRole('Requester')) {
+            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                // Admins and sub-admins see all tasks
+            } elseif ($user->hasRole('Requester')) {
                 $taskQuery->where(function($q) use ($user) {
                     $q->where('created_by', $user->id)
                       ->orWhereHas('users', function($subQ) use ($user) {
@@ -124,7 +127,6 @@ class SearchController extends BaseController
                     $q->where('users.id', $user->id);
                 });
             }
-            // Admins and sub-admins see all tasks
 
             $tasks = $taskQuery->with(['status', 'priority', 'project', 'users'])
                 ->limit(5)
@@ -151,7 +153,9 @@ class SearchController extends BaseController
             });
 
             // Apply role-based filtering
-            if ($user->hasRole('Requester')) {
+            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                // Admins and sub-admins see all portfolio items
+            } elseif ($user->hasRole('Requester')) {
                 $portfolioQuery->where(function($q) use ($user) {
                     $q->where('created_by', $user->id)
                       ->orWhereHas('task', function($subQ) use ($user) {
@@ -168,7 +172,6 @@ class SearchController extends BaseController
                     });
                 });
             }
-            // Admins and sub-admins see all portfolio items
 
             $portfolio = $portfolioQuery->with(['client', 'task'])
                 ->limit(5)

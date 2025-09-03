@@ -36,7 +36,9 @@ class TaskController extends BaseController
             $query = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'project.clients', 'deliverables', 'createdBy']);
             
             // Role-based filtering
-            if ($user->hasRole('Requester')) {
+            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                // Admins and sub-admins see all tasks (no additional filtering)
+            } elseif ($user->hasRole('Requester')) {
                 // Requesters see tasks they created OR are assigned to
                 $query->where(function($q) use ($user) {
                     $q->where('created_by', $user->id)
@@ -50,7 +52,6 @@ class TaskController extends BaseController
                     $q->where('users.id', $user->id);
                 });
             }
-            // Admins and sub-admins see all tasks (no additional filtering)
 
             // Apply filters
             if ($request->has('status_id')) {
@@ -296,7 +297,9 @@ class TaskController extends BaseController
             }
 
             // Role-based access control
-            if ($user->hasRole('Requester')) {
+            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                // Admins and sub-admins can access all tasks
+            } elseif ($user->hasRole('Requester')) {
                 // Requesters can access tasks they created OR are assigned to
                 $isCreated = $task->created_by === $user->id;
                 $isAssigned = $task->users()->where('users.id', $user->id)->exists();
@@ -310,7 +313,6 @@ class TaskController extends BaseController
                     return $this->sendError('Access denied', [], 403);
                 }
             }
-            // Admins and sub-admins can access all tasks
 
             // Check if task is expired and has strict deadline
             if ($task->end_date && $task->close_deadline == 1) {
@@ -365,7 +367,9 @@ class TaskController extends BaseController
             }
 
             // Role-based access control
-            if ($user->hasRole('Requester')) {
+            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                // Admins and sub-admins can update all tasks
+            } elseif ($user->hasRole('Requester')) {
                 // Requesters can update tasks they created OR are assigned to
                 $isCreated = $task->created_by === $user->id;
                 $isAssigned = $task->users()->where('users.id', $user->id)->exists();
@@ -379,7 +383,6 @@ class TaskController extends BaseController
                     return $this->sendError('Access denied', [], 403);
                 }
             }
-            // Admins and sub-admins can update all tasks
 
             $validator = Validator::make($request->all(), [
                 'title' => 'sometimes|required|string|max:255',
@@ -525,7 +528,9 @@ class TaskController extends BaseController
             }
 
             // Role-based access control
-            if ($user->hasRole('Requester')) {
+            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                // Admins and sub-admins can update all tasks
+            } elseif ($user->hasRole('Requester')) {
                 // Requesters can update status of tasks they created OR are assigned to
                 $isCreated = $task->created_by === $user->id;
                 $isAssigned = $task->users()->where('users.id', $user->id)->exists();
@@ -536,7 +541,6 @@ class TaskController extends BaseController
                 // Taskers cannot update task status
                 return $this->sendError('Access denied: Taskers cannot update task status', [], 403);
             }
-            // Admins and sub-admins can update all tasks
 
             $oldStatus = $task->status;
             $task->update(['status_id' => $request->status_id]);
@@ -577,7 +581,9 @@ class TaskController extends BaseController
             }
 
             // Role-based access control
-            if ($user->hasRole('Requester')) {
+            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                // Admins and sub-admins can update all tasks
+            } elseif ($user->hasRole('Requester')) {
                 // Requesters can update priority of tasks they created OR are assigned to
                 $isCreated = $task->created_by === $user->id;
                 $isAssigned = $task->users()->where('users.id', $user->id)->exists();
@@ -588,7 +594,6 @@ class TaskController extends BaseController
                 // Taskers cannot update task priority
                 return $this->sendError('Access denied: Taskers cannot update task priority', [], 403);
             }
-            // Admins and sub-admins can update all tasks
 
             $task->update(['priority_id' => $request->priority_id]);
             $task->load('priority');
