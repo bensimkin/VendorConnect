@@ -37,7 +37,7 @@ class ProjectController extends BaseController
                     ]);
                     
                     // Role-based filtering for tasks within projects
-                    if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                    if ($this->hasAdminAccess($user)) {
                         // Admins and sub-admins see all tasks (no additional filtering)
                     } elseif ($user->hasRole('Requester')) {
                         // Requesters see tasks they created OR are assigned to
@@ -58,7 +58,7 @@ class ProjectController extends BaseController
             // Removed workspace filtering for single-tenant system
 
             // Role-based filtering
-            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+            if ($this->hasAdminAccess($user)) {
                 // Admins and sub-admins see all projects (no additional filtering)
             } elseif ($user->hasRole('Requester')) {
                 // Requesters only see projects they created
@@ -285,7 +285,7 @@ class ProjectController extends BaseController
             $project->setRelation('users', $allUsers);
 
             // Apply role-based data protection to project users
-            if (!$user->hasRole(['admin', 'sub_admin'])) {
+            if (!$this->hasAdminAccess($user)) {
                 // Remove sensitive data from users for requesters and taskers
                 foreach ($project->users as $projectUser) {
                     unset($projectUser->email);
@@ -324,7 +324,7 @@ class ProjectController extends BaseController
                 ->where('project_id', $id);
 
             // Apply role-based filtering
-            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+            if ($this->hasAdminAccess($user)) {
                 // Admins and sub-admins see all tasks
             } elseif ($user->hasRole('Requester')) {
                 // Requesters only see tasks they created
@@ -339,7 +339,7 @@ class ProjectController extends BaseController
             $tasks = $taskQuery->orderBy('created_at', 'desc')->get();
 
             // Apply role-based data protection to task users
-            if (!$user->hasRole(['admin', 'sub_admin'])) {
+            if (!$this->hasAdminAccess($user)) {
                 // Remove sensitive data from assigned users for requesters and taskers
                 foreach ($tasks as $task) {
                     if ($task->users) {
