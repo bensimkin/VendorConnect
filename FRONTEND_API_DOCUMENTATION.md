@@ -3,7 +3,7 @@
 ## Overview
 This document provides comprehensive documentation of all frontend pages in the VendorConnect application, including their API calls, data usage, and variable mappings.
 
-**Base URL**: `https://vc.themastermind.com.au/api/v1`
+**Base URL**: Defined in the `NEXT_PUBLIC_API_URL` environment variable (e.g., `https://example.com/api/v1`)
 **Frontend Framework**: Next.js 14 with TypeScript
 **State Management**: Zustand (auth-store)
 **UI Library**: Custom components with Lucide React icons
@@ -766,7 +766,7 @@ interface TaskType {
 ## 🔧 Technical Implementation Notes
 
 ### API Client Configuration
-- **Base URL**: `https://vc.themastermind.com.au/api/v1`
+- **Base URL**: Provided by the `NEXT_PUBLIC_API_URL` environment variable
 - **Headers**: Automatic Content-Type and Authorization
 - **Interceptors**: Request and response interceptors for auth and error handling
 - **Error Handling**: Centralized error handling with toast notifications

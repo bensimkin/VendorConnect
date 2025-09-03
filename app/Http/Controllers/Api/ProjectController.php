@@ -37,7 +37,7 @@ class ProjectController extends BaseController
                     ]);
                     
                     // Role-based filtering for tasks within projects
-                    if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+                    if ($this->hasAdminAccess($user)) {
                         // Admins and sub-admins see all tasks (no additional filtering)
                     } elseif ($user->hasRole('Requester')) {
                         // Requesters see tasks they created OR are assigned to
@@ -58,7 +58,7 @@ class ProjectController extends BaseController
             // Removed workspace filtering for single-tenant system
 
             // Role-based filtering
-            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+            if ($this->hasAdminAccess($user)) {
                 // Admins and sub-admins see all projects (no additional filtering)
             } elseif ($user->hasRole('Requester')) {
                 // Requesters only see projects they created
@@ -231,18 +231,24 @@ class ProjectController extends BaseController
                 $project->users()->attach($request->user_ids);
             }
 
-            // Attach clients
+            // Attach clients and update primary client reference
             if ($request->filled('client_ids')) {
                 // Multiple clients mode
                 \Log::info('Attaching multiple clients to project', ['client_ids' => $request->client_ids, 'project_id' => $project->id]);
                 $project->clients()->attach($request->client_ids, ['admin_id' => 1]);
+                // Store first client as primary reference
+                $project->client_id = $request->client_ids[0] ?? null;
             } elseif ($request->filled('client_id')) {
                 // Single client mode
                 \Log::info('Attaching single client to project', ['client_id' => $request->client_id, 'project_id' => $project->id]);
                 $project->clients()->attach($request->client_id, ['admin_id' => 1]);
+                $project->client_id = $request->client_id;
             } else {
                 \Log::warning('No client data provided for project creation', ['project_id' => $project->id, 'request_data' => $request->all()]);
+                $project->client_id = null;
             }
+
+            $project->save();
 
             DB::commit();
 
@@ -285,7 +291,7 @@ class ProjectController extends BaseController
             $project->setRelation('users', $allUsers);
 
             // Apply role-based data protection to project users
-            if (!$user->hasRole(['admin', 'sub_admin'])) {
+            if (!$this->hasAdminAccess($user)) {
                 // Remove sensitive data from users for requesters and taskers
                 foreach ($project->users as $projectUser) {
                     unset($projectUser->email);
@@ -324,7 +330,7 @@ class ProjectController extends BaseController
                 ->where('project_id', $id);
 
             // Apply role-based filtering
-            if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {
+            if ($this->hasAdminAccess($user)) {
                 // Admins and sub-admins see all tasks
             } elseif ($user->hasRole('Requester')) {
                 // Requesters only see tasks they created
@@ -339,7 +345,7 @@ class ProjectController extends BaseController
             $tasks = $taskQuery->orderBy('created_at', 'desc')->get();
 
             // Apply role-based data protection to task users
-            if (!$user->hasRole(['admin', 'sub_admin'])) {
+            if (!$this->hasAdminAccess($user)) {
                 // Remove sensitive data from assigned users for requesters and taskers
                 foreach ($tasks as $task) {
                     if ($task->users) {
@@ -429,10 +435,18 @@ class ProjectController extends BaseController
                     $clientData[$clientId] = ['admin_id' => 1];
                 }
                 $project->clients()->sync($clientData);
+                $project->client_id = $request->client_ids[0] ?? null;
             } elseif ($request->filled('client_id')) {
                 // Single client mode - sync with admin_id
                 $project->clients()->sync([$request->client_id => ['admin_id' => 1]]);
+                $project->client_id = $request->client_id;
+            } else {
+                // No client data - detach all clients
+                $project->clients()->detach();
+                $project->client_id = null;
             }
+
+            $project->save();
 
             DB::commit();
 

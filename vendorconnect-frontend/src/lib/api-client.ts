@@ -1,7 +1,11 @@
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://vc.themastermind.com.au/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_URL) {
+  throw new Error('NEXT_PUBLIC_API_URL is not defined');
+}
 
 export const apiClient = axios.create({
   baseURL: API_URL,

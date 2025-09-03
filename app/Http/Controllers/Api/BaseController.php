@@ -34,6 +34,25 @@ class BaseController extends Controller
     }
 
     /**
+     * Determine if the provided user has administrative access.
+     * This check is case-insensitive and supports multiple admin role names.
+     */
+    protected function hasAdminAccess($user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        return $user->hasAnyRole([
+            'admin',
+            'Admin',
+            'sub_admin',
+            'sub admin',
+            'Sub Admin',
+        ]);
+    }
+
+    /**
      * Success response
      */
     public function sendResponse($result, $message = 'Success')
