@@ -170,6 +170,7 @@ class TaskController extends BaseController
                 'repeat_frequency' => 'nullable|in:daily,weekly,monthly,yearly',
                 'repeat_interval' => 'nullable|integer|min:1',
                 'repeat_until' => 'nullable|date|after:start_date',
+                'repeat_start' => 'nullable|date|after_or_equal:start_date',
             ]);
 
             if ($validator->fails()) {
@@ -227,6 +228,7 @@ class TaskController extends BaseController
                 'repeat_frequency' => $request->get('repeat_frequency'),
                 'repeat_interval' => $request->get('repeat_interval', 1),
                 'repeat_until' => $request->get('repeat_until'),
+                'repeat_start' => $request->get('repeat_start'),
                 'repeat_active' => $request->get('is_repeating', false),
                 'created_by' => $request->user()->id,
                 'template_questions' => $templateQuestions,
