@@ -6,6 +6,7 @@ import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import DateRangeSelector, { TimeRange } from '@/components/ui/date-range-selector';
 import apiClient from '@/lib/api-client';
 import { Activity, CheckCircle2, Clock, TrendingUp, AlertCircle, FileText, Calendar, User, Plus, FolderOpen } from 'lucide-react';
 import { format } from 'date-fns';
@@ -94,14 +95,18 @@ export default function RequesterDashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<RequesterDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState<TimeRange>('all');
 
   useEffect(() => {
     fetchRequesterDashboardData();
-  }, []);
+  }, [timeRange]);
 
   const fetchRequesterDashboardData = async () => {
     try {
-      const response = await apiClient.get('/dashboard/requester');
+      setLoading(true);
+      const response = await apiClient.get('/dashboard/requester', {
+        params: { time_range: timeRange }
+      });
       setData(response.data.data);
     } catch (error) {
       console.error('Failed to fetch requester dashboard data:', error);
@@ -235,6 +240,14 @@ export default function RequesterDashboardPage() {
               New Project
             </Button>
           </div>
+        </div>
+        
+        {/* Date Range Selector */}
+        <div className="flex justify-center md:justify-start">
+          <DateRangeSelector 
+            value={timeRange} 
+            onChange={setTimeRange}
+          />
         </div>
 
         {/* Overview Cards */}
