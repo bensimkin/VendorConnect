@@ -115,6 +115,7 @@ function NewTaskPageContent() {
     repeat_frequency: '',
     repeat_interval: 1,
     repeat_until: '',
+    repeat_start: '',
   });
 
   useEffect(() => {
@@ -271,6 +272,24 @@ function NewTaskPageContent() {
       return;
     }
 
+    // Validate repeating task fields
+    if (formData.is_repeating) {
+      if (!formData.repeat_frequency) {
+        toast.error('Please select a repeat frequency');
+        return;
+      }
+      
+      if (formData.repeat_start && formData.start_date && formData.repeat_start < formData.start_date) {
+        toast.error('Repeat start date cannot be before the task start date');
+        return;
+      }
+      
+      if (formData.repeat_until && formData.repeat_start && formData.repeat_until < formData.repeat_start) {
+        toast.error('Repeat until date cannot be before the repeat start date');
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const payload = {
@@ -292,6 +311,7 @@ function NewTaskPageContent() {
         repeat_frequency: formData.repeat_frequency || null,
         repeat_interval: formData.repeat_interval,
         repeat_until: formData.repeat_until || null,
+        repeat_start: formData.repeat_start || null,
         template_id: selectedTemplate ? parseInt(selectedTemplate) : null,
       };
 
@@ -810,7 +830,7 @@ function NewTaskPageContent() {
 
               {formData.is_repeating && (
                 <div className="space-y-4 pl-6 border-l-2 border-gray-200">
-                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <div className="space-y-2">
                       <Label htmlFor="repeat_frequency">Frequency</Label>
                       <select
@@ -847,13 +867,26 @@ function NewTaskPageContent() {
                     </div>
 
                     <div className="space-y-2">
+                      <Label htmlFor="repeat_start">Start (Optional)</Label>
+                      <Input
+                        id="repeat_start"
+                        type="date"
+                        value={formData.repeat_start}
+                        onChange={(e) => setFormData({ ...formData, repeat_start: e.target.value })}
+                        min={formData.start_date}
+                        className="w-full"
+                      />
+                      <p className="text-xs text-muted-foreground">Leave empty to start immediately</p>
+                    </div>
+
+                    <div className="space-y-2">
                       <Label htmlFor="repeat_until">Until (Optional)</Label>
                       <Input
                         id="repeat_until"
                         type="date"
                         value={formData.repeat_until}
                         onChange={(e) => setFormData({ ...formData, repeat_until: e.target.value })}
-                        min={formData.start_date}
+                        min={formData.repeat_start || formData.start_date}
                         className="w-full"
                       />
                       <p className="text-xs text-muted-foreground">Leave empty to repeat indefinitely</p>
@@ -864,6 +897,9 @@ function NewTaskPageContent() {
                     <p className="text-sm text-blue-800">
                       <strong>How it works:</strong> This task will automatically create new instances based on your schedule. 
                       Each new task will inherit all the details, assignments, and settings from this original task.
+                      <br /><br />
+                      <strong>Start Repeating From:</strong> Set a future date to delay when repetition begins. 
+                      If left empty, repetition starts immediately after the original task's start date.
                     </p>
                   </div>
                 </div>
