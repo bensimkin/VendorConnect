@@ -7,6 +7,7 @@ import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import DateRangeSelector, { TimeRange } from '@/components/ui/date-range-selector';
 import apiClient from '@/lib/api-client';
 import { Activity, Users, CheckCircle2, Clock, TrendingUp, TrendingDown, XCircle, FileText } from 'lucide-react';
 import {
@@ -166,6 +167,7 @@ export default function DashboardPage() {
   const { user } = useAuthStore();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState<TimeRange>('all');
 
   // Redirect to role-specific dashboard
   useEffect(() => {
@@ -183,11 +185,14 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [timeRange]);
 
   const fetchDashboardData = async () => {
     try {
-      const response = await apiClient.get('/dashboard');
+      setLoading(true);
+      const response = await apiClient.get('/dashboard', {
+        params: { time_range: timeRange }
+      });
       console.log('Dashboard API response:', response.data.data);
       console.log('Recent tasks:', response.data.data.recent_tasks);
       if (response.data.data.recent_tasks && response.data.data.recent_tasks.length > 0) {
@@ -288,9 +293,24 @@ export default function DashboardPage() {
   return (
     <MainLayout>
       <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's what's happening with your projects.</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back! Here's what's happening with your projects.</p>
+          </div>
+          <DateRangeSelector 
+            value={timeRange} 
+            onChange={setTimeRange}
+            className="hidden md:flex"
+          />
+        </div>
+        
+        {/* Mobile date range selector */}
+        <div className="md:hidden">
+          <DateRangeSelector 
+            value={timeRange} 
+            onChange={setTimeRange}
+          />
         </div>
 
         {/* Stats Grid */}

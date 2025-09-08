@@ -6,6 +6,7 @@ import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import DateRangeSelector, { TimeRange } from '@/components/ui/date-range-selector';
 import apiClient from '@/lib/api-client';
 import { Activity, CheckCircle2, Clock, TrendingUp, AlertCircle, FileText, Calendar, User } from 'lucide-react';
 import { format } from 'date-fns';
@@ -61,14 +62,18 @@ export default function TaskerDashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<TaskerDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState<TimeRange>('all');
 
   useEffect(() => {
     fetchTaskerDashboardData();
-  }, []);
+  }, [timeRange]);
 
   const fetchTaskerDashboardData = async () => {
     try {
-      const response = await apiClient.get('/dashboard/tasker');
+      setLoading(true);
+      const response = await apiClient.get('/dashboard/tasker', {
+        params: { time_range: timeRange }
+      });
       setData(response.data.data);
     } catch (error) {
       console.error('Failed to fetch tasker dashboard data:', error);
@@ -157,11 +162,26 @@ export default function TaskerDashboardPage() {
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">My Dashboard</h1>
-          <p className="text-muted-foreground">
-            Overview of your assigned tasks and progress
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">My Dashboard</h1>
+            <p className="text-muted-foreground">
+              Overview of your assigned tasks and progress
+            </p>
+          </div>
+          <DateRangeSelector 
+            value={timeRange} 
+            onChange={setTimeRange}
+            className="hidden md:flex"
+          />
+        </div>
+        
+        {/* Mobile date range selector */}
+        <div className="md:hidden">
+          <DateRangeSelector 
+            value={timeRange} 
+            onChange={setTimeRange}
+          />
         </div>
 
         {/* Overview Cards */}
