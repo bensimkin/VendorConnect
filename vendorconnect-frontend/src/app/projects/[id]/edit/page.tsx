@@ -143,7 +143,7 @@ export default function EditProjectPage() {
       // Only include client fields based on settings
       if (settings.allow_multiple_clients_per_project) {
         payload.client_ids = formData.client_ids;
-        payload.client_id = null;
+        // Don't set client_id when multiple clients are enabled
       } else {
         payload.client_id = parseInt(formData.client_id);
         // Don't include client_ids at all when multiple clients are disabled
