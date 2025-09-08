@@ -82,7 +82,18 @@ class GenerateRepeatingTasks extends Command
      */
     private function calculateNextOccurrence(Task $task): ?Carbon
     {
+        // Check if we should start repeating yet
+        if ($task->repeat_start) {
+            $repeatStartDate = Carbon::parse($task->repeat_start);
+            // If repeat_start is in the future, don't generate tasks yet
+            if ($repeatStartDate->isFuture()) {
+                return null;
+            }
+        }
+
+        // Determine the base date for calculation
         $baseDate = $task->last_repeated_at ? Carbon::parse($task->last_repeated_at) : Carbon::parse($task->start_date);
+        
         $interval = $task->repeat_interval;
         $now = Carbon::now();
 
