@@ -85,5 +85,6 @@ class Kernel extends HttpKernel
         'check.subscription' => \App\Http\Middleware\CheckSubscription::class,
         'subscription.modules' => \App\Http\Middleware\CheckSubscriptionModules::class,
         'check.maxCreate' => \App\Http\Middleware\CheckMaxCreate::class,
+        'cAuth' => \App\Http\Middleware\ApiKeyAuth::class,
     ];
 }

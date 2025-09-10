@@ -12,7 +12,8 @@ import { useTheme } from 'next-themes';
 import apiClient from '@/lib/api-client';
 import { toast } from 'react-hot-toast';
 import RoleGuard from '@/components/auth/role-guard';
-import { User, Bell, Shield, Palette, Database, HelpCircle, Moon, Sun, Monitor } from 'lucide-react';
+import ApiKeyManager from '@/components/settings/ApiKeyManager';
+import { User, Bell, Shield, Palette, Database, HelpCircle, Moon, Sun, Monitor, Key } from 'lucide-react';
 
 export default function SettingsPage() {
   const { user } = useAuthStore();
@@ -340,6 +341,15 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
+          {
+            user?.roles?.some(role => role.name.toLowerCase() === 'admin') && (
+              <>
+                {/* API Keys */}
+                <ApiKeyManager />
+              </>
+            )
+          }
+          
           {/* Help & Support */}
           <Card>
             <CardHeader>
