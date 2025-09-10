@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\ClientCredentialController;
 use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\ApiKeyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,7 +48,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/resend-verification', [AuthController::class, 'resendVerification']);
     
     // Protected routes (authentication required)
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['cAuth'])->group(function () {
         
         // User profile
         Route::get('/user', function (Request $request) {
@@ -297,6 +298,17 @@ Route::prefix('priorities')->group(function () {
         
         // Global Search
         Route::get('/search', [SearchController::class, 'globalSearch']);
+
+        // API Keys Management
+        Route::prefix('api-keys')->group(function () {
+            Route::get('/', [ApiKeyController::class, 'index']);
+            Route::post('/', [ApiKeyController::class, 'store']);
+            Route::get('/stats', [ApiKeyController::class, 'stats']);
+            Route::get('/{id}', [ApiKeyController::class, 'show']);
+            Route::put('/{id}', [ApiKeyController::class, 'update']);
+            Route::delete('/{id}', [ApiKeyController::class, 'destroy']);
+            Route::post('/{id}/regenerate', [ApiKeyController::class, 'regenerate']);
+        });
 
         // Notifications
         Route::prefix('notifications')->group(function () {
