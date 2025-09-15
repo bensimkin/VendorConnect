@@ -178,7 +178,11 @@ function NewProjectPageContent() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Enter project description"
                   rows={4}
+                  maxLength={100}
                 />
+                <div className="text-sm text-muted-foreground text-right">
+                  {formData.description.length}/100 characters
+                </div>
               </div>
 
               <div className="space-y-2">
