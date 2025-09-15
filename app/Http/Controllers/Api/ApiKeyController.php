@@ -20,7 +20,7 @@ class ApiKeyController extends BaseController
             $user = $request->user();
             
             // Check if user is admin
-            if (!$user->hasRole('Admin')) {
+            if (!$user->hasRole('admin')) {
                 return $this->sendError('Only administrators can view API keys', 403);
             }
             
@@ -68,7 +68,7 @@ class ApiKeyController extends BaseController
             $user = $request->user();
             
             // Check if user is admin
-            if (!$user->hasRole('Admin')) {
+            if (!$user->hasRole('admin')) {
                 return $this->sendError('Only administrators can create API keys', 403);
             }
             
@@ -115,7 +115,7 @@ class ApiKeyController extends BaseController
             $user = $request->user();
             
             // Check if user is admin
-            if (!$user->hasRole('Admin')) {
+            if (!$user->hasRole('admin')) {
                 return $this->sendError('Only administrators can view API keys', 403);
             }
             
@@ -165,7 +165,7 @@ class ApiKeyController extends BaseController
             $user = $request->user();
             
             // Check if user is admin
-            if (!$user->hasRole('Admin')) {
+            if (!$user->hasRole('admin')) {
                 return $this->sendError('Only administrators can update API keys', 403);
             }
             
@@ -210,7 +210,7 @@ class ApiKeyController extends BaseController
             $user = $request->user();
             
             // Check if user is admin
-            if (!$user->hasRole('Admin')) {
+            if (!$user->hasRole('admin')) {
                 return $this->sendError('Only administrators can delete API keys', 403);
             }
             
@@ -237,7 +237,7 @@ class ApiKeyController extends BaseController
             $user = $request->user();
             
             // Check if user is admin
-            if (!$user->hasRole('Admin')) {
+            if (!$user->hasRole('admin')) {
                 return $this->sendError('Only administrators can regenerate API keys', 403);
             }
             
@@ -275,7 +275,7 @@ class ApiKeyController extends BaseController
             $user = $request->user();
             
             // Check if user is admin
-            if (!$user->hasRole('Admin')) {
+            if (!$user->hasRole('admin')) {
                 return $this->sendError('Only administrators can view API key statistics', 403);
             }
             
