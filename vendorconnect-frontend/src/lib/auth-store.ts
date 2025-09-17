@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import apiClient from './api-client';
 import { toast } from 'react-hot-toast';
+import { EmailService } from './email-service';
 
 interface User {
   id: number;
@@ -21,6 +22,10 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (token: string, email: string, password: string, passwordConfirmation: string) => Promise<void>;
+  resendVerification: (email: string) => Promise<void>;
+  verifyEmail: (id: string, hash: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -89,6 +94,62 @@ export const useAuthStore = create<AuthState>()(
           localStorage.removeItem('auth_token');
           document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
           set({ user: null, token: null, permissions: [] });
+        }
+      },
+
+      forgotPassword: async (email: string) => {
+        set({ isLoading: true });
+        try {
+          await EmailService.forgotPassword({ email });
+          toast.success('Password reset link sent to your email!');
+        } catch (error: any) {
+          console.error('Forgot password error:', error);
+          toast.error(error.message || 'Failed to send reset email');
+          throw error;
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      resetPassword: async (token: string, email: string, password: string, passwordConfirmation: string) => {
+        set({ isLoading: true });
+        try {
+          await EmailService.resetPassword({ token, email, password, password_confirmation: passwordConfirmation });
+          toast.success('Password reset successfully!');
+        } catch (error: any) {
+          console.error('Reset password error:', error);
+          toast.error(error.message || 'Failed to reset password');
+          throw error;
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      resendVerification: async (email: string) => {
+        set({ isLoading: true });
+        try {
+          await EmailService.resendVerification({ email });
+          toast.success('Verification email sent!');
+        } catch (error: any) {
+          console.error('Resend verification error:', error);
+          toast.error(error.message || 'Failed to send verification email');
+          throw error;
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      verifyEmail: async (id: string, hash: string) => {
+        set({ isLoading: true });
+        try {
+          await EmailService.verifyEmail(id, hash);
+          toast.success('Email verified successfully!');
+        } catch (error: any) {
+          console.error('Email verification error:', error);
+          toast.error(error.message || 'Failed to verify email');
+          throw error;
+        } finally {
+          set({ isLoading: false });
         }
       },
     }),

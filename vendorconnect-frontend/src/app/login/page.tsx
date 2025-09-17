@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -101,6 +102,14 @@ export default function LoginPage() {
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
+            <div className="text-sm text-center text-muted-foreground">
+              <Link 
+                href="/forgot-password" 
+                className="text-primary hover:underline"
+              >
+                Forgot your password?
+              </Link>
+            </div>
             <div className="text-sm text-center text-muted-foreground">
               <p>Demo credentials:</p>
               <p className="font-mono text-xs mt-1">
