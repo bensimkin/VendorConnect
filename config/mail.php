@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => env('MAIL_MAILER', 'sendgrid'),
 
     /*
     |--------------------------------------------------------------------------
@@ -78,6 +78,11 @@ return [
                 'log',
             ],
         ],
+
+        'sendgrid' => [
+            'transport' => 'sendgrid',
+            'api_key' => env('SENDGRID_API_KEY'),
+        ],
     ],
 
     /*
@@ -92,8 +97,8 @@ return [
     */
 
     'from' => [
-        'address' => '',
-        'name' => '',
+        'address' => env('MAIL_FROM_ADDRESS', 'noreply@vendorconnect.com'),
+        'name' => env('MAIL_FROM_NAME', 'VendorConnect'),
     ],
 
     /*

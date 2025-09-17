@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Mail\PasswordResetMail;
+use App\Mail\EmailVerificationMail;
+use App\Mail\WelcomeMail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -127,21 +131,42 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $status = Password::sendResetLink(
-            $request->only('email')
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email not found in our system'
+            ], 404);
+        }
+
+        // Generate password reset token
+        $token = Str::random(60);
+        
+        // Store the token in the password_resets table
+        \DB::table('password_resets')->updateOrInsert(
+            ['email' => $user->email],
+            ['token' => Hash::make($token), 'created_at' => now()]
         );
 
-        if ($status === Password::RESET_LINK_SENT) {
+        // Send password reset email using Laravel Mail
+        $resetUrl = config('app.url') . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
+        
+        try {
+            Mail::to($user->email)->send(new PasswordResetMail($user, $resetUrl));
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Password reset link sent to your email'
             ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send password reset email: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to send reset link. Please try again later.'
+            ], 500);
         }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Unable to send reset link'
-        ], 400);
     }
 
     /**
@@ -163,28 +188,58 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user, $password) {
-                $user->forceFill([
-                    'password' => Hash::make($password)
-                ])->setRememberToken(Str::random(60));
+        // Find the password reset record
+        $passwordReset = \DB::table('password_resets')
+            ->where('email', $request->email)
+            ->first();
 
-                $user->save();
-            }
-        );
-
-        if ($status === Password::PASSWORD_RESET) {
+        if (!$passwordReset) {
             return response()->json([
-                'success' => true,
-                'message' => 'Password reset successfully'
-            ]);
+                'success' => false,
+                'message' => 'Invalid reset token'
+            ], 400);
         }
 
+        // Check if token is valid and not expired (60 minutes)
+        if (!Hash::check($request->token, $passwordReset->token)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid reset token'
+            ], 400);
+        }
+
+        // Check if token is expired
+        if (now()->diffInMinutes($passwordReset->created_at) > 60) {
+            \DB::table('password_resets')->where('email', $request->email)->delete();
+            return response()->json([
+                'success' => false,
+                'message' => 'Reset token has expired. Please request a new one.'
+            ], 400);
+        }
+
+        // Find the user
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        // Update the user's password
+        $user->forceFill([
+            'password' => Hash::make($request->password)
+        ])->setRememberToken(Str::random(60));
+
+        $user->save();
+
+        // Delete the password reset record
+        \DB::table('password_resets')->where('email', $request->email)->delete();
+
         return response()->json([
-            'success' => false,
-            'message' => 'Unable to reset password'
-        ], 400);
+            'success' => true,
+            'message' => 'Password reset successfully'
+        ]);
     }
 
     /**
@@ -256,12 +311,24 @@ class AuthController extends Controller
             ], 400);
         }
 
-        $user->sendEmailVerificationNotification();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Verification link sent'
-        ]);
+        // Send verification email using Laravel Mail
+        $verificationUrl = config('app.url') . '/verify-email?id=' . $user->id . '&hash=' . sha1($user->getEmailForVerification());
+        
+        try {
+            Mail::to($user->email)->send(new EmailVerificationMail($user, $verificationUrl));
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Verification link sent'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send verification email: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to send verification email. Please try again later.'
+            ], 500);
+        }
     }
 
     /**
@@ -286,6 +353,50 @@ class AuthController extends Controller
                 'expires_at' => now()->addDays(7)->toISOString()
             ]
         ]);
+    }
+
+    /**
+     * Send welcome email to user
+     */
+    public function sendWelcomeEmail(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        // Send welcome email using Laravel Mail
+        try {
+            Mail::to($user->email)->send(new WelcomeMail($user));
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Welcome email sent successfully'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send welcome email: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to send welcome email. Please try again later.'
+            ], 500);
+        }
     }
 
     /**

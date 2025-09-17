@@ -21,29 +21,29 @@ class NotificationController extends BaseController
             $priority = $request->get('priority');
             $read = $request->get('read'); // 'true', 'false', or null for all
 
-            $query = Notification::where('from_id', $user->id);
+            $query = $user->notifications();
 
             // Filter by type
             if ($type) {
-                $query->where('type', $type);
+                $query->byType($type);
             }
 
             // Filter by priority
             if ($priority) {
-                $query->where('priority', $priority);
+                $query->byPriority($priority);
             }
 
-            // Filter by read status - disabled since table doesn't have read_at column
-            // if ($read === 'true') {
-            //     $query->read();
-            // } elseif ($read === 'false') {
-            //     $query->unread();
-            // }
+            // Filter by read status
+            if ($read === 'true') {
+                $query->read();
+            } elseif ($read === 'false') {
+                $query->unread();
+            }
 
             $notifications = $query->orderBy('created_at', 'desc')
                 ->paginate($perPage);
 
-            return $this->sendResponse($notifications, 'Notifications retrieved successfully');
+            return $this->sendPaginatedResponse($notifications, 'Notifications retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error retrieving notifications: ' . $e->getMessage());
         }
@@ -56,8 +56,7 @@ class NotificationController extends BaseController
     {
         try {
             $user = Auth::user();
-            // Since the table doesn't have read_at column, return 0 for now
-            $count = 0;
+            $count = $user->notifications()->unread()->count();
 
             return $this->sendResponse(['count' => $count], 'Unread count retrieved successfully');
         } catch (\Exception $e) {
@@ -72,14 +71,14 @@ class NotificationController extends BaseController
     {
         try {
             $user = Auth::user();
-            $notification = Notification::where('from_id', $user->id)
-                ->find($id);
+            $notification = $user->notifications()->find($id);
 
             if (!$notification) {
                 return $this->sendNotFound('Notification not found');
             }
 
-            // Since table doesn't have read_at column, just return success
+            $notification->markAsRead();
+
             return $this->sendResponse($notification, 'Notification marked as read');
         } catch (\Exception $e) {
             return $this->sendServerError('Error marking notification as read: ' . $e->getMessage());
@@ -93,8 +92,7 @@ class NotificationController extends BaseController
     {
         try {
             $user = Auth::user();
-            // Since table doesn't have read_at column, just return success
-            $updated = 0;
+            $updated = $user->notifications()->unread()->update(['read_at' => now()]);
 
             return $this->sendResponse(['updated_count' => $updated], 'All notifications marked as read');
         } catch (\Exception $e) {
@@ -109,14 +107,14 @@ class NotificationController extends BaseController
     {
         try {
             $user = Auth::user();
-            $notification = Notification::where('from_id', $user->id)
-                ->find($id);
+            $notification = $user->notifications()->find($id);
 
             if (!$notification) {
                 return $this->sendNotFound('Notification not found');
             }
 
-            // Since table doesn't have read_at column, just return success
+            $notification->markAsUnread();
+
             return $this->sendResponse($notification, 'Notification marked as unread');
         } catch (\Exception $e) {
             return $this->sendServerError('Error marking notification as unread: ' . $e->getMessage());
@@ -130,8 +128,7 @@ class NotificationController extends BaseController
     {
         try {
             $user = Auth::user();
-            $notification = Notification::where('from_id', $user->id)
-                ->find($id);
+            $notification = $user->notifications()->find($id);
 
             if (!$notification) {
                 return $this->sendNotFound('Notification not found');
@@ -152,8 +149,7 @@ class NotificationController extends BaseController
     {
         try {
             $user = Auth::user();
-            // Since table doesn't have read_at column, return 0
-            $deleted = 0;
+            $deleted = $user->notifications()->read()->delete();
 
             return $this->sendResponse(['deleted_count' => $deleted], 'Read notifications deleted successfully');
         } catch (\Exception $e) {
@@ -200,6 +196,34 @@ class NotificationController extends BaseController
             return $this->sendResponse($priorities, 'Notification priorities retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error retrieving notification priorities: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get notification statistics
+     */
+    public function stats()
+    {
+        try {
+            $user = Auth::user();
+            
+            $stats = [
+                'total' => $user->notifications()->count(),
+                'unread' => $user->notifications()->unread()->count(),
+                'read' => $user->notifications()->read()->count(),
+                'by_type' => $user->notifications()
+                    ->selectRaw('type, COUNT(*) as count')
+                    ->groupBy('type')
+                    ->pluck('count', 'type'),
+                'by_priority' => $user->notifications()
+                    ->selectRaw('priority, COUNT(*) as count')
+                    ->groupBy('priority')
+                    ->pluck('count', 'priority'),
+            ];
+
+            return $this->sendResponse($stats, 'Notification statistics retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving notification statistics: ' . $e->getMessage());
         }
     }
 }

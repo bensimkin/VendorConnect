@@ -42,6 +42,7 @@ const navigation = [
   { name: 'Projects', href: '/projects', icon: FolderOpen, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
   { name: 'Project Management', href: '/project-management', icon: BarChart3, roles: ['Admin', 'Requester', 'sub admin'] },
   { name: 'Portfolio', href: '/portfolio', icon: Briefcase, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
+  { name: 'Notifications', href: '/notifications', icon: Bell, roles: ['Admin', 'Requester', 'sub admin', 'Tasker'] },
   { name: 'Settings', href: '/settings', icon: Settings, roles: ['Admin'] },
 ];
 

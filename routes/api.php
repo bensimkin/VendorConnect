@@ -46,6 +46,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
     Route::post('/auth/verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail']);
     Route::post('/auth/resend-verification', [AuthController::class, 'resendVerification']);
+    Route::post('/auth/send-welcome-email', [AuthController::class, 'sendWelcomeEmail']);
     
     // Protected routes (authentication required)
     Route::middleware(['cAuth'])->group(function () {
@@ -147,6 +148,7 @@ Route::delete('/{taskId}/deliverables/{deliverableId}/files/{mediaId}', [TaskDel
         Route::prefix('notifications')->group(function () {
             Route::get('/', [NotificationController::class, 'index']);
             Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+            Route::get('/stats', [NotificationController::class, 'stats']);
             Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
             Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
             Route::post('/{id}/unread', [NotificationController::class, 'markAsUnread']);
@@ -310,11 +312,5 @@ Route::prefix('priorities')->group(function () {
             Route::post('/{id}/regenerate', [ApiKeyController::class, 'regenerate']);
         });
 
-        // Notifications
-        Route::prefix('notifications')->group(function () {
-            Route::get('/', [NotificationController::class, 'index']);
-            Route::put('/{id}/read', [NotificationController::class, 'markAsRead']);
-            Route::put('/read-all', [NotificationController::class, 'markAllAsRead']);
-        });
     });
 });
