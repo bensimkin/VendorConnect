@@ -13,24 +13,28 @@ class PasswordResetMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(
-        public User $user,
-        public string $resetUrl
-    ) {}
+    public $user;
+    public $resetUrl;
+
+    public function __construct(User $user, string $resetUrl)
+    {
+        $this->user = $user;
+        $this->resetUrl = $resetUrl;
+    }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Reset Your Password - ' . config('app.name'),
+            'Reset Your Password - ' . config('app.name')
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.password-reset',
-            text: 'emails.password-reset-text',
-            with: [
+            'emails.password-reset',
+            'emails.password-reset-text',
+            [
                 'user' => $this->user,
                 'resetUrl' => $this->resetUrl,
                 'appName' => config('app.name', 'VendorConnect'),
