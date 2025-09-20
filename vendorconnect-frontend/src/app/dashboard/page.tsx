@@ -227,7 +227,7 @@ export default function DashboardPage() {
 
   // Calculate task completion stats from by_status
   const getTaskStats = () => {
-    if (!data) return { completed: 0, pending: 0, inProgress: 0 };
+    if (!data) return { completed: 0, pending: 0, inProgress: 0, submitted: 0 };
     
     const byStatus = data.task_statistics.by_status;
     const statuses = data.statuses || [];
@@ -236,22 +236,24 @@ export default function DashboardPage() {
     const completedStatus = statuses.find(s => s.title === 'Completed');
     const pendingStatus = statuses.find(s => s.title === 'Pending');
     const inProgressStatus = statuses.find(s => s.title === 'In Progress');
+    const submittedStatus = statuses.find(s => s.title === 'Submitted');
     
     return {
       completed: completedStatus ? (byStatus[completedStatus.id.toString()] || 0) : 0,
       pending: pendingStatus ? (byStatus[pendingStatus.id.toString()] || 0) : 0,
       inProgress: inProgressStatus ? (byStatus[inProgressStatus.id.toString()] || 0) : 0,
+      submitted: submittedStatus ? (byStatus[submittedStatus.id.toString()] || 0) : 0,
     };
   };
 
   const taskStats = getTaskStats();
 
   const taskCompletionData = {
-    labels: ['Completed', 'Pending', 'In Progress'],
+    labels: ['Completed', 'Pending', 'In Progress', 'Submitted'],
     datasets: [
       {
-        data: [taskStats.completed, taskStats.pending, taskStats.inProgress],
-        backgroundColor: ['#10b981', '#f59e0b', '#3b82f6'],
+        data: [taskStats.completed, taskStats.pending, taskStats.inProgress, taskStats.submitted],
+        backgroundColor: ['#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'],
         borderWidth: 0,
       },
     ],

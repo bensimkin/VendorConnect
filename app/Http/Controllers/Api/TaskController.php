@@ -391,6 +391,14 @@ class TaskController extends BaseController
                 if (!$isAssigned) {
                     return $this->sendError('Access denied', [], 403);
                 }
+                
+                // If updating status, check if it's allowed for Taskers
+                if ($request->has('status_id')) {
+                    $allowedStatuses = Status::whereIn('title', ['Pending', 'Submitted'])->pluck('id')->toArray();
+                    if (!in_array($request->status_id, $allowedStatuses)) {
+                        return $this->sendError('Access denied: Taskers can only set status to Pending or Submitted', [], 403);
+                    }
+                }
             }
 
             $validator = Validator::make($request->all(), [
@@ -555,8 +563,17 @@ class TaskController extends BaseController
                     return $this->sendError('Access denied', [], 403);
                 }
             } elseif ($user->hasRole('Tasker')) {
-                // Taskers cannot update task status
-                return $this->sendError('Access denied: Taskers cannot update task status', [], 403);
+                // Taskers can only update status to Pending or Submitted
+                $allowedStatuses = Status::whereIn('title', ['Pending', 'Submitted'])->pluck('id')->toArray();
+                if (!in_array($request->status_id, $allowedStatuses)) {
+                    return $this->sendError('Access denied: Taskers can only set status to Pending or Submitted', [], 403);
+                }
+                
+                // Check if tasker is assigned to this task
+                $isAssigned = $task->users()->where('users.id', $user->id)->exists();
+                if (!$isAssigned) {
+                    return $this->sendError('Access denied: You are not assigned to this task', [], 403);
+                }
             }
 
             $oldStatus = $task->status;

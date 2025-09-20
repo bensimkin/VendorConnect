@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'name' => '',
+    'name' => env('APP_NAME', 'VendorConnect'),
 
     /*
     |--------------------------------------------------------------------------
@@ -199,6 +199,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\SendGridServiceProvider::class,
         Spatie\Permission\PermissionServiceProvider::class,
 
     ],
