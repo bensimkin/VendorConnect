@@ -142,6 +142,8 @@ export default function RequesterDashboardPage() {
         return 'bg-blue-500';
       case 'pending':
         return 'bg-yellow-500';
+      case 'submitted':
+        return 'bg-purple-500';
       case 'overdue':
         return 'bg-red-500';
       default:

@@ -499,8 +499,7 @@ class NotificationService
                 'message' => $message,
                 'data' => $data,
                 'action_url' => $actionUrl,
-                'priority' => $priority,
-                'sent_at' => now(),
+                'priority' => $priority
             ]);
 
             Log::info("Notification created", [

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, X, Check, Trash2 } from 'lucide-react';
+import { Bell, X, Check, Trash2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,8 +11,16 @@ import { format } from 'date-fns';
 
 export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
-  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification, fetchNotifications } = useNotifications();
   const router = useRouter();
+
+  const handleBellClick = () => {
+    if (!isOpen) {
+      // Fetch notifications when opening the bell
+      fetchNotifications();
+    }
+    setIsOpen(!isOpen);
+  };
 
   const handleNotificationClick = (notification: any) => {
     if (!notification.read_at) {
@@ -80,7 +88,7 @@ export default function NotificationBell() {
       <Button
         variant="ghost"
         size="icon"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleBellClick}
         className="relative"
       >
         <Bell className="h-5 w-5" />
@@ -99,7 +107,7 @@ export default function NotificationBell() {
           {/* Backdrop */}
           <div 
             className="fixed inset-0 z-40" 
-            onClick={() => setIsOpen(false)}
+            onClick={handleBellClick}
           />
           
           {/* Notification Panel */}
@@ -119,7 +127,7 @@ export default function NotificationBell() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setIsOpen(false)}
+                    onClick={handleBellClick}
                     className="h-6 w-6 p-0"
                   >
                     <X className="h-3 w-3" />
@@ -128,7 +136,12 @@ export default function NotificationBell() {
               </div>
               
               <div className="max-h-80 overflow-y-auto">
-                {notifications.length === 0 ? (
+                {loading ? (
+                  <div className="p-4 text-center text-muted-foreground">
+                    <RefreshCw className="h-4 w-4 animate-spin mx-auto mb-2" />
+                    Loading notifications...
+                  </div>
+                ) : notifications.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground">
                     No notifications
                   </div>

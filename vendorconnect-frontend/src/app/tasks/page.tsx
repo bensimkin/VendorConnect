@@ -193,6 +193,8 @@ function TasksPageContent() {
         return <Clock className="h-4 w-4 text-blue-500" />;
       case 'pending':
         return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      case 'submitted':
+        return <CheckCircle className="h-4 w-4 text-purple-500" />;
       default:
         return <Clock className="h-4 w-4 text-gray-500" />;
     }

@@ -16,6 +16,8 @@ class StatusController extends BaseController
     public function index(Request $request)
     {
         try {
+            $user = Auth::user();
+
             $query = Status::query();
             // Remove admin_id filtering for single-tenant system
 
@@ -32,6 +34,10 @@ class StatusController extends BaseController
             $sortBy = $request->get('sort_by', 'created_at');
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
+
+            if ($user->hasRole('Tasker')) {
+                $query->whereIn('title', ['Pending', 'Submitted']);
+            }
 
             if ($request->get('per_page') === 'all') {
                 $statuses = $query->get();

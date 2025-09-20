@@ -269,6 +269,22 @@ class User extends Authenticatable implements MustVerifyEmail
     }
     public function notifications()
     {
-        return $this->belongsToMany(Notification::class, 'notification_user')->where('notifications.workspace_id', session()->get('workspace_id'))->withPivot('read_at');
+        return $this->hasMany(Notification::class);
+    }
+
+    /**
+     * Send the password reset notification using SendGrid.
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new \App\Notifications\SendGridPasswordReset($token));
+    }
+
+    /**
+     * Send the email verification notification using SendGrid.
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new \App\Notifications\SendGridEmailVerification);
     }
 }
