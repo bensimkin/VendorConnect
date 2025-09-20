@@ -13,24 +13,28 @@ class EmailVerificationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(
-        public User $user,
-        public string $verificationUrl
-    ) {}
+    public $user;
+    public $verificationUrl;
+
+    public function __construct(User $user, string $verificationUrl)
+    {
+        $this->user = $user;
+        $this->verificationUrl = $verificationUrl;
+    }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Verify Your Email Address - ' . config('app.name'),
+            'Verify Your Email Address - ' . config('app.name')
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.email-verification',
-            text: 'emails.email-verification-text',
-            with: [
+            'emails.email-verification',
+            'emails.email-verification-text',
+            [
                 'user' => $this->user,
                 'verificationUrl' => $this->verificationUrl,
                 'appName' => config('app.name', 'VendorConnect'),
