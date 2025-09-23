@@ -563,8 +563,8 @@ class TaskController extends BaseController
                     return $this->sendError('Access denied', [], 403);
                 }
             } elseif ($user->hasRole('Tasker')) {
-                // Taskers can only update status to Pending or Submitted
-                $allowedStatuses = Status::whereIn('title', ['Pending', 'Submitted'])->pluck('id')->toArray();
+                // Taskers can only update status to Pending or Submitted (NOT Archive)
+                $allowedStatuses = Status::getTaskerAllowedStatuses()->pluck('id')->toArray();
                 if (!in_array($request->status_id, $allowedStatuses)) {
                     return $this->sendError('Access denied: Taskers can only set status to Pending or Submitted', [], 403);
                 }
@@ -573,6 +573,18 @@ class TaskController extends BaseController
                 $isAssigned = $task->users()->where('users.id', $user->id)->exists();
                 if (!$isAssigned) {
                     return $this->sendError('Access denied: You are not assigned to this task', [], 403);
+                }
+            } else {
+                // Other roles (if any) cannot update status
+                return $this->sendError('Access denied: Insufficient permissions to update task status', [], 403);
+            }
+
+            // Check if trying to set Archive status
+            $archiveStatus = Status::getArchiveStatus();
+            if ($archiveStatus && $request->status_id == $archiveStatus->id) {
+                // Only Admins and Requesters can set Archive status
+                if (!$this->hasAdminAccess($user) && !$user->hasRole('Requester')) {
+                    return $this->sendError('Access denied: Only Admins and Requesters can archive tasks', [], 403);
                 }
             }
 
