@@ -418,6 +418,11 @@ class TaskController extends BaseController
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date|after_or_equal:start_date',
                 'close_deadline' => 'nullable|boolean',
+                'is_repeating' => 'nullable|boolean',
+                'repeat_frequency' => 'nullable|in:daily,weekly,monthly,yearly',
+                'repeat_interval' => 'nullable|integer|min:1',
+                'repeat_until' => 'nullable|date|after:start_date',
+                'repeat_start' => 'nullable|date|after_or_equal:start_date',
             ]);
 
             if ($validator->fails()) {
@@ -429,7 +434,8 @@ class TaskController extends BaseController
             $task->update($request->only([
                 'title', 'description', 'standard_brief', 'status_id', 'priority_id', 
                 'task_type_id', 'project_id', 'start_date', 'end_date', 'close_deadline',
-                'note', 'deliverable_quantity'
+                'note', 'deliverable_quantity', 'is_repeating', 'repeat_frequency', 
+                'repeat_interval', 'repeat_until', 'repeat_start'
             ]));
 
             // Sync users and track assignment history

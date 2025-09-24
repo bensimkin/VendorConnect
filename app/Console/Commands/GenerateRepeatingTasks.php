@@ -136,10 +136,17 @@ class GenerateRepeatingTasks extends Command
             $formattedDate = $nextDate->format('j M Y');
             $newTitle = $parentTask->title . ' ' . $formattedDate;
             
+            // Get default "Pending" status for new repeating tasks
+            $pendingStatus = \App\Models\Status::where('title', 'Pending')->first();
+            if (!$pendingStatus) {
+                // Fallback to first available status if "Pending" doesn't exist
+                $pendingStatus = \App\Models\Status::first();
+            }
+
             $newTask = Task::create([
                 'title' => $newTitle,
                 'description' => $parentTask->description,
-                'status_id' => $parentTask->status_id,
+                'status_id' => $pendingStatus ? $pendingStatus->id : $parentTask->status_id, // Use "Pending" status for new tasks
                 'priority_id' => $parentTask->priority_id,
                 'task_type_id' => $parentTask->task_type_id,
                 'project_id' => $parentTask->project_id,
