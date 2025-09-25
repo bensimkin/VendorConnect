@@ -195,6 +195,8 @@ function TasksPageContent() {
         return <AlertCircle className="h-4 w-4 text-yellow-500" />;
       case 'submitted':
         return <CheckCircle className="h-4 w-4 text-purple-500" />;
+      case 'archive':
+        return <X className="h-4 w-4 text-gray-400" />;
       default:
         return <Clock className="h-4 w-4 text-gray-500" />;
     }

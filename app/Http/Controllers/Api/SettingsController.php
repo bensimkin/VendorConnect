@@ -147,4 +147,71 @@ class SettingsController extends BaseController
             return $this->sendServerError('Error retrieving project settings: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get auto-archive settings
+     */
+    public function getAutoArchiveSettings()
+    {
+        try {
+            $settings = Setting::where('group', 'archive_settings')->get();
+            
+            $result = [
+                'auto_archive_enabled' => $settings->where('key', 'auto_archive_enabled')->first()?->value === '1',
+                'auto_archive_days' => (int) $settings->where('key', 'auto_archive_days')->first()?->value ?? 30,
+            ];
+
+            return $this->sendResponse($result, 'Auto-archive settings retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving auto-archive settings: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update auto-archive settings
+     */
+    public function updateAutoArchiveSettings(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'auto_archive_enabled' => 'required|boolean',
+                'auto_archive_days' => 'required|integer|min:1|max:365',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendValidationError($validator->errors());
+            }
+
+            // Update auto_archive_enabled
+            Setting::updateOrCreate(
+                ['key' => 'auto_archive_enabled'],
+                [
+                    'value' => $request->auto_archive_enabled ? '1' : '0',
+                    'group' => 'archive_settings',
+                    'description' => 'Enable automatic archiving of completed tasks',
+                    'type' => 'boolean',
+                ]
+            );
+
+            // Update auto_archive_days
+            Setting::updateOrCreate(
+                ['key' => 'auto_archive_days'],
+                [
+                    'value' => (string) $request->auto_archive_days,
+                    'group' => 'archive_settings',
+                    'description' => 'Number of days after completion to auto-archive tasks',
+                    'type' => 'integer',
+                ]
+            );
+
+            $result = [
+                'auto_archive_enabled' => $request->auto_archive_enabled,
+                'auto_archive_days' => $request->auto_archive_days,
+            ];
+
+            return $this->sendResponse($result, 'Auto-archive settings updated successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error updating auto-archive settings: ' . $e->getMessage());
+        }
+    }
 }

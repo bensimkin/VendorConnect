@@ -416,6 +416,18 @@ class ProjectController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
+            // Check Archive status permissions
+            if ($request->has('status_id')) {
+                $archiveStatus = \App\Models\Status::getArchiveStatus();
+                if ($archiveStatus && $request->status_id == $archiveStatus->id) {
+                    $user = Auth::user();
+                    // Only Admins and Requesters can set Archive status
+                    if (!$this->hasAdminAccess($user) && !$user->hasRole('Requester')) {
+                        return $this->sendError('Access denied: Only Admins and Requesters can archive projects', [], 403);
+                    }
+                }
+            }
+
             DB::beginTransaction();
 
             $project->update($request->only([

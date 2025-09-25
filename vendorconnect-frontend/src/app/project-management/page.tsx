@@ -215,6 +215,8 @@ function ProjectManagementPageContent() {
         return <AlertCircle className="h-4 w-4 text-yellow-500" />;
       case 'overdue':
         return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case 'archive':
+        return <X className="h-4 w-4 text-gray-400" />;
       default:
         return <Clock className="h-4 w-4 text-gray-500" />;
     }
@@ -236,6 +238,8 @@ function ProjectManagementPageContent() {
         return '#f59e0b'; // yellow
       case 'overdue':
         return '#ef4444'; // red
+      case 'archive':
+        return '#9ca3af'; // gray-400
       default:
         return '#6b7280'; // gray
     }
