@@ -21,6 +21,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('tasks:check-deadlines')->everyMinute();
         $schedule->command('tasks:generate-repeating')->daily();
         $schedule->command('notifications:send-emails')->everyMinute();
+        $schedule->command('tasks:auto-archive')->daily();
     }
 
     /**

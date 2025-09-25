@@ -109,11 +109,11 @@ export default function EditProjectPage() {
       const clientsResponse = await apiClient.get('/clients');
       setClients(clientsResponse.data.data || []);
 
-      // Fetch project statuses (Active, Inactive, Completed)
+      // Fetch project statuses (Active, Inactive, Completed, Archive)
       const statusesResponse = await apiClient.get('/statuses');
       const allStatuses = statusesResponse.data.data || [];
       const projectStatuses = allStatuses.filter((status: any) => 
-        ['active', 'inactive', 'completed'].includes(status.slug)
+        ['active', 'inactive', 'completed', 'archive'].includes(status.slug)
       );
       setStatuses(projectStatuses);
     } catch (error) {

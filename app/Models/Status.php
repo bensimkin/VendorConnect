@@ -41,4 +41,52 @@ class Status extends Model
         return $this->belongsToMany(Role::class, 'role_status');
     }
 
+    /**
+     * Check if this status is the Archive status
+     */
+    public function isArchive()
+    {
+        return $this->slug === 'archive';
+    }
+
+    /**
+     * Check if this status is the Completed status
+     */
+    public function isCompleted()
+    {
+        return $this->slug === 'completed';
+    }
+
+    /**
+     * Get the Archive status
+     */
+    public static function getArchiveStatus()
+    {
+        return static::where('slug', 'archive')->first();
+    }
+
+    /**
+     * Get the Completed status
+     */
+    public static function getCompletedStatus()
+    {
+        return static::where('slug', 'completed')->first();
+    }
+
+    /**
+     * Get statuses that can be set by Taskers
+     */
+    public static function getTaskerAllowedStatuses()
+    {
+        return static::whereIn('slug', ['pending', 'submitted'])->get();
+    }
+
+    /**
+     * Get statuses that can be set by Requesters and Admins
+     */
+    public static function getRequesterAdminAllowedStatuses()
+    {
+        return static::whereNotIn('slug', ['pending', 'submitted'])->get();
+    }
+
 }
