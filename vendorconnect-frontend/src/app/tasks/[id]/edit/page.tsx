@@ -66,6 +66,11 @@ interface Task {
     deliverable_quantity?: number;
   };
   close_deadline?: boolean;
+  is_repeating?: boolean;
+  repeat_frequency?: string;
+  repeat_interval?: number;
+  repeat_until?: string;
+  repeat_start?: string;
   question_answers?: Array<{
     question_id: number;
     question_answer: string;
@@ -165,6 +170,11 @@ export default function EditTaskPage() {
     task_type_id: null as number | null,
     close_deadline: 0,
     deliverable_quantity: 1,
+    is_repeating: false,
+    repeat_frequency: '',
+    repeat_interval: 1,
+    repeat_until: '',
+    repeat_start: '',
   });
 
   // Debug: Log form data changes
@@ -209,6 +219,11 @@ export default function EditTaskPage() {
            task_type_id: taskData?.taskType?.id || null,
            close_deadline: taskData?.close_deadline === true ? 1 : 0,
            deliverable_quantity: taskData?.deliverable_quantity || 1,
+           is_repeating: taskData?.is_repeating || false,
+           repeat_frequency: taskData?.repeat_frequency || '',
+           repeat_interval: taskData?.repeat_interval || 1,
+           repeat_until: taskData?.repeat_until ? taskData.repeat_until.split('T')[0] : '',
+           repeat_start: taskData?.repeat_start ? taskData.repeat_start.split('T')[0] : '',
          });
          
 
@@ -307,6 +322,22 @@ export default function EditTaskPage() {
       return;
     }
 
+    // Validate repeating task fields
+    if (formData.is_repeating) {
+      if (!formData.repeat_frequency) {
+        toast.error('Please select a repeat frequency');
+        return;
+      }
+      if (formData.repeat_start && formData.end_date && formData.repeat_start < formData.end_date) {
+        toast.error('Repeat start date cannot be before the task end date');
+        return;
+      }
+      if (formData.repeat_until && formData.repeat_start && formData.repeat_until < formData.repeat_start) {
+        toast.error('Repeat until date cannot be before the repeat start date');
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       const payload: Record<string, any> = {
@@ -323,6 +354,11 @@ export default function EditTaskPage() {
         end_date: formData.end_date,
         close_deadline: formData.close_deadline,
         deliverable_quantity: formData.deliverable_quantity,
+        is_repeating: formData.is_repeating,
+        repeat_frequency: formData.repeat_frequency || null,
+        repeat_interval: formData.repeat_interval,
+        repeat_until: formData.repeat_until || null,
+        repeat_start: formData.repeat_start || null,
       };
 
       await apiClient.put(`/tasks/${taskId}`, payload);
@@ -579,7 +615,82 @@ export default function EditTaskPage() {
                   <p className="text-xs text-muted-foreground">Number of deliverables needed</p>
                 </div>
 
+              </div>
 
+              {/* Repeatable Task Settings */}
+              <div className="space-y-4 border-t pt-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="is_repeating"
+                    type="checkbox"
+                    checked={formData.is_repeating}
+                    onChange={(e) => setFormData({ ...formData, is_repeating: e.target.checked })}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <Label htmlFor="is_repeating">Make this task repeat automatically</Label>
+                </div>
+
+                {formData.is_repeating && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pl-6 border-l-2 border-gray-200">
+                    <div className="space-y-2">
+                      <Label htmlFor="repeat_frequency">Frequency</Label>
+                      <select
+                        id="repeat_frequency"
+                        value={formData.repeat_frequency}
+                        onChange={(e) => setFormData({ ...formData, repeat_frequency: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-md"
+                      >
+                        <option value="">Select frequency</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="repeat_interval">Every</Label>
+                      <Input
+                        id="repeat_interval"
+                        type="number"
+                        min="1"
+                        value={formData.repeat_interval}
+                        onChange={(e) => setFormData({ ...formData, repeat_interval: parseInt(e.target.value) || 1 })}
+                        className="w-full"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {formData.repeat_frequency === 'daily' && 'days'}
+                        {formData.repeat_frequency === 'weekly' && 'weeks'}
+                        {formData.repeat_frequency === 'monthly' && 'months'}
+                        {formData.repeat_frequency === 'yearly' && 'years'}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="repeat_start">Start (Optional)</Label>
+                      <Input
+                        id="repeat_start"
+                        type="date"
+                        value={formData.repeat_start}
+                        onChange={(e) => setFormData({ ...formData, repeat_start: e.target.value })}
+                        min={formData.end_date}
+                      />
+                      <p className="text-xs text-muted-foreground">When to start repeating</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="repeat_until">Until (Optional)</Label>
+                      <Input
+                        id="repeat_until"
+                        type="date"
+                        value={formData.repeat_until}
+                        onChange={(e) => setFormData({ ...formData, repeat_until: e.target.value })}
+                        min={formData.repeat_start || formData.end_date}
+                      />
+                      <p className="text-xs text-muted-foreground">Leave empty to repeat indefinitely</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
