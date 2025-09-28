@@ -128,6 +128,10 @@ export default function ProjectsPage() {
 
   // Use projects directly since search is now server-side
   const filteredProjects = projects.filter(project => {
+    if (statusFilter == 'all' && (project.status?.title?.toLowerCase() || '') == 'archive') {
+      return false;
+    }
+
     const matchesStatus = 
       statusFilter === 'all' || 
       (project.status?.title?.toLowerCase() || '') === statusFilter.toLowerCase();
