@@ -44,51 +44,12 @@ class Workspace extends Model
     {
         return $this->hasMany(Task::class);
     }
-    public function meetings()
-    {
-        return $this->hasMany(Meeting::class);
-    }
-
-    public function todos()
-    {
-        return $this->hasMany(Todo::class);
-    }
-
-    public function leave_requests()
-    {
-        return $this->hasMany(LeaveRequest::class);
-    }
-    public function payslips()
-    {
-        return $this->hasMany(Payslip::class);
-    }
-
-    public function contracts()
-    {
-        return $this->hasMany(Contract::class);
-    }
-
-    public function contract_types()
-    {
-        return $this->hasMany(ContractType::class)->orWhereNull('workspace_id');
-    }
 
     public function payment_methods()
     {
         return $this->hasMany(PaymentMethod::class)->orWhereNull('workspace_id');
     }
-    public function allowances()
-    {
-        return $this->hasMany(Allowance::class);
-    }
-    public function deductions()
-    {
-        return $this->hasMany(Deduction::class);
-    }
-    public function timesheets()
-    {
-        return $this->hasMany(TimeTracker::class);
-    }
+
     public function taxes()
     {
         return $this->hasMany(Tax::class);

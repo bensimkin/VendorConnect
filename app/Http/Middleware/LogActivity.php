@@ -8,7 +8,7 @@ use App\Models\ActivityLog;
 use App\Models\Project;
 use Illuminate\Support\Str;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use App\Models\EstimatesInvoice;
+use Illuminate\Support\Facades\Log;
 
 class LogActivity
 {
@@ -143,8 +143,6 @@ class LogActivity
     {
         if ($type == 'media') {
             $record = Media::find($id);
-        } elseif ($type == 'estimate' || $type == 'invoice') {
-            $record = EstimatesInvoice::find($id);
         } else {
             $model = 'App\\Models\\' . str_replace('_', '', ucwords($type, '_')); // Assuming your model names are in singular form
             $record = $model::find($id);

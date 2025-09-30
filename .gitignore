@@ -34,3 +34,5 @@ protect_statuses_*.sh
 restore_database.sh
 setup_database_backup.sh
 DATABASE_BACKUP_README.md
+
+/vendor
