@@ -73,10 +73,6 @@ class Client extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Project::class, 'client_project');
     }
 
-    public function meetings()
-    {
-        return $this->belongsToMany(Meeting::class);
-    }
     public function workspaces()
     {
         return $this->belongsToMany(Workspace::class);
@@ -95,18 +91,6 @@ class Client extends Authenticatable implements MustVerifyEmail
     public function getNameAttribute()
     {
         return trim($this->first_name . ' ' . $this->last_name);
-    }
-
-    public function todos($status = null, $search = '')
-    {
-        $query = $this->morphMany(Todo::class, 'creator')->where('workspace_id', session()->get('workspace_id'));
-
-        if ($status !== null) {
-            $query->where('is_completed', $status);
-        }
-        if ($search !== '') {
-            $query->where('title', 'like', '%' . $search . '%');
-        }
     }
 
     public function portfolio()
@@ -145,18 +129,6 @@ class Client extends Authenticatable implements MustVerifyEmail
     {
         return Task::whereHas('project.clients', function ($query) use ($project_id) {
             $query->where('clients.id', getAuthenticatedUser()->id)->where('tasks.workspace_id', session()->get('workspace_id'))->where('tasks.project_id', $project_id);
-        })->get();
-    }
-    // public function contracts()
-    // {
-    //     return $this->hasMany(Contract::class, 'client_id');
-    // }
-
-    public function contracts()
-    {
-        return Contract::where(function ($query) {
-            $query->where('created_by', 'c_' . $this->getKey())
-                ->orWhere('client_id', $this->getKey());
         })->get();
     }
 
