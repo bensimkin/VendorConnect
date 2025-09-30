@@ -105,21 +105,6 @@ class User extends Authenticatable implements MustVerifyEmail
         ->where('tasks.project_id', $project_id)->get();
     }
 
-    // public function meetings()
-    // {
-    //     return $this->belongsToMany(Meeting::class)->where('workspace_id', '=', session()->get('workspace_id'));
-    // }
-    public function meetings($status = null)
-    {
-        $meetings = $this->belongsToMany(Meeting::class)->where('workspace_id', '=', session()->get('workspace_id'));
-
-        if ($status !== null && $status == 'ongoing') {
-            $meetings->where('start_date_time', '<=', Carbon::now(config('app.timezone')))
-                ->where('end_date_time', '>=', Carbon::now(config('app.timezone')));
-        }
-
-        return $meetings;
-    }
     public function workspaces()
     {
         return $this->belongsToMany(Workspace::class);
@@ -127,36 +112,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function role()
     {
         return $this->belongsTo(Role::class);
-    }
-
-    public function todos($status = null, $search = '')
-    {
-        $query = $this->morphMany(Todo::class, 'creator')->where('workspace_id', session()->get('workspace_id'));
-
-        if ($status !== null) {
-            $query->where('is_completed', $status);
-        }
-        if ($search !== '') {
-            $query->where('title', 'like', '%' . $search . '%');
-        }
-
-        return $query;
-    }
-
-    public function payslips()
-    {
-        return $this->hasMany(Payslip::class, 'user_id')
-            ->orWhere(function ($query) {
-                $query->where('created_by', 'u_' . $this->getKey());
-            });
-    }
-
-
-    public function contracts()
-    {
-        return Contract::where(function ($query) {
-            $query->where('created_by', 'u_' . $this->getKey());
-        })->get();
     }
 
     public function profile()
@@ -174,17 +129,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return trim($this->first_name . ' ' . $this->last_name);
     }
 
-    public function leave_requests()
-    {
-        return $this->hasMany(LeaveRequest::class)->where('workspace_id', session()->get('workspace_id'));
-    }
-
-    public function leaveEditors()
-    {
-        return $this->hasMany(LeaveEditor::class, 'user_id');
-    }
-
-
     public function notes($search = '', $orderBy = 'id', $direction = 'desc')
     {
         $query = Note::where(function ($query) {
@@ -197,12 +141,6 @@ class User extends Authenticatable implements MustVerifyEmail
         }
         $query->orderBy($orderBy, $direction);
         return $query->get();
-    }
-
-    public function timesheets()
-    {
-        return $this->hasMany(TimeTracker::class, 'user_id', 'id')
-            ->where('workspace_id', session()->get('workspace_id'));
     }
 
     public function can($ability, $arguments = [])
