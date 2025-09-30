@@ -75,8 +75,6 @@ class Kernel extends HttpKernel
         'custom-verified' => \App\Http\Middleware\CustomVerifiedMiddleware::class,
         'customcan' => \App\Http\Middleware\CustomCanMiddleware::class,
         'customRole' => \App\Http\Middleware\CustomRoleMiddleware::class,
-        'admin_or_leave_editor' => \App\Http\Middleware\CheckAdminOrLeaveEditor::class,
-        'admin_or_user' => \App\Http\Middleware\CheckAdminOrUser::class,
         // 'checkAccess' => \App\Http\Middleware\CheckAccess::class,
         'CheckInstallation' => \App\Http\Middleware\CheckInstallation::class,
         'log.activity' => \App\Http\Middleware\LogActivity::class,
