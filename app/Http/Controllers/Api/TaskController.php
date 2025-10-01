@@ -57,7 +57,10 @@ class TaskController extends BaseController
             if ($request->has('status_id')) {
                 $query->where('status_id', $request->status_id);
             } else {
-                $query->where('status_id', '!=', Status::where('slug', 'archive')->first()->id);
+                $archiveStatus = Status::where('slug', 'archive')->first();
+                if ($archiveStatus) {
+                    $query->where('status_id', '!=', $archiveStatus->id);
+                }
             }
 
             if ($request->has('priority_id')) {
