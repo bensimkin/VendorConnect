@@ -204,6 +204,9 @@ class SmartTaskController extends Controller
             case 'get_task_updates':
                 return $this->getTaskUpdates($params);
                 
+            case 'add_task_message':
+                return $this->addTaskMessage($params);
+                
             case 'get_users':
                 return $this->getUsers($params);
                 
@@ -1230,6 +1233,88 @@ class SmartTaskController extends Controller
     }
     
     /**
+     * Add a message/update to a task using existing API endpoints
+     */
+    private function addTaskMessage(array $params): array
+    {
+        $taskId = $params['task_id'] ?? null;
+        $taskTitle = $params['task_title'] ?? null;
+        $message = $params['message'] ?? $params['update'] ?? null;
+        $userId = $params['user_id'] ?? 1; // Default to super admin if not specified
+        
+        if (!$message) {
+            return [
+                'content' => "❌ **No Message Provided**\n\nPlease provide a message to add to the task.\n\n💡 **Example:**\n• \"Add message: Working on this task, will complete by Friday\"\n• \"Ask user: What's the current status of this task?\""
+            ];
+        }
+        
+        // If no task ID provided, try to find task by title
+        if (!$taskId && $taskTitle) {
+            try {
+                $tasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
+                    'search' => $taskTitle,
+                    'per_page' => 200
+                ]);
+                
+                if ($tasksResponse->successful()) {
+                    $tasks = $tasksResponse->json()['data'] ?? [];
+                    foreach ($tasks as $task) {
+                        if (strtolower($task['title']) === strtolower($taskTitle)) {
+                            $taskId = $task['id'];
+                            break;
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Smart Task addTaskMessage - Error finding task by title', ['error' => $e->getMessage()]);
+            }
+        }
+        
+        if (!$taskId) {
+            return [
+                'content' => "❌ **Task Not Found**\n\nI couldn't find a task with the specified title or ID.\n\n💡 **Suggestions:**\n• Check the spelling of the task name\n• Try a partial match (e.g., \"GHL\" instead of \"Update GHL Sales Data\")\n• Ask me to list all tasks to see what's available"
+            ];
+        }
+        
+        try {
+            // Add message to task
+            $messageResponse = $this->getHttpClient()->post(secure_url("/api/v1/tasks/{$taskId}/messages"), [
+                'message' => $message,
+                'user_id' => $userId
+            ]);
+            
+            if (!$messageResponse->successful()) {
+                return [
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI'm having trouble adding the message to the task right now."
+                ];
+            }
+            
+            $messageData = $messageResponse->json();
+            $addedMessage = $messageData['data'] ?? [];
+            
+            // Get user info for the response
+            $userName = 'Unknown User';
+            if (isset($addedMessage['sender'])) {
+                $sender = $addedMessage['sender'];
+                $userName = trim(($sender['first_name'] ?? '') . ' ' . ($sender['last_name'] ?? ''));
+            }
+            
+            $sentAt = \Carbon\Carbon::parse($addedMessage['sent_at'])->format('M j, Y \a\t g:i A');
+            
+            return [
+                'content' => "✅ **Message Added Successfully!**\n\n💬 **{$userName}** ({$sentAt})\n   └ {$message}\n\n📝 **Task:** {$taskTitle}\n\n💡 **To view all updates:**\n• Ask me to show updates for this task",
+                'data' => $addedMessage
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task addTaskMessage Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble adding the message to the task."
+            ];
+        }
+    }
+    
+    /**
      * Get users using existing API endpoints
      */
     private function getUsers(array $params): array
@@ -2005,6 +2090,8 @@ class SmartTaskController extends Controller
                         return $this->getTaskStatus($params);
                     case 'get_task_updates':
                         return $this->getTaskUpdates($params);
+                    case 'add_task_message':
+                        return $this->addTaskMessage($params);
                     case 'get_users':
                         return $this->getUsers($params);
                     case 'get_projects':
