@@ -547,6 +547,13 @@ class SmartTaskController extends Controller
         
             $user = $foundUser;
             
+            // Calculate start date for recurring tasks
+            $startDate = now()->format('Y-m-d');
+            if ($isRecurring) {
+                $recurringPattern = $this->extractRecurringPattern($message);
+                $startDate = $this->calculateRecurringStartDate($recurringPattern);
+            }
+            
             // Use the existing tasks endpoint to create a task
             $taskData = [
             'title' => $title,
@@ -554,8 +561,8 @@ class SmartTaskController extends Controller
             'status_id' => 20, // Active
             'priority_id' => $this->getPriorityId($priority) ?? 2, // Default to Medium
             'project_id' => $projectId ?? 19, // Default project
-                'start_date' => now()->format('Y-m-d'),
-                'end_date' => $dueDate ? \Carbon\Carbon::parse($dueDate)->format('Y-m-d') : now()->addDays(7)->format('Y-m-d'),
+                'start_date' => $startDate,
+                'end_date' => $dueDate ? \Carbon\Carbon::parse($dueDate)->format('Y-m-d') : \Carbon\Carbon::parse($startDate)->addDays(7)->format('Y-m-d'),
             'is_repeating' => $isRecurring,
             'repeat_frequency' => $isRecurring ? 'weekly' : null,
             'repeat_interval' => $isRecurring ? 1 : null,
@@ -1993,5 +2000,46 @@ RESPONSE: Always return JSON only:
 EXAMPLES:
 \"create task for John to review proposal\" → {\"action\": \"create_task\", \"params\": {\"title\": \"review proposal\", \"user_name\": \"John\"}}
 \"change due date for Check cursor to Oct 15\" → {\"action\": \"update_task\", \"params\": {\"title\": \"Check cursor\", \"due_date\": \"2025-10-15\"}}";
+    }
+    
+    /**
+     * Calculate the start date for recurring tasks based on the pattern
+     */
+    private function calculateRecurringStartDate(?string $pattern): string
+    {
+        $today = now();
+        
+        // Map day names to Carbon day constants
+        $dayMap = [
+            'monday' => \Carbon\Carbon::MONDAY,
+            'tuesday' => \Carbon\Carbon::TUESDAY,
+            'wednesday' => \Carbon\Carbon::WEDNESDAY,
+            'thursday' => \Carbon\Carbon::THURSDAY,
+            'friday' => \Carbon\Carbon::FRIDAY,
+            'saturday' => \Carbon\Carbon::SATURDAY,
+            'sunday' => \Carbon\Carbon::SUNDAY,
+        ];
+        
+        // If pattern contains a specific day of the week
+        foreach ($dayMap as $dayName => $dayConstant) {
+            if (strpos($pattern, $dayName) !== false) {
+                // Find the next occurrence of this day
+                $nextDay = $today->copy()->next($dayConstant);
+                return $nextDay->format('Y-m-d');
+            }
+        }
+        
+        // For generic weekly patterns, start next week
+        if (strpos($pattern, 'weekly') !== false || strpos($pattern, 'every') !== false) {
+            return $today->addWeek()->format('Y-m-d');
+        }
+        
+        // For daily patterns, start tomorrow
+        if (strpos($pattern, 'daily') !== false) {
+            return $today->addDay()->format('Y-m-d');
+        }
+        
+        // Default: start next week
+        return $today->addWeek()->format('Y-m-d');
     }
 }
