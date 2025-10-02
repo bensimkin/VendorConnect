@@ -765,28 +765,28 @@ class SmartTaskController extends Controller
     {
         $responses = [
             'no_search_results' => [
-                "🤔 Hmm, I couldn't find anything matching \"{$context['query']}\". Let me help you out!",
-                "🔍 I searched high and low, but \"{$context['query']}\" didn't match anything in our system.",
-                "😅 Oops! Nothing came up for \"{$context['query']}\". Maybe we can try something else?",
-                "🤷‍♂️ I'm drawing a blank on \"{$context['query']}\". Let's try a different approach!"
+                "🤔 Hmm, I couldn't find anything matching \"" . ($context['query'] ?? 'your search') . "\". Let me help you out!",
+                "🔍 I searched high and low, but \"" . ($context['query'] ?? 'your search') . "\" didn't match anything in our system.",
+                "😅 Oops! Nothing came up for \"" . ($context['query'] ?? 'your search') . "\". Maybe we can try something else?",
+                "🤷‍♂️ I'm drawing a blank on \"" . ($context['query'] ?? 'your search') . "\". Let's try a different approach!"
             ],
             'user_not_found' => [
-                "👤 I don't see anyone named \"{$context['user']}\" in our team. Let me show you who's available:",
-                "🤔 Hmm, \"{$context['user']}\" doesn't ring a bell. Here are the people I know:",
-                "😅 I can't find \"{$context['user']}\" in our user list. Maybe check out these folks:",
-                "👥 \"{$context['user']}\" isn't in our system, but here's who I can find:"
+                "👤 I don't see anyone named \"" . ($context['user'] ?? 'that person') . "\" in our team. Let me show you who's available:",
+                "🤔 Hmm, \"" . ($context['user'] ?? 'that person') . "\" doesn't ring a bell. Here are the people I know:",
+                "😅 I can't find \"" . ($context['user'] ?? 'that person') . "\" in our user list. Maybe check out these folks:",
+                "👥 \"" . ($context['user'] ?? 'that person') . "\" isn't in our system, but here's who I can find:"
             ],
             'task_not_found' => [
-                "📋 I don't see a task called \"{$context['task']}\" anywhere. Let me help you find what you're looking for!",
-                "🤔 Hmm, \"{$context['task']}\" doesn't match any of our current tasks. Want to see what's available?",
-                "😅 I'm not finding \"{$context['task']}\" in our task list. Maybe we can try something else?",
-                "📝 \"{$context['task']}\" isn't showing up in our tasks. Let me show you what we have:"
+                "📋 I don't see a task called \"" . ($context['task'] ?? 'that task') . "\" anywhere. Let me help you find what you're looking for!",
+                "🤔 Hmm, \"" . ($context['task'] ?? 'that task') . "\" doesn't match any of our current tasks. Want to see what's available?",
+                "😅 I'm not finding \"" . ($context['task'] ?? 'that task') . "\" in our task list. Maybe we can try something else?",
+                "📝 \"" . ($context['task'] ?? 'that task') . "\" isn't showing up in our tasks. Let me show you what we have:"
             ],
             'project_not_found' => [
-                "📁 I don't see a project called \"{$context['project']}\" in our system. Here's what I can find:",
-                "🤔 \"{$context['project']}\" doesn't match any of our projects. Maybe check out these:",
-                "😅 I can't locate \"{$context['project']}\" in our project list. Here are the ones I know:",
-                "📂 \"{$context['project']}\" isn't in our projects. Want to see what's available?"
+                "📁 I don't see a project called \"" . ($context['project'] ?? 'that project') . "\" in our system. Here's what I can find:",
+                "🤔 \"" . ($context['project'] ?? 'that project') . "\" doesn't match any of our projects. Maybe check out these:",
+                "😅 I can't locate \"" . ($context['project'] ?? 'that project') . "\" in our project list. Here are the ones I know:",
+                "📂 \"" . ($context['project'] ?? 'that project') . "\" isn't in our projects. Want to see what's available?"
             ],
             'api_error' => [
                 "😬 Oops! Something went wrong on my end. Let me try to fix that for you.",
