@@ -904,6 +904,10 @@ class TaskController extends BaseController
 
             $message = $task->messages()->create($messageData);
 
+            // Send notifications for new task message
+            $notificationService = new NotificationService();
+            $notificationService->commentAdded($message, Auth::user());
+
             return $this->sendResponse($message, 'Message uploaded successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error uploading message: ' . $e->getMessage());
