@@ -207,6 +207,9 @@ class SmartTaskController extends Controller
             case 'add_task_message':
                 return $this->addTaskMessage($params);
                 
+            case 'add_task_attachment':
+                return $this->addTaskAttachment($params);
+                
             case 'get_users':
                 return $this->getUsers($params);
                 
@@ -585,6 +588,20 @@ class SmartTaskController extends Controller
             
             $task = $taskResponse->json()['data'] ?? [];
             $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
+            
+            // Add attachment if provided
+            $attachmentUrl = $params['attachment_url'] ?? $params['url'] ?? $params['link'] ?? $params['google_drive_url'] ?? null;
+            if ($attachmentUrl && filter_var($attachmentUrl, FILTER_VALIDATE_URL)) {
+                $attachmentDescription = $params['attachment_description'] ?? 'Task attachment';
+                $messageText = "📎 **Task Attachment**\n\n**Description:** {$attachmentDescription}\n\n**Link:** {$attachmentUrl}";
+                
+                // Add attachment as a message
+                $this->getHttpClient()->post(secure_url("/api/v1/tasks/{$task['id']}/messages"), [
+                    'message' => $messageText,
+                    'user_id' => 1 // Default to super admin
+                ]);
+            }
+            
         $recurringText = $isRecurring ? " (recurring weekly)" : "";
         
         return [
@@ -1310,6 +1327,105 @@ class SmartTaskController extends Controller
             Log::error('Smart Task addTaskMessage Error', ['error' => $e->getMessage()]);
             return [
                 'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble adding the message to the task."
+            ];
+        }
+    }
+    
+    /**
+     * Add file attachment or Google Drive link to a task using existing API endpoints
+     */
+    private function addTaskAttachment(array $params): array
+    {
+        $taskId = $params['task_id'] ?? null;
+        $taskTitle = $params['task_title'] ?? null;
+        $attachmentUrl = $params['url'] ?? $params['link'] ?? $params['google_drive_url'] ?? null;
+        $description = $params['description'] ?? null;
+        
+        // If no task ID provided, try to find task by title
+        if (!$taskId && $taskTitle) {
+            try {
+                $tasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
+                    'search' => $taskTitle,
+                    'per_page' => 200
+                ]);
+                
+                if ($tasksResponse->successful()) {
+                    $tasks = $tasksResponse->json()['data'] ?? [];
+                    foreach ($tasks as $task) {
+                        if (strtolower($task['title']) === strtolower($taskTitle)) {
+                            $taskId = $task['id'];
+                            break;
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Smart Task addTaskAttachment - Error finding task by title', ['error' => $e->getMessage()]);
+            }
+        }
+        
+        if (!$taskId) {
+            return [
+                'content' => "❌ **Task Not Found**\n\nI couldn't find a task with the specified title or ID.\n\n💡 **Suggestions:**\n• Check the spelling of the task name\n• Try a partial match (e.g., \"GHL\" instead of \"Update GHL Sales Data\")\n• Ask me to list all tasks to see what's available"
+            ];
+        }
+        
+        if (!$attachmentUrl) {
+            return [
+                'content' => "❌ **No Attachment Provided**\n\nPlease provide a file URL or Google Drive link to attach to the task.\n\n💡 **Examples:**\n• \"Add Google Drive link: https://drive.google.com/file/d/...\"\n• \"Attach file: https://example.com/document.pdf\"\n• \"Add link: https://docs.google.com/spreadsheets/d/...\""
+            ];
+        }
+        
+        try {
+            // Validate URL format
+            if (!filter_var($attachmentUrl, FILTER_VALIDATE_URL)) {
+                return [
+                    'content' => "❌ **Invalid URL**\n\nThe provided URL is not valid. Please provide a proper URL.\n\n💡 **Examples:**\n• Google Drive: https://drive.google.com/file/d/...\n• Google Docs: https://docs.google.com/document/d/...\n• Google Sheets: https://docs.google.com/spreadsheets/d/..."
+                ];
+            }
+            
+            // Add attachment as a message with the URL
+            $messageText = "📎 **Attachment Added**\n\n";
+            if ($description) {
+                $messageText .= "**Description:** {$description}\n\n";
+            }
+            $messageText .= "**Link:** {$attachmentUrl}";
+            
+            // Add the attachment as a message
+            $messageResponse = $this->getHttpClient()->post(secure_url("/api/v1/tasks/{$taskId}/messages"), [
+                'message' => $messageText,
+                'user_id' => 1 // Default to super admin
+            ]);
+            
+            if (!$messageResponse->successful()) {
+                return [
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI'm having trouble adding the attachment to the task right now."
+                ];
+            }
+            
+            $messageData = $messageResponse->json();
+            $addedMessage = $messageData['data'] ?? [];
+            
+            // Determine attachment type
+            $attachmentType = 'Link';
+            if (strpos($attachmentUrl, 'drive.google.com') !== false) {
+                $attachmentType = 'Google Drive';
+            } elseif (strpos($attachmentUrl, 'docs.google.com') !== false) {
+                $attachmentType = 'Google Docs';
+            } elseif (strpos($attachmentUrl, 'sheets.google.com') !== false) {
+                $attachmentType = 'Google Sheets';
+            } elseif (preg_match('/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|png|jpg|jpeg|gif)$/i', $attachmentUrl)) {
+                $attachmentType = 'File';
+            }
+            
+            return [
+                'content' => "✅ **Attachment Added Successfully!**\n\n📎 **{$attachmentType}**\n   └ {$attachmentUrl}\n\n📝 **Task:** {$taskTitle}\n\n💡 **To view all attachments:**\n• Ask me to show updates for this task",
+                'data' => $addedMessage
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task addTaskAttachment Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble adding the attachment to the task."
             ];
         }
     }
@@ -2092,6 +2208,8 @@ class SmartTaskController extends Controller
                         return $this->getTaskUpdates($params);
                     case 'add_task_message':
                         return $this->addTaskMessage($params);
+                    case 'add_task_attachment':
+                        return $this->addTaskAttachment($params);
                     case 'get_users':
                         return $this->getUsers($params);
                     case 'get_projects':
