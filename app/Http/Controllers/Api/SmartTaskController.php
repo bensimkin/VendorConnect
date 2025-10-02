@@ -366,9 +366,10 @@ class SmartTaskController extends Controller
         
         // First, check if a task with this title already exists
         try {
+            // Search for tasks with the same title (get more results to catch all matches)
             $existingTasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
                 'search' => $title,
-                'per_page' => 10
+                'per_page' => 50
             ]);
             
             if ($existingTasksResponse->successful()) {
@@ -378,6 +379,33 @@ class SmartTaskController extends Controller
                 foreach ($existingTasks as $task) {
                     if (strtolower($task['title']) === strtolower($title)) {
                         // Found existing task, reassign it instead of creating new one
+                        Log::info('Smart API createTask - Found existing task, reassigning', [
+                            'existing_task_id' => $task['id'],
+                            'title' => $title,
+                            'assigned_to' => $assignedTo
+                        ]);
+                        return $this->reassignTask($task['id'], $assignedTo, $title);
+                    }
+                }
+            }
+            
+            // If search didn't find it, try getting all tasks and search locally
+            $allTasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
+                'per_page' => 100
+            ]);
+            
+            if ($allTasksResponse->successful()) {
+                $allTasks = $allTasksResponse->json()['data'] ?? [];
+                
+                // Look for exact title match in all tasks
+                foreach ($allTasks as $task) {
+                    if (strtolower($task['title']) === strtolower($title)) {
+                        // Found existing task, reassign it instead of creating new one
+                        Log::info('Smart API createTask - Found existing task in all tasks, reassigning', [
+                            'existing_task_id' => $task['id'],
+                            'title' => $title,
+                            'assigned_to' => $assignedTo
+                        ]);
                         return $this->reassignTask($task['id'], $assignedTo, $title);
                     }
                 }
