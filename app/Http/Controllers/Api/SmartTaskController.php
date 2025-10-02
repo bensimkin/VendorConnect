@@ -45,6 +45,9 @@ class SmartTaskController extends Controller
     public function handleRequest(Request $request): JsonResponse
     {
         try {
+            // Set a reasonable execution time limit for Smart API operations
+            set_time_limit(60); // 60 seconds max
+            
             // Get the action and parameters from n8n AI
             $action = $request->input('action');
             $params = $request->input('params', []);
@@ -214,16 +217,7 @@ class SmartTaskController extends Controller
                 return $this->searchContent($params);
                 
             case 'update_task':
-                $result = $this->updateTask($params);
-                // If task not found, try OpenAI fallback only if we have a message to analyze
-                if (isset($result['content']) && strpos($result['content'], 'Task Not Found') !== false && $originalMessage) {
-                    Log::info('Smart API update_task failed, trying OpenAI fallback', [
-                        'params' => $params,
-                        'originalMessage' => $originalMessage
-                    ]);
-                    return $this->openAIFallback($originalMessage, $params);
-                }
-                return $result;
+                return $this->updateTask($params);
                 
             case 'update_task_status':
                 return $this->updateTaskStatus($params);
@@ -232,16 +226,7 @@ class SmartTaskController extends Controller
                 return $this->updateTaskPriority($params);
                 
             case 'delete_task':
-                $result = $this->deleteTask($params);
-                // If task not found, try OpenAI fallback only if we have a message to analyze
-                if (isset($result['content']) && strpos($result['content'], 'Task Not Found') !== false && $originalMessage) {
-                    Log::info('Smart API delete_task failed, trying OpenAI fallback', [
-                        'params' => $params,
-                        'originalMessage' => $originalMessage
-                    ]);
-                    return $this->openAIFallback($originalMessage, $params);
-                }
-                return $result;
+                return $this->deleteTask($params);
                 
             default:
                 return [
@@ -427,12 +412,12 @@ class SmartTaskController extends Controller
             ];
         }
         
-        // First, check if a task with this title already exists
+        // First, check if a task with this title already exists (optimized single call)
         try {
-            // Search for tasks with the same title (get more results to catch all matches)
+            // Single optimized search with larger per_page to avoid second call
             $existingTasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
                 'search' => $title,
-                'per_page' => 50
+                'per_page' => 200  // Increased to catch more results
             ]);
             
             if ($existingTasksResponse->successful()) {
@@ -443,28 +428,6 @@ class SmartTaskController extends Controller
                     if (strtolower($task['title']) === strtolower($title)) {
                         // Found existing task, reassign it instead of creating new one
                         Log::info('Smart API createTask - Found existing task, reassigning', [
-                            'existing_task_id' => $task['id'],
-                            'title' => $title,
-                            'assigned_to' => $assignedTo
-                        ]);
-                        return $this->reassignTask($task['id'], $assignedTo, $title);
-                    }
-                }
-            }
-            
-            // If search didn't find it, try getting all tasks and search locally
-            $allTasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
-                'per_page' => 100
-            ]);
-            
-            if ($allTasksResponse->successful()) {
-                $allTasks = $allTasksResponse->json()['data'] ?? [];
-                
-                // Look for exact title match in all tasks
-                foreach ($allTasks as $task) {
-                    if (strtolower($task['title']) === strtolower($title)) {
-                        // Found existing task, reassign it instead of creating new one
-                        Log::info('Smart API createTask - Found existing task in all tasks, reassigning', [
                             'existing_task_id' => $task['id'],
                             'title' => $title,
                             'assigned_to' => $assignedTo
@@ -1250,42 +1213,23 @@ class SmartTaskController extends Controller
             $updateData['status_id'] = $this->getStatusId($params['status']);
         }
         
-        // If no task ID provided, search for task by title
+        // If no task ID provided, search for task by title (optimized single call)
         if (!$taskId && $taskTitle) {
             try {
-                // Search for tasks with the same title
-                $existingTasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
+                // Single optimized search with larger per_page to avoid second call
+                $tasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
                     'search' => $taskTitle,
-                    'per_page' => 50
+                    'per_page' => 200  // Increased to catch more results
                 ]);
                 
-                if ($existingTasksResponse->successful()) {
-                    $existingTasks = $existingTasksResponse->json()['data'] ?? [];
+                if ($tasksResponse->successful()) {
+                    $tasks = $tasksResponse->json()['data'] ?? [];
                     
                     // Look for exact title match
-                    foreach ($existingTasks as $task) {
+                    foreach ($tasks as $task) {
                         if (strtolower($task['title']) === strtolower($taskTitle)) {
                             $taskId = $task['id'];
                             break;
-                        }
-                    }
-                }
-                
-                // If search didn't find it, try getting all tasks and search locally
-                if (!$taskId) {
-                    $allTasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
-                        'per_page' => 100
-                    ]);
-                    
-                    if ($allTasksResponse->successful()) {
-                        $allTasks = $allTasksResponse->json()['data'] ?? [];
-                        
-                        // Look for exact title match in all tasks
-                        foreach ($allTasks as $task) {
-                            if (strtolower($task['title']) === strtolower($taskTitle)) {
-                                $taskId = $task['id'];
-                                break;
-                            }
                         }
                     }
                 }
@@ -1621,8 +1565,44 @@ class SmartTaskController extends Controller
             $parsedResponse = json_decode($aiResponse, true);
             
             if ($parsedResponse && isset($parsedResponse['action'])) {
-                // AI provided a structured response, execute it
-                return $this->executeAction($parsedResponse['action'], $parsedResponse['params'] ?? [], $message);
+                // AI provided a structured response, execute it directly (avoid recursion)
+                $action = $parsedResponse['action'];
+                $params = $parsedResponse['params'] ?? [];
+                
+                // Execute the action directly to avoid recursive fallback calls
+                switch ($action) {
+                    case 'get_user_tasks':
+                        return $this->getUserTasks($params);
+                    case 'create_task':
+                        return $this->createTask($params);
+                    case 'list_tasks':
+                        return $this->listTasks($params);
+                    case 'get_task_status':
+                        return $this->getTaskStatus($params);
+                    case 'get_users':
+                        return $this->getUsers($params);
+                    case 'get_projects':
+                        return $this->getProjects($params);
+                    case 'get_project_progress':
+                        return $this->getProjectProgress($params);
+                    case 'get_dashboard':
+                        return $this->getDashboard($params);
+                    case 'search_content':
+                        return $this->searchContent($params);
+                    case 'update_task':
+                        return $this->updateTask($params);
+                    case 'update_task_status':
+                        return $this->updateTaskStatus($params);
+                    case 'update_task_priority':
+                        return $this->updateTaskPriority($params);
+                    case 'delete_task':
+                        return $this->deleteTask($params);
+                    default:
+                        // If action not recognized, return natural language response
+                        return [
+                            'content' => $aiResponse . "\n\n🔧 **Available Actions:**\n• `create_task` - Create a new task\n• `update_task` - Update an existing task\n• `delete_task` - Delete a task\n• `get_user_tasks` - Get tasks for a user\n• `list_tasks` - List all tasks\n• `get_projects` - List all projects\n• `get_users` - List all users\n\n💡 **Try rephrasing your request** or ask me to list available tasks/users to see what's available."
+                        ];
+                }
             } else {
                 // AI provided a natural language response - enhance it with API suggestions
                 $enhancedResponse = $aiResponse . "\n\n🔧 **Available Actions:**\n";
