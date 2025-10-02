@@ -475,6 +475,339 @@ class SmartTaskController extends Controller
         }
     }
     
+    /**
+     * Get users using existing API endpoints
+     */
+    private function getUsers(array $params): array
+    {
+        try {
+            $usersResponse = Http::get(url('/api/users'));
+            
+            if (!$usersResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to fetch users. Please try again."
+                ];
+            }
+            
+            $usersData = $usersResponse->json();
+            $users = $usersData['data'] ?? [];
+            
+            if (empty($users)) {
+                return [
+                    'content' => "👥 No users found."
+                ];
+            }
+            
+            $userList = collect($users)->map(function($u) {
+                $displayName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
+                return "• {$displayName} ({$u['email']})";
+            })->join("\n");
+            
+            return [
+                'content' => "👥 **Available Users** (" . count($users) . " total)\n\n{$userList}",
+                'data' => $users
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task getUsers Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => "❌ Sorry, I encountered an error while fetching users. Please try again."
+            ];
+        }
+    }
+    
+    /**
+     * Get projects using existing API endpoints
+     */
+    private function getProjects(array $params): array
+    {
+        try {
+            $projectsResponse = Http::get(url('/api/projects'));
+            
+            if (!$projectsResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to fetch projects. Please try again."
+                ];
+            }
+            
+            $projectsData = $projectsResponse->json();
+            $projects = $projectsData['data'] ?? [];
+            
+            if (empty($projects)) {
+                return [
+                    'content' => "📁 No projects found."
+                ];
+            }
+            
+            $projectList = collect($projects)->map(function($p) {
+                return "• {$p['name']} (ID: {$p['id']})";
+            })->join("\n");
+            
+            return [
+                'content' => "📁 **Available Projects** (" . count($projects) . " total)\n\n{$projectList}",
+                'data' => $projects
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task getProjects Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => "❌ Sorry, I encountered an error while fetching projects. Please try again."
+            ];
+        }
+    }
+    
+    /**
+     * Get dashboard data using existing API endpoints
+     */
+    private function getDashboard(array $params): array
+    {
+        try {
+            $dashboardResponse = Http::get(url('/api/dashboard'));
+            
+            if (!$dashboardResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to fetch dashboard data. Please try again."
+                ];
+            }
+            
+            $dashboardData = $dashboardResponse->json();
+            $data = $dashboardData['data'] ?? [];
+            
+            return [
+                'content' => "📊 **Dashboard Overview**\n\n• Total Tasks: " . ($data['total_tasks'] ?? 'N/A') . "\n• Active Tasks: " . ($data['active_tasks'] ?? 'N/A') . "\n• Completed Tasks: " . ($data['completed_tasks'] ?? 'N/A'),
+                'data' => $data
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task getDashboard Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => "❌ Sorry, I encountered an error while fetching dashboard data. Please try again."
+            ];
+        }
+    }
+    
+    /**
+     * Search content using existing API endpoints
+     */
+    private function searchContent(array $params): array
+    {
+        $query = $params['query'] ?? '';
+        
+        if (!$query) {
+            return [
+                'content' => "❌ Please provide a search query. Example: \"search for [term]\""
+            ];
+        }
+        
+        try {
+            $searchResponse = Http::get(url('/api/search'), [
+                'q' => $query
+            ]);
+            
+            if (!$searchResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to search. Please try again."
+                ];
+            }
+            
+            $searchData = $searchResponse->json();
+            $results = $searchData['data'] ?? [];
+            
+            $content = "🔍 **Search Results for '{$query}'**\n\n";
+            
+            if (!empty($results['tasks'])) {
+                $content .= "📋 **Tasks** (" . count($results['tasks']) . ")\n";
+                foreach (array_slice($results['tasks'], 0, 5) as $task) {
+                    $content .= "• {$task['title']}\n";
+                }
+                $content .= "\n";
+            }
+            
+            if (!empty($results['users'])) {
+                $content .= "👥 **Users** (" . count($results['users']) . ")\n";
+                foreach (array_slice($results['users'], 0, 5) as $user) {
+                    $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
+                    $content .= "• {$displayName} ({$user['email']})\n";
+                }
+                $content .= "\n";
+            }
+            
+            if (!empty($results['projects'])) {
+                $content .= "📁 **Projects** (" . count($results['projects']) . ")\n";
+                foreach (array_slice($results['projects'], 0, 5) as $project) {
+                    $content .= "• {$project['name']}\n";
+                }
+            }
+            
+            if (empty($results['tasks']) && empty($results['users']) && empty($results['projects'])) {
+                $content = "🔍 **No results found for '{$query}'**\n\nTry different search terms or check spelling.";
+            }
+            
+            return [
+                'content' => $content,
+                'data' => $results
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task searchContent Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => "❌ Sorry, I encountered an error while searching. Please try again."
+            ];
+        }
+    }
+    
+    /**
+     * Update task using existing API endpoints
+     */
+    private function updateTask(array $params): array
+    {
+        $taskId = $params['task_id'] ?? null;
+        $updateData = $params['update_data'] ?? [];
+        
+        if (!$taskId) {
+            return [
+                'content' => "❌ Please specify a task ID to update."
+            ];
+        }
+        
+        try {
+            $taskResponse = Http::put(url("/api/tasks/{$taskId}"), $updateData);
+            
+            if (!$taskResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to update task. Please try again."
+                ];
+            }
+            
+            $task = $taskResponse->json()['data'] ?? [];
+            
+            return [
+                'content' => "✅ **Task #{$taskId} Updated Successfully!**\n\n🟡 **{$task['title']}**",
+                'data' => $task
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task updateTask Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => "❌ Sorry, I encountered an error while updating the task. Please try again."
+            ];
+        }
+    }
+    
+    /**
+     * Update task status using existing API endpoints
+     */
+    private function updateTaskStatus(array $params): array
+    {
+        $taskId = $params['task_id'] ?? null;
+        $statusId = $params['status_id'] ?? null;
+        
+        if (!$taskId || !$statusId) {
+            return [
+                'content' => "❌ Please specify both task ID and status ID."
+            ];
+        }
+        
+        try {
+            $taskResponse = Http::put(url("/api/tasks/{$taskId}"), [
+                'status_id' => $statusId
+            ]);
+            
+            if (!$taskResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to update task status. Please try again."
+                ];
+            }
+            
+            $task = $taskResponse->json()['data'] ?? [];
+            
+            return [
+                'content' => "✅ **Task #{$taskId} Status Updated!**\n\n🟡 **{$task['title']}**\n   └ 📊 Status: " . ($task['status']['name'] ?? 'Unknown'),
+                'data' => $task
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task updateTaskStatus Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => "❌ Sorry, I encountered an error while updating task status. Please try again."
+            ];
+        }
+    }
+    
+    /**
+     * Update task priority using existing API endpoints
+     */
+    private function updateTaskPriority(array $params): array
+    {
+        $taskId = $params['task_id'] ?? null;
+        $priorityId = $params['priority_id'] ?? null;
+        
+        if (!$taskId || !$priorityId) {
+            return [
+                'content' => "❌ Please specify both task ID and priority ID."
+            ];
+        }
+        
+        try {
+            $taskResponse = Http::put(url("/api/tasks/{$taskId}"), [
+                'priority_id' => $priorityId
+            ]);
+            
+            if (!$taskResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to update task priority. Please try again."
+                ];
+            }
+            
+            $task = $taskResponse->json()['data'] ?? [];
+            
+            return [
+                'content' => "✅ **Task #{$taskId} Priority Updated!**\n\n🟡 **{$task['title']}**\n   └ 🎯 Priority: " . ($task['priority']['name'] ?? 'Unknown'),
+                'data' => $task
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task updateTaskPriority Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => "❌ Sorry, I encountered an error while updating task priority. Please try again."
+            ];
+        }
+    }
+    
+    /**
+     * Delete task using existing API endpoints
+     */
+    private function deleteTask(array $params): array
+    {
+        $taskId = $params['task_id'] ?? null;
+        
+        if (!$taskId) {
+            return [
+                'content' => "❌ Please specify a task ID to delete."
+            ];
+        }
+        
+        try {
+            $taskResponse = Http::delete(url("/api/tasks/{$taskId}"));
+            
+            if (!$taskResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to delete task. Please try again."
+                ];
+            }
+            
+            return [
+                'content' => "✅ **Task #{$taskId} Deleted Successfully!**"
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task deleteTask Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => "❌ Sorry, I encountered an error while deleting the task. Please try again."
+            ];
+        }
+    }
+    
     // Helper methods
     private function extractUserName(string $message): ?string
     {
