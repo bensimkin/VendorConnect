@@ -423,7 +423,7 @@ class SmartTaskController extends Controller
             if ($existingTasksResponse->successful()) {
                 $existingTasks = $existingTasksResponse->json()['data'] ?? [];
                 
-                // Look for exact title match
+                // Look for exact title match first
                 foreach ($existingTasks as $task) {
                     if (strtolower($task['title']) === strtolower($title)) {
                         // Found existing task, reassign it instead of creating new one
@@ -434,6 +434,18 @@ class SmartTaskController extends Controller
                         ]);
                         return $this->reassignTask($task['id'], $assignedTo, $title);
                     }
+                }
+                
+                // If no exact match, try fuzzy matching
+                $bestMatch = $this->findBestTaskMatch($title, $existingTasks);
+                if ($bestMatch) {
+                    Log::info('Smart API createTask - Found fuzzy match, reassigning', [
+                        'existing_task_id' => $bestMatch['id'],
+                        'existing_title' => $bestMatch['title'],
+                        'requested_title' => $title,
+                        'assigned_to' => $assignedTo
+                    ]);
+                    return $this->reassignTask($bestMatch['id'], $assignedTo, $title);
                 }
             }
         } catch (\Exception $e) {
@@ -644,6 +656,63 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             return false;
         }
+    }
+    
+    /**
+     * Find the best matching task using fuzzy matching
+     */
+    private function findBestTaskMatch(string $searchTitle, array $tasks): ?array
+    {
+        $searchTitle = strtolower(trim($searchTitle));
+        $bestMatch = null;
+        $bestScore = 0;
+        
+        foreach ($tasks as $task) {
+            $taskTitle = strtolower(trim($task['title']));
+            $score = $this->calculateTaskMatchScore($searchTitle, $taskTitle);
+            
+            if ($score > $bestScore && $score >= 0.6) { // Minimum 60% match
+                $bestScore = $score;
+                $bestMatch = $task;
+            }
+        }
+        
+        return $bestMatch;
+    }
+    
+    /**
+     * Calculate similarity score between two task titles
+     */
+    private function calculateTaskMatchScore(string $searchTitle, string $taskTitle): float
+    {
+        // Remove common words that don't affect matching
+        $commonWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'];
+        $searchWords = array_diff(explode(' ', $searchTitle), $commonWords);
+        $taskWords = array_diff(explode(' ', $taskTitle), $commonWords);
+        
+        if (empty($searchWords) || empty($taskWords)) {
+            return 0;
+        }
+        
+        $matches = 0;
+        $totalWords = count($searchWords);
+        
+        foreach ($searchWords as $searchWord) {
+            foreach ($taskWords as $taskWord) {
+                // Exact word match
+                if ($searchWord === $taskWord) {
+                    $matches += 1;
+                    break;
+                }
+                // Partial word match (for plurals, etc.)
+                if (strpos($taskWord, $searchWord) !== false || strpos($searchWord, $taskWord) !== false) {
+                    $matches += 0.7;
+                    break;
+                }
+            }
+        }
+        
+        return $matches / $totalWords;
     }
     
     /**
@@ -1225,11 +1294,19 @@ class SmartTaskController extends Controller
                 if ($tasksResponse->successful()) {
                     $tasks = $tasksResponse->json()['data'] ?? [];
                     
-                    // Look for exact title match
+                    // Look for exact title match first
                     foreach ($tasks as $task) {
                         if (strtolower($task['title']) === strtolower($taskTitle)) {
                             $taskId = $task['id'];
                             break;
+                        }
+                    }
+                    
+                    // If no exact match, try fuzzy matching
+                    if (!$taskId) {
+                        $bestMatch = $this->findBestTaskMatch($taskTitle, $tasks);
+                        if ($bestMatch) {
+                            $taskId = $bestMatch['id'];
                         }
                     }
                 }
