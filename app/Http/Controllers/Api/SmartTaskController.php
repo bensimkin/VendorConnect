@@ -5,11 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Models\User;
-use App\Models\Task;
-use App\Models\Project;
-use App\Models\Status;
-use App\Models\Priority;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class SmartTaskController extends Controller
@@ -161,7 +157,7 @@ class SmartTaskController extends Controller
     }
     
     /**
-     * Get tasks for a specific user
+     * Get tasks for a specific user using existing API endpoints
      */
     private function getUserTasks(array $params): array
     {
@@ -173,58 +169,95 @@ class SmartTaskController extends Controller
             ];
         }
         
-        // Find user by name (case-insensitive, partial match)
-        $user = User::where(function($query) use ($userName) {
-            $query->where('name', 'like', "%{$userName}%")
-                  ->orWhere('email', 'like', "%{$userName}%")
-                  ->orWhere('first_name', 'like', "%{$userName}%")
-                  ->orWhere('last_name', 'like', "%{$userName}%");
-        })->first();
-        
-        if (!$user) {
-            $allUsers = User::select('name', 'email', 'first_name', 'last_name')->get();
-            $userList = $allUsers->map(function($u) {
-                $displayName = $u->name ?: trim($u->first_name . ' ' . $u->last_name);
-                return "• {$displayName} ({$u->email})";
-            })->join("\n");
+        try {
+            // Use the existing search endpoint to find users
+            $searchResponse = Http::get(url('/api/search'), [
+                'q' => $userName,
+                'type' => 'users'
+            ]);
+            
+            if (!$searchResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to search for users. Please try again."
+                ];
+            }
+            
+            $searchData = $searchResponse->json();
+            $users = $searchData['data']['users'] ?? [];
+            
+            if (empty($users)) {
+                // Get all users to show available options
+                $usersResponse = Http::get(url('/api/users'));
+                if ($usersResponse->successful()) {
+                    $allUsers = $usersResponse->json()['data'] ?? [];
+                    $userList = collect($allUsers)->map(function($u) {
+                        $displayName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
+                        return "• {$displayName} ({$u['email']})";
+                    })->join("\n");
+                    
+                    return [
+                        'content' => "❌ User '{$userName}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling or use a different name."
+                    ];
+                }
+                
+                return [
+                    'content' => "❌ User '{$userName}' not found. Please check the spelling and try again."
+                ];
+            }
+            
+            $user = $users[0]; // Take the first match
+            
+            // Use the existing tasks endpoint with user filter
+            $tasksResponse = Http::get(url('/api/tasks'), [
+                'user_id' => $user['id']
+            ]);
+            
+            if (!$tasksResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to fetch tasks. Please try again."
+                ];
+            }
+            
+            $tasksData = $tasksResponse->json();
+            $tasks = $tasksData['data'] ?? [];
+            
+            if (empty($tasks)) {
+                $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
+                return [
+                    'content' => "📋 {$displayName} has no tasks assigned.\n\n💡 You can create a task for them by saying: \"Create a task for {$displayName} to [action]\""
+                ];
+            }
+            
+            // Format tasks
+            $taskList = collect($tasks)->map(function($task) {
+                $status = $task['status']['name'] ?? 'Unknown';
+                $priority = $task['priority']['name'] ?? 'Medium';
+                $project = $task['project']['name'] ?? 'No Project';
+                $dueDate = $task['end_date'] ? date('M j, Y', strtotime($task['end_date'])) : 'No due date';
+                
+                return "🟡 **{$task['title']}**\n   └ 📊 {$status} | 🎯 {$priority} | 📁 {$project} | 🗓️ {$dueDate}";
+            })->join("\n\n");
+            
+            $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
             
             return [
-                'content' => "❌ User '{$userName}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling or use a different name."
+                'content' => "📋 **{$displayName}'s Tasks** (" . count($tasks) . " total)\n\n{$taskList}\n\n💡 Need to create a task? Just ask: \"Create a task for {$displayName} to [action]\"",
+                'data' => [
+                    'user' => $user,
+                    'tasks' => $tasks
+                ]
             ];
-        }
-        
-        // Get user's tasks
-        $tasks = Task::whereHas('users', function($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })->with(['users', 'status', 'priority', 'project'])->get();
-        
-        if ($tasks->isEmpty()) {
-            return [
-                'content' => "📋 {$user->name} has no tasks assigned.\n\n💡 You can create a task for them by saying: \"Create a task for {$user->name} to [action]\""
-            ];
-        }
-        
-        // Format tasks
-        $taskList = $tasks->map(function($task) {
-            $status = $task->status->name ?? 'Unknown';
-            $priority = $task->priority->name ?? 'Medium';
-            $project = $task->project->name ?? 'No Project';
-            $dueDate = $task->end_date ? $task->end_date->format('M j, Y') : 'No due date';
             
-            return "🟡 **{$task->title}**\n   └ 📊 {$status} | 🎯 {$priority} | 📁 {$project} | 🗓️ {$dueDate}";
-        })->join("\n\n");
-        
-        return [
-            'content' => "📋 **{$user->name}'s Tasks** ({$tasks->count()} total)\n\n{$taskList}\n\n💡 Need to create a task? Just ask: \"Create a task for {$user->name} to [action]\"",
-            'data' => [
-                'user' => $user,
-                'tasks' => $tasks
-            ]
-        ];
+        } catch (\Exception $e) {
+            Log::error('Smart Task getUserTasks Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => "❌ Sorry, I encountered an error while fetching user tasks. Please try again."
+            ];
+        }
     }
     
     /**
-     * Create a new task
+     * Create a new task using existing API endpoints
      */
     private function createTask(array $params): array
     {
@@ -240,101 +273,152 @@ class SmartTaskController extends Controller
             ];
         }
         
-        // Find user to assign to (case-insensitive, partial match)
-        $user = User::where(function($query) use ($assignedTo) {
-            $query->where('name', 'like', "%{$assignedTo}%")
-                  ->orWhere('email', 'like', "%{$assignedTo}%")
-                  ->orWhere('first_name', 'like', "%{$assignedTo}%")
-                  ->orWhere('last_name', 'like', "%{$assignedTo}%");
-        })->first();
-        
-        if (!$user) {
-            $allUsers = User::select('name', 'email', 'first_name', 'last_name')->get();
-            $userList = $allUsers->map(function($u) {
-                $displayName = $u->name ?: trim($u->first_name . ' ' . $u->last_name);
-                return "• {$displayName} ({$u->email})";
-            })->join("\n");
+        try {
+            // Use the existing search endpoint to find users
+            $searchResponse = Http::get(url('/api/search'), [
+                'q' => $assignedTo,
+                'type' => 'users'
+            ]);
+            
+            if (!$searchResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to search for users. Please try again."
+                ];
+            }
+            
+            $searchData = $searchResponse->json();
+            $users = $searchData['data']['users'] ?? [];
+            
+            if (empty($users)) {
+                // Get all users to show available options
+                $usersResponse = Http::get(url('/api/users'));
+                if ($usersResponse->successful()) {
+                    $allUsers = $usersResponse->json()['data'] ?? [];
+                    $userList = collect($allUsers)->map(function($u) {
+                        $displayName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
+                        return "• {$displayName} ({$u['email']})";
+                    })->join("\n");
+                    
+                    return [
+                        'content' => "❌ User '{$assignedTo}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling and try again."
+                    ];
+                }
+                
+                return [
+                    'content' => "❌ User '{$assignedTo}' not found. Please check the spelling and try again."
+                ];
+            }
+            
+            $user = $users[0]; // Take the first match
+            
+            // Use the existing tasks endpoint to create a task
+            $taskData = [
+                'title' => $title,
+                'description' => "Task created via Smart API: {$title}",
+                'status_id' => 20, // Active
+                'priority_id' => 2, // Medium
+                'project_id' => 19, // Default project
+                'start_date' => now()->format('Y-m-d'),
+                'end_date' => now()->addDays(7)->format('Y-m-d'),
+                'is_repeating' => $isRecurring,
+                'repeat_frequency' => $isRecurring ? 'weekly' : null,
+                'repeat_interval' => $isRecurring ? 1 : null,
+                'user_ids' => [$user['id']] // Assign to user
+            ];
+            
+            $taskResponse = Http::post(url('/api/tasks'), $taskData);
+            
+            if (!$taskResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to create task. Please try again."
+                ];
+            }
+            
+            $task = $taskResponse->json()['data'] ?? [];
+            $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
+            $recurringText = $isRecurring ? " (recurring weekly)" : "";
             
             return [
-                'content' => "❌ User '{$assignedTo}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling and try again."
+                'content' => "✅ **Task Created Successfully!**\n\n🟡 **{$task['title']}**\n   └ 👤 Assigned to: {$displayName}\n   └ 📊 Status: Active\n   └ 🎯 Priority: Medium\n   └ 🗓️ Due: " . now()->addDays(7)->format('M j, Y') . "{$recurringText}\n\n💡 You can check on this task anytime by asking: \"What tasks does {$displayName} have?\"",
+                'data' => [
+                    'task' => $task,
+                    'user' => $user
+                ]
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task createTask Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => "❌ Sorry, I encountered an error while creating the task. Please try again."
             ];
         }
-        
-        // Create task
-        $task = Task::create([
-            'title' => $title,
-            'description' => "Task created via Discord: {$title}",
-            'status_id' => 20, // Active
-            'priority_id' => 2, // Medium
-            'project_id' => 19, // Default project
-            'start_date' => now(),
-            'end_date' => now()->addDays(7),
-            'is_repeating' => $isRecurring,
-            'repeat_frequency' => $isRecurring ? 'weekly' : null,
-            'repeat_interval' => $isRecurring ? 1 : null,
-        ]);
-        
-        // Assign to user
-        $task->users()->attach($user->id);
-        
-        $recurringText = $isRecurring ? " (recurring weekly)" : "";
-        
-        return [
-            'content' => "✅ **Task Created Successfully!**\n\n🟡 **{$task->title}**\n   └ 👤 Assigned to: {$user->name}\n   └ 📊 Status: Active\n   └ 🎯 Priority: Medium\n   └ 🗓️ Due: " . now()->addDays(7)->format('M j, Y') . "{$recurringText}\n\n💡 You can check on this task anytime by asking: \"What tasks does {$user->name} have?\"",
-            'data' => [
-                'task' => $task,
-                'user' => $user
-            ]
-        ];
     }
     
     /**
-     * List tasks with filters
+     * List tasks with filters using existing API endpoints
      */
     private function listTasks(array $analysis): array
     {
         $filters = $analysis['filters'] ?? [];
         
-        $query = Task::with(['users', 'status', 'priority', 'project']);
-        
-        // Apply filters
-        if (isset($filters['status'])) {
-            $query->where('status_id', $filters['status']);
-        }
-        
-        if (isset($filters['user_id'])) {
-            $query->whereHas('users', function($q) use ($filters) {
-                $q->where('user_id', $filters['user_id']);
-            });
-        }
-        
-        $tasks = $query->get();
-        
-        if ($tasks->isEmpty()) {
+        try {
+            // Build query parameters for the existing tasks endpoint
+            $queryParams = [];
+            
+            if (isset($filters['status'])) {
+                $queryParams['status_id'] = $filters['status'];
+            }
+            
+            if (isset($filters['user_id'])) {
+                $queryParams['user_id'] = $filters['user_id'];
+            }
+            
+            // Use the existing tasks endpoint
+            $tasksResponse = Http::get(url('/api/tasks'), $queryParams);
+            
+            if (!$tasksResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to fetch tasks. Please try again."
+                ];
+            }
+            
+            $tasksData = $tasksResponse->json();
+            $tasks = $tasksData['data'] ?? [];
+            
+            if (empty($tasks)) {
+                return [
+                    'content' => "📋 No tasks found matching your criteria.\n\n💡 Try asking:\n• \"What tasks are active?\"\n• \"Show me all tasks\"\n• \"What tasks does [name] have?\""
+                ];
+            }
+            
+            // Format tasks
+            $taskList = collect($tasks)->map(function($task) {
+                $assignees = collect($task['users'] ?? [])->map(function($u) {
+                    return trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
+                })->join(', ');
+                $status = $task['status']['name'] ?? 'Unknown';
+                $priority = $task['priority']['name'] ?? 'Medium';
+                $project = $task['project']['name'] ?? 'No Project';
+                $dueDate = $task['end_date'] ? date('M j, Y', strtotime($task['end_date'])) : 'No due date';
+                
+                return "🟡 **{$task['title']}**\n   └ 👤 {$assignees} | 📊 {$status} | 🎯 {$priority} | 📁 {$project} | 🗓️ {$dueDate}";
+            })->join("\n\n");
+            
             return [
-                'content' => "📋 No tasks found matching your criteria.\n\n💡 Try asking:\n• \"What tasks are active?\"\n• \"Show me all tasks\"\n• \"What tasks does [name] have?\""
+                'content' => "📋 **Tasks Found** (" . count($tasks) . " total)\n\n{$taskList}\n\n💡 Need to create a task? Just ask: \"Create a task for [name] to [action]\"",
+                'data' => $tasks
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task listTasks Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => "❌ Sorry, I encountered an error while fetching tasks. Please try again."
             ];
         }
-        
-        // Format tasks
-        $taskList = $tasks->map(function($task) {
-            $assignees = $task->users->map(fn($u) => $u->name)->join(', ');
-            $status = $task->status->name ?? 'Unknown';
-            $priority = $task->priority->name ?? 'Medium';
-            $project = $task->project->name ?? 'No Project';
-            $dueDate = $task->end_date ? $task->end_date->format('M j, Y') : 'No due date';
-            
-            return "🟡 **{$task->title}**\n   └ 👤 {$assignees} | 📊 {$status} | 🎯 {$priority} | 📁 {$project} | 🗓️ {$dueDate}";
-        })->join("\n\n");
-        
-        return [
-            'content' => "📋 **Tasks Found** ({$tasks->count()} total)\n\n{$taskList}\n\n💡 Need to create a task? Just ask: \"Create a task for [name] to [action]\"",
-            'data' => $tasks
-        ];
     }
     
     /**
-     * Get task status
+     * Get task status using existing API endpoints
      */
     private function getTaskStatus(array $analysis): array
     {
@@ -346,24 +430,49 @@ class SmartTaskController extends Controller
             ];
         }
         
-        $task = Task::with(['users', 'status', 'priority', 'project'])->find($taskId);
-        
-        if (!$task) {
+        try {
+            // Use the existing tasks endpoint to get a specific task
+            $taskResponse = Http::get(url("/api/tasks/{$taskId}"));
+            
+            if (!$taskResponse->successful()) {
+                if ($taskResponse->status() === 404) {
+                    return [
+                        'content' => "❌ Task #{$taskId} not found. Please check the task ID and try again."
+                    ];
+                }
+                return [
+                    'content' => "❌ Unable to fetch task. Please try again."
+                ];
+            }
+            
+            $taskData = $taskResponse->json();
+            $task = $taskData['data'] ?? [];
+            
+            if (empty($task)) {
+                return [
+                    'content' => "❌ Task #{$taskId} not found. Please check the task ID and try again."
+                ];
+            }
+            
+            $assignees = collect($task['users'] ?? [])->map(function($u) {
+                return trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
+            })->join(', ');
+            $status = $task['status']['name'] ?? 'Unknown';
+            $priority = $task['priority']['name'] ?? 'Medium';
+            $project = $task['project']['name'] ?? 'No Project';
+            $dueDate = $task['end_date'] ? date('M j, Y', strtotime($task['end_date'])) : 'No due date';
+            
             return [
-                'content' => "❌ Task #{$taskId} not found. Please check the task ID and try again."
+                'content' => "📊 **Task #{$task['id']} Status**\n\n🟡 **{$task['title']}**\n   └ 👤 Assigned to: {$assignees}\n   └ 📊 Status: {$status}\n   └ 🎯 Priority: {$priority}\n   └ 📁 Project: {$project}\n   └ 🗓️ Due: {$dueDate}\n\n💡 Need to update this task? Just ask: \"Mark task #{$task['id']} as completed\"",
+                'data' => $task
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task getTaskStatus Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => "❌ Sorry, I encountered an error while fetching task status. Please try again."
             ];
         }
-        
-        $assignees = $task->users->map(fn($u) => $u->name)->join(', ');
-        $status = $task->status->name ?? 'Unknown';
-        $priority = $task->priority->name ?? 'Medium';
-        $project = $task->project->name ?? 'No Project';
-        $dueDate = $task->end_date ? $task->end_date->format('M j, Y') : 'No due date';
-        
-        return [
-            'content' => "📊 **Task #{$task->id} Status**\n\n🟡 **{$task->title}**\n   └ 👤 Assigned to: {$assignees}\n   └ 📊 Status: {$status}\n   └ 🎯 Priority: {$priority}\n   └ 📁 Project: {$project}\n   └ 🗓️ Due: {$dueDate}\n\n💡 Need to update this task? Just ask: \"Mark task #{$task->id} as completed\"",
-            'data' => $task
-        ];
     }
     
     // Helper methods
