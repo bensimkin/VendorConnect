@@ -1381,7 +1381,7 @@ class SmartTaskController extends Controller
             
             if (!$searchResponse->successful()) {
                 return [
-                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI'm having trouble searching right now."
+                    'content' => "😬 Oops! Something went wrong on my end. Let me try to fix that for you.\n\nI'm having trouble searching right now.\n\n💡 **What you can do:**\n• Try rephrasing your request\n• Ask me to list available options\n• Try a simpler version of what you're looking for\n• Let me know if this keeps happening!"
                 ];
             }
             
@@ -1415,7 +1415,7 @@ class SmartTaskController extends Controller
             }
             
             if (empty($results['tasks']) && empty($results['users']) && empty($results['projects'])) {
-                $content = $this->generateConversationalResponse('no_search_results', ['query' => $query]);
+                $content = "🤔 Hmm, I couldn't find anything matching \"{$query}\". Let me help you out!\n\n💡 **Try these instead:**\n• Use simpler keywords (e.g., \"tasks\" instead of \"quarterly report tasks\")\n• Check your spelling\n• Ask me to list all tasks, users, or projects to see what's available\n• Try searching for just part of what you're looking for";
             }
             
             return [
