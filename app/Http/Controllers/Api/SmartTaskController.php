@@ -360,9 +360,9 @@ class SmartTaskController extends Controller
         
         // Format tasks
             $taskList = collect($tasks)->map(function($task) {
-                $status = $task['status']['name'] ?? 'Unknown';
-                $priority = $task['priority']['name'] ?? 'Medium';
-                $project = $task['project']['name'] ?? 'No Project';
+                $status = $task['status']['title'] ?? 'Unknown';
+                $priority = $task['priority']['title'] ?? 'Medium';
+                $project = $task['project']['title'] ?? 'No Project';
                 $dueDate = $task['end_date'] ? date('M j, Y', strtotime($task['end_date'])) : 'No due date';
                 
                 return "🟡 **{$task['title']}**\n   └ 📊 {$status} | 🎯 {$priority} | 📁 {$project} | 🗓️ {$dueDate}";
@@ -1132,9 +1132,9 @@ class SmartTaskController extends Controller
             $assignees = collect($task['users'] ?? [])->map(function($u) {
                 return trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
             })->join(', ');
-            $status = $task['status']['name'] ?? 'Unknown';
-            $priority = $task['priority']['name'] ?? 'Medium';
-            $project = $task['project']['name'] ?? 'No Project';
+            $status = $task['status']['title'] ?? 'Unknown';
+            $priority = $task['priority']['title'] ?? 'Medium';
+            $project = $task['project']['title'] ?? 'No Project';
             $dueDate = $task['end_date'] ? date('M j, Y', strtotime($task['end_date'])) : 'No due date';
             
             return [
