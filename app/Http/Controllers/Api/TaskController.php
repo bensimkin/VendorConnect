@@ -893,7 +893,7 @@ class TaskController extends BaseController
 
             $messageData = [
                 'message_text' => $request->message ?? $request->message_text,
-                'sender_id' => Auth::user()->id,
+                'sender_id' => $request->user_id ?? Auth::user()->id,
             ];
 
             if ($request->hasFile('file')) {
