@@ -65,13 +65,13 @@ class SmartTaskController extends Controller
                 Log::info('Smart API using OpenAI fallback', [
                     'reason' => 'No action or unknown action',
                     'action' => $action,
-                    'message' => $originalMessage
-                ]);
-                
+                'message' => $originalMessage
+            ]);
+            
                 $result = $this->openAIFallback($originalMessage, $params);
             } else {
-                // Execute the action determined by n8n AI
-                $result = $this->executeAction($action, $params, $originalMessage);
+            // Execute the action determined by n8n AI
+            $result = $this->executeAction($action, $params, $originalMessage);
             }
             
             Log::info('Smart Task Response', [
@@ -117,7 +117,7 @@ class SmartTaskController extends Controller
             
             return response()->json([
                 'success' => false,
-                'content' => "❌ Sorry, I encountered an error: " . $e->getMessage(),
+                'content' => $this->generateConversationalResponse('generic_error') . "\n\n**Technical details:** " . $e->getMessage(),
                 'error' => $e->getMessage()
             ]);
         }
@@ -254,7 +254,7 @@ class SmartTaskController extends Controller
             
             if (!$usersResponse->successful()) {
                 return [
-                    'content' => "❌ Unable to fetch users. Please try again."
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI'm having trouble accessing the user list right now."
                 ];
             }
             
@@ -331,7 +331,7 @@ class SmartTaskController extends Controller
             })->join("\n");
             
             return [
-                'content' => "❌ User '{$userName}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling or use a different name."
+                'content' => $this->generateConversationalResponse('user_not_found', ['user' => $userName]) . "\n\n👥 **Available users:**\n{$userList}"
             ];
         }
         
@@ -343,8 +343,8 @@ class SmartTaskController extends Controller
             ]);
             
             if (!$tasksResponse->successful()) {
-                return [
-                    'content' => "❌ Unable to fetch tasks. Please try again."
+            return [
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI'm having trouble accessing the task list right now."
                 ];
             }
             
@@ -366,7 +366,7 @@ class SmartTaskController extends Controller
                 $dueDate = $task['end_date'] ? date('M j, Y', strtotime($task['end_date'])) : 'No due date';
                 
                 return "🟡 **{$task['title']}**\n   └ 📊 {$status} | 🎯 {$priority} | 📁 {$project} | 🗓️ {$dueDate}";
-            })->join("\n\n");
+        })->join("\n\n");
             
             $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
         
@@ -381,7 +381,7 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart Task getUserTasks Error', ['error' => $e->getMessage()]);
             return [
-                'content' => "❌ Sorry, I encountered an error while fetching user tasks. Please try again."
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI ran into trouble getting the user's tasks."
             ];
         }
     }
@@ -464,7 +464,7 @@ class SmartTaskController extends Controller
             
             if (!$usersResponse->successful()) {
                 return [
-                    'content' => "❌ Unable to fetch users. Please try again."
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI'm having trouble accessing the user list right now."
                 ];
             }
             
@@ -538,10 +538,10 @@ class SmartTaskController extends Controller
                 $userList = collect($allUsers)->map(function($u) {
                     $displayName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
                     return "• {$displayName} ({$u['email']})";
-                })->join("\n");
+            })->join("\n");
             
             return [
-                'content' => "❌ User '{$assignedTo}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling and try again."
+                'content' => $this->generateConversationalResponse('user_not_found', ['user' => $assignedTo]) . "\n\n👥 **Available users:**\n{$userList}"
             ];
         }
         
@@ -566,7 +566,7 @@ class SmartTaskController extends Controller
             
             if (!$taskResponse->successful()) {
                 return [
-                    'content' => "❌ Unable to create task. Please try again."
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI couldn't create that task for you right now."
                 ];
             }
             
@@ -585,7 +585,7 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart Task createTask Error', ['error' => $e->getMessage()]);
             return [
-                'content' => "❌ Sorry, I encountered an error while creating the task. Please try again."
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble creating that task for you."
             ];
         }
     }
@@ -746,6 +746,111 @@ class SmartTaskController extends Controller
     }
     
     /**
+     * Generate conversational and helpful error responses
+     */
+    private function generateConversationalResponse(string $type, array $context = []): string
+    {
+        $responses = [
+            'no_search_results' => [
+                "🤔 Hmm, I couldn't find anything matching \"{$context['query']}\". Let me help you out!",
+                "🔍 I searched high and low, but \"{$context['query']}\" didn't match anything in our system.",
+                "😅 Oops! Nothing came up for \"{$context['query']}\". Maybe we can try something else?",
+                "🤷‍♂️ I'm drawing a blank on \"{$context['query']}\". Let's try a different approach!"
+            ],
+            'user_not_found' => [
+                "👤 I don't see anyone named \"{$context['user']}\" in our team. Let me show you who's available:",
+                "🤔 Hmm, \"{$context['user']}\" doesn't ring a bell. Here are the people I know:",
+                "😅 I can't find \"{$context['user']}\" in our user list. Maybe check out these folks:",
+                "👥 \"{$context['user']}\" isn't in our system, but here's who I can find:"
+            ],
+            'task_not_found' => [
+                "📋 I don't see a task called \"{$context['task']}\" anywhere. Let me help you find what you're looking for!",
+                "🤔 Hmm, \"{$context['task']}\" doesn't match any of our current tasks. Want to see what's available?",
+                "😅 I'm not finding \"{$context['task']}\" in our task list. Maybe we can try something else?",
+                "📝 \"{$context['task']}\" isn't showing up in our tasks. Let me show you what we have:"
+            ],
+            'project_not_found' => [
+                "📁 I don't see a project called \"{$context['project']}\" in our system. Here's what I can find:",
+                "🤔 \"{$context['project']}\" doesn't match any of our projects. Maybe check out these:",
+                "😅 I can't locate \"{$context['project']}\" in our project list. Here are the ones I know:",
+                "📂 \"{$context['project']}\" isn't in our projects. Want to see what's available?"
+            ],
+            'api_error' => [
+                "😬 Oops! Something went wrong on my end. Let me try to fix that for you.",
+                "🤖 I hit a little snag there. Give me a moment to sort this out.",
+                "😅 Well, that didn't go as planned. Let me try a different approach.",
+                "🔄 I'm having a bit of trouble with that request. Let me try again."
+            ],
+            'generic_error' => [
+                "😬 Something unexpected happened. Let me help you get back on track.",
+                "🤖 I encountered an issue, but don't worry - I'm here to help!",
+                "😅 Oops! That didn't work as expected. Let's try something else.",
+                "🔄 I hit a bump in the road. Let me find a better way to help you."
+            ]
+        ];
+        
+        $typeResponses = $responses[$type] ?? $responses['generic_error'];
+        $baseResponse = $typeResponses[array_rand($typeResponses)];
+        
+        // Add helpful suggestions based on context
+        $suggestions = [];
+        
+        switch ($type) {
+            case 'no_search_results':
+                $suggestions = [
+                    "💡 **Try these instead:**",
+                    "• Use simpler keywords (e.g., \"tasks\" instead of \"quarterly report tasks\")",
+                    "• Check your spelling",
+                    "• Ask me to list all tasks, users, or projects to see what's available",
+                    "• Try searching for just part of what you're looking for"
+                ];
+                break;
+                
+            case 'user_not_found':
+                $suggestions = [
+                    "💡 **Tips for finding users:**",
+                    "• Try just the first name (e.g., \"John\" instead of \"John Smith\")",
+                    "• Check the spelling",
+                    "• Ask me to list all users to see everyone available"
+                ];
+                break;
+                
+            case 'task_not_found':
+                $suggestions = [
+                    "💡 **To find tasks, try:**",
+                    "• Ask me to list all tasks",
+                    "• Search for part of the task name",
+                    "• Check the spelling",
+                    "• Ask \"What tasks does [user] have?\" to see user-specific tasks"
+                ];
+                break;
+                
+            case 'project_not_found':
+                $suggestions = [
+                    "💡 **To find projects, try:**",
+                    "• Ask me to list all projects",
+                    "• Use simpler project names",
+                    "• Check the spelling",
+                    "• Ask \"What projects are active?\" to see current projects"
+                ];
+                break;
+                
+            case 'api_error':
+            case 'generic_error':
+                $suggestions = [
+                    "💡 **What you can do:**",
+                    "• Try rephrasing your request",
+                    "• Ask me to list available options",
+                    "• Try a simpler version of what you're looking for",
+                    "• Let me know if this keeps happening!"
+                ];
+                break;
+        }
+        
+        return $baseResponse . "\n\n" . implode("\n", $suggestions);
+    }
+    
+    /**
      * Create a disambiguation response when multiple tasks match
      */
     private function createDisambiguationResponse(string $searchTitle, array $matches): array
@@ -808,7 +913,7 @@ class SmartTaskController extends Controller
             
             if (!$usersResponse->successful()) {
                 return [
-                    'content' => "❌ Unable to fetch users. Please try again."
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI'm having trouble accessing the user list right now."
                 ];
             }
             
@@ -884,9 +989,9 @@ class SmartTaskController extends Controller
                     return "• {$displayName} ({$u['email']})";
                 })->join("\n");
                 
-                return [
-                    'content' => "❌ User '{$assignedTo}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling or use a different name."
-                ];
+            return [
+                'content' => $this->generateConversationalResponse('user_not_found', ['user' => $assignedTo]) . "\n\n👥 **Available users:**\n{$userList}"
+            ];
             }
             
             // Update the task to assign it to the new user
@@ -961,7 +1066,7 @@ class SmartTaskController extends Controller
                     'headers' => $tasksResponse->headers()
                 ]);
                 return [
-                    'content' => "❌ Unable to fetch tasks. Please try again."
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI'm having trouble accessing the task list right now."
                 ];
             }
             
@@ -995,7 +1100,7 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart Task listTasks Error', ['error' => $e->getMessage()]);
             return [
-                'content' => "❌ Sorry, I encountered an error while fetching tasks. Please try again."
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble getting the task list."
             ];
         }
     }
@@ -1016,10 +1121,10 @@ class SmartTaskController extends Controller
         try {
             // Use the existing tasks endpoint to get a specific task
             $taskResponse = $this->getHttpClient()->get(secure_url("/api/v1/tasks/{$taskId}"));
-            
+        
             if (!$taskResponse->successful()) {
                 if ($taskResponse->status() === 404) {
-                    return [
+            return [
                         'content' => "❌ Task not found. Please check the task details and try again."
                     ];
                 }
@@ -1032,7 +1137,7 @@ class SmartTaskController extends Controller
             $task = $taskData['data'] ?? [];
             
             if (empty($task)) {
-                return [
+        return [
                     'content' => "❌ Task not found. Please check the task details and try again."
                 ];
             }
@@ -1047,8 +1152,8 @@ class SmartTaskController extends Controller
             
             return [
                 'content' => "📊 **Task Status**\n\n🟡 **{$task['title']}**\n   └ 👤 Assigned to: {$assignees}\n   └ 📊 Status: {$status}\n   └ 🎯 Priority: {$priority}\n   └ 📁 Project: {$project}\n   └ 🗓️ Due: {$dueDate}\n\n💡 Need to update this task? Just ask: \"Mark this task as completed\"",
-                'data' => $task
-            ];
+            'data' => $task
+        ];
             
         } catch (\Exception $e) {
             Log::error('Smart Task getTaskStatus Error', ['error' => $e->getMessage()]);
@@ -1068,7 +1173,7 @@ class SmartTaskController extends Controller
             
             if (!$usersResponse->successful()) {
                 return [
-                    'content' => "❌ Unable to fetch users. Please try again."
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI'm having trouble accessing the user list right now."
                 ];
             }
             
@@ -1109,7 +1214,7 @@ class SmartTaskController extends Controller
             
             if (!$projectsResponse->successful()) {
                 return [
-                    'content' => "❌ Unable to fetch projects. Please try again."
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI'm having trouble accessing the project list right now."
                 ];
             }
             
@@ -1158,7 +1263,7 @@ class SmartTaskController extends Controller
             
             if (!$projectsResponse->successful()) {
                 return [
-                    'content' => "❌ Unable to fetch projects. Please try again."
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI'm having trouble accessing the project list right now."
                 ];
             }
             
@@ -1183,9 +1288,9 @@ class SmartTaskController extends Controller
                     return "• {$p['title']}";
                 })->join("\n");
                 
-                return [
-                    'content' => "❌ Project '{$projectName}' not found.\n\n📁 Available projects:\n{$projectList}\n\nPlease check the spelling or use a different name."
-                ];
+            return [
+                'content' => $this->generateConversationalResponse('project_not_found', ['project' => $projectName]) . "\n\n📁 **Available projects:**\n{$projectList}"
+            ];
             }
             
             // Format project progress information
@@ -1276,7 +1381,7 @@ class SmartTaskController extends Controller
             
             if (!$searchResponse->successful()) {
                 return [
-                    'content' => "❌ Unable to search. Please try again."
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI'm having trouble searching right now."
                 ];
             }
             
@@ -1310,7 +1415,7 @@ class SmartTaskController extends Controller
             }
             
             if (empty($results['tasks']) && empty($results['users']) && empty($results['projects'])) {
-                $content = "🔍 **No results found for '{$query}'**\n\nTry different search terms or check spelling.";
+                $content = $this->generateConversationalResponse('no_search_results', ['query' => $query]);
             }
             
             return [
@@ -1412,7 +1517,7 @@ class SmartTaskController extends Controller
             
             if (!$taskResponse->successful()) {
                 return [
-                    'content' => "❌ Unable to update task. Please try again."
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI couldn't update that task for you right now."
                 ];
             }
             
@@ -1460,7 +1565,7 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart Task updateTask Error', ['error' => $e->getMessage()]);
             return [
-                'content' => "❌ Sorry, I encountered an error while updating the task. Please try again."
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble updating that task for you."
             ];
         }
     }
@@ -1608,7 +1713,7 @@ class SmartTaskController extends Controller
             
             if (!$taskResponse->successful()) {
                 return [
-                    'content' => "❌ Unable to delete task. Please try again."
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI couldn't delete that task for you right now."
                 ];
             }
             
@@ -1619,7 +1724,7 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart Task deleteTask Error', ['error' => $e->getMessage()]);
             return [
-                'content' => "❌ Sorry, I encountered an error while deleting the task. Please try again."
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble deleting that task for you."
             ];
         }
     }
