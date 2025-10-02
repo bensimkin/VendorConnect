@@ -56,8 +56,19 @@ class TaskController extends BaseController
             // Apply filters
             if ($request->has('status_id')) {
                 $query->where('status_id', $request->status_id);
+            } elseif ($request->has('status_filter')) {
+                // Handle special status filters
+                $statusFilter = $request->status_filter;
+                if ($statusFilter === 'active') {
+                    // Show only active tasks (exclude archived and completed)
+                    $excludeStatuses = Status::whereIn('slug', ['archive', 'completed'])->pluck('id');
+                    if ($excludeStatuses->isNotEmpty()) {
+                        $query->whereNotIn('status_id', $excludeStatuses);
+                    }
+                }
+                // For 'all' or any other value, show all tasks (no additional filtering)
             } else {
-                // By default, exclude archived and completed tasks
+                // By default, show active tasks (exclude archived and completed)
                 $excludeStatuses = Status::whereIn('slug', ['archive', 'completed'])->pluck('id');
                 if ($excludeStatuses->isNotEmpty()) {
                     $query->whereNotIn('status_id', $excludeStatuses);

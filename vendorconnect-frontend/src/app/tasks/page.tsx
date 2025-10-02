@@ -94,7 +94,7 @@ function TasksPageContent() {
   };
 
   const [searchTerm, setSearchTerm] = useState(getInitialFilterValue('search', ''));
-  const [selectedStatus, setSelectedStatus] = useState(getInitialFilterValue('status'));
+  const [selectedStatus, setSelectedStatus] = useState(getInitialFilterValue('status', 'active'));
   const [selectedProject, setSelectedProject] = useState(getInitialFilterValue('project'));
   const [selectedClient, setSelectedClient] = useState(getInitialFilterValue('client'));
   const [selectedTaskType, setSelectedTaskType] = useState(getInitialFilterValue('taskType'));
@@ -155,7 +155,12 @@ function TasksPageContent() {
       if (searchQuery) {
         params.append('search', searchQuery);
       }
-      if (selectedStatus !== 'all') {
+      if (selectedStatus === 'all') {
+        params.append('status_filter', 'all');
+      } else if (selectedStatus === 'active') {
+        params.append('status_filter', 'active');
+      } else {
+        // Specific status ID selected
         params.append('status_id', selectedStatus);
       }
       if (selectedProject !== 'all') {
@@ -225,7 +230,7 @@ function TasksPageContent() {
   };
 
   const clearAllFilters = () => {
-    setSelectedStatus('all');
+    setSelectedStatus('active');
     setSelectedProject('all');
     setSelectedClient('all');
     setSelectedTaskType('all');
@@ -246,7 +251,7 @@ function TasksPageContent() {
     router.replace(window.location.pathname, { scroll: false });
   };
 
-  const hasActiveFilters = selectedStatus !== 'all' || 
+  const hasActiveFilters = selectedStatus !== 'active' || 
     selectedProject !== 'all' || 
     selectedClient !== 'all' || 
     selectedTaskType !== 'all' || 
@@ -342,6 +347,7 @@ function TasksPageContent() {
                         <SelectValue placeholder="All Statuses" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="active">Active Tasks</SelectItem>
                         <SelectItem value="all">All Statuses</SelectItem>
                         {statuses.map((status) => (
                           <SelectItem key={status.id} value={status.id.toString()}>
@@ -441,14 +447,17 @@ function TasksPageContent() {
               {/* Active Filters Display */}
               {hasActiveFilters && (
                 <div className="flex flex-wrap gap-2">
-                  {selectedStatus !== 'all' && (
+                  {selectedStatus !== 'active' && (
                     <Badge variant="secondary" className="flex items-center gap-1">
-                      Status: {statuses.find(s => s.id.toString() === selectedStatus)?.title || selectedStatus}
+                      Status: {
+                        selectedStatus === 'all' ? 'All Statuses' :
+                        statuses.find(s => s.id.toString() === selectedStatus)?.title || selectedStatus
+                      }
                       <X 
                         className="h-3 w-3 cursor-pointer" 
                         onClick={() => {
-                          setSelectedStatus('all');
-                          updateFilterPersistence('status', 'all');
+                          setSelectedStatus('active');
+                          updateFilterPersistence('status', 'active');
                         }}
                       />
                     </Badge>
@@ -643,7 +652,7 @@ function TasksPageContent() {
         ) : (
           <div className="text-center py-12">
             <p className="text-muted-foreground">
-              {searchTerm || selectedStatus !== 'all' 
+              {searchTerm || selectedStatus !== 'active' 
                 ? 'No tasks found matching your criteria.' 
                 : 'No tasks available. Create your first task to get started!'}
             </p>
