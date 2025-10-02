@@ -357,6 +357,9 @@ class SmartTaskController extends Controller
         $assignedTo = $params['user_name'] ?? null;
         $isRecurring = $params['is_repeating'] ?? false;
         $repeatFrequency = $params['repeat_frequency'] ?? null;
+        $priority = $params['priority'] ?? null;
+        $dueDate = $params['due_date'] ?? null;
+        $projectId = $params['project_id'] ?? null;
         
         Log::info('Smart API createTask - Starting task creation', [
             'title' => $title,
@@ -513,12 +516,12 @@ class SmartTaskController extends Controller
             // Use the existing tasks endpoint to create a task
             $taskData = [
             'title' => $title,
-                'description' => "Task created via Smart API: {$title}",
+                'description' => $description ?: "Task created via Smart API: {$title}",
             'status_id' => 20, // Active
-            'priority_id' => 2, // Medium
-            'project_id' => 19, // Default project
+            'priority_id' => $this->getPriorityId($priority) ?? 2, // Default to Medium
+            'project_id' => $projectId ?? 19, // Default project
                 'start_date' => now()->format('Y-m-d'),
-                'end_date' => now()->addDays(7)->format('Y-m-d'),
+                'end_date' => $dueDate ? \Carbon\Carbon::parse($dueDate)->format('Y-m-d') : now()->addDays(7)->format('Y-m-d'),
             'is_repeating' => $isRecurring,
             'repeat_frequency' => $isRecurring ? 'weekly' : null,
             'repeat_interval' => $isRecurring ? 1 : null,
@@ -551,6 +554,25 @@ class SmartTaskController extends Controller
                 'content' => "❌ Sorry, I encountered an error while creating the task. Please try again."
             ];
         }
+    }
+    
+    /**
+     * Get priority ID from priority name
+     */
+    private function getPriorityId(?string $priority): ?int
+    {
+        if (!$priority) {
+            return null;
+        }
+        
+        $priorityMap = [
+            'low' => 1,
+            'medium' => 2,
+            'high' => 3,
+            'urgent' => 4,
+        ];
+        
+        return $priorityMap[strtolower($priority)] ?? null;
     }
     
     /**
