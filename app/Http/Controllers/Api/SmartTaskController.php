@@ -1437,7 +1437,7 @@ class SmartTaskController extends Controller
             if (empty($results['tasks']) && empty($results['users']) && empty($results['projects'])) {
                 // Check if this looks like a project status/progress query
                 $queryLower = strtolower($query);
-                $projectKeywords = ['status of project', 'progress of project', 'project status', 'project progress', 'how is project', 'project update'];
+                $projectKeywords = ['status of project', 'progress of project', 'project status', 'project progress', 'how is project', 'project update', 'how is', 'going', 'how are', 'how\'s'];
                 
                 $isProjectQuery = false;
                 foreach ($projectKeywords as $keyword) {
@@ -1501,6 +1501,12 @@ class SmartTaskController extends Controller
             '/project update (.+)/i',
             '/status of (.+) project/i',
             '/progress of (.+) project/i',
+            '/how is (.+) going/i',
+            '/how are (.+) going/i',
+            '/how\'s (.+) going/i',
+            '/how is (.+) project/i',
+            '/how are (.+) project/i',
+            '/how\'s (.+) project/i',
         ];
         
         foreach ($patterns as $pattern) {
