@@ -171,7 +171,7 @@ class SmartTaskController extends Controller
         
         try {
             // Use the existing search endpoint to find users
-            $searchResponse = Http::get(url('/api/search'), [
+            $searchResponse = Http::get(secure_secure_url('/api/search'), [
                 'q' => $userName,
                 'type' => 'users'
             ]);
@@ -187,7 +187,7 @@ class SmartTaskController extends Controller
             
             if (empty($users)) {
                 // Get all users to show available options
-                $usersResponse = Http::get(url('/api/users'));
+                $usersResponse = Http::get(secure_url('/api/users'));
                 if ($usersResponse->successful()) {
                     $allUsers = $usersResponse->json()['data'] ?? [];
                     $userList = collect($allUsers)->map(function($u) {
@@ -208,7 +208,7 @@ class SmartTaskController extends Controller
             $user = $users[0]; // Take the first match
             
             // Use the existing tasks endpoint with user filter
-            $tasksResponse = Http::get(url('/api/tasks'), [
+            $tasksResponse = Http::get(secure_url('/api/tasks'), [
                 'user_id' => $user['id']
             ]);
             
@@ -275,7 +275,7 @@ class SmartTaskController extends Controller
         
         try {
             // Use the existing search endpoint to find users
-            $searchResponse = Http::get(url('/api/search'), [
+            $searchResponse = Http::get(secure_url('/api/search'), [
                 'q' => $assignedTo,
                 'type' => 'users'
             ]);
@@ -291,7 +291,7 @@ class SmartTaskController extends Controller
             
             if (empty($users)) {
                 // Get all users to show available options
-                $usersResponse = Http::get(url('/api/users'));
+                $usersResponse = Http::get(secure_url('/api/users'));
                 if ($usersResponse->successful()) {
                     $allUsers = $usersResponse->json()['data'] ?? [];
                     $userList = collect($allUsers)->map(function($u) {
@@ -326,7 +326,7 @@ class SmartTaskController extends Controller
                 'user_ids' => [$user['id']] // Assign to user
             ];
             
-            $taskResponse = Http::post(url('/api/tasks'), $taskData);
+            $taskResponse = Http::post(secure_url('/api/tasks'), $taskData);
             
             if (!$taskResponse->successful()) {
                 return [
@@ -374,7 +374,7 @@ class SmartTaskController extends Controller
             }
             
             // Use the existing tasks endpoint
-            $tasksResponse = Http::get(url('/api/tasks'), $queryParams);
+            $tasksResponse = Http::get(secure_url('/api/tasks'), $queryParams);
             
             if (!$tasksResponse->successful()) {
                 return [
@@ -481,7 +481,7 @@ class SmartTaskController extends Controller
     private function getUsers(array $params): array
     {
         try {
-            $usersResponse = Http::get(url('/api/users'));
+            $usersResponse = Http::get(secure_url('/api/users'));
             
             if (!$usersResponse->successful()) {
                 return [
@@ -522,7 +522,7 @@ class SmartTaskController extends Controller
     private function getProjects(array $params): array
     {
         try {
-            $projectsResponse = Http::get(url('/api/projects'));
+            $projectsResponse = Http::get(secure_url('/api/projects'));
             
             if (!$projectsResponse->successful()) {
                 return [
@@ -562,7 +562,7 @@ class SmartTaskController extends Controller
     private function getDashboard(array $params): array
     {
         try {
-            $dashboardResponse = Http::get(url('/api/dashboard'));
+            $dashboardResponse = Http::get(secure_url('/api/dashboard'));
             
             if (!$dashboardResponse->successful()) {
                 return [
@@ -600,7 +600,7 @@ class SmartTaskController extends Controller
         }
         
         try {
-            $searchResponse = Http::get(url('/api/search'), [
+            $searchResponse = Http::get(secure_url('/api/search'), [
                 'q' => $query
             ]);
             
