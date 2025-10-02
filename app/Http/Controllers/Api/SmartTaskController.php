@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use OpenAI\Laravel\Facades\OpenAI;
+use OpenAI\Client;
 
 class SmartTaskController extends Controller
 {
@@ -1497,7 +1497,8 @@ class SmartTaskController extends Controller
                 'params' => $params
             ]);
             
-            $response = OpenAI::chat()->create([
+            $client = new Client($apiKey);
+            $response = $client->chat()->create([
                 'model' => 'gpt-4',
                 'messages' => [
                     ['role' => 'system', 'content' => $systemPrompt],
