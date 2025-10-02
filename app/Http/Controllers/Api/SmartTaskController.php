@@ -919,7 +919,7 @@ class SmartTaskController extends Controller
         }
         
         try {
-            $taskResponse = $this->getHttpClient()->put(secure_url("/api/tasks/{$taskId}"), $updateData);
+            $taskResponse = $this->getHttpClient()->put(secure_url("/api/v1/tasks/{$taskId}"), $updateData);
             
             if (!$taskResponse->successful()) {
                 return [
@@ -957,7 +957,7 @@ class SmartTaskController extends Controller
         }
         
         try {
-            $taskResponse = $this->getHttpClient()->put(secure_url("/api/tasks/{$taskId}"), [
+            $taskResponse = $this->getHttpClient()->put(secure_url("/api/v1/tasks/{$taskId}"), [
                 'status_id' => $statusId
             ]);
             
@@ -997,7 +997,7 @@ class SmartTaskController extends Controller
         }
         
         try {
-            $taskResponse = $this->getHttpClient()->put(secure_url("/api/tasks/{$taskId}"), [
+            $taskResponse = $this->getHttpClient()->put(secure_url("/api/v1/tasks/{$taskId}"), [
                 'priority_id' => $priorityId
             ]);
             
@@ -1036,7 +1036,7 @@ class SmartTaskController extends Controller
         }
         
         try {
-            $taskResponse = $this->getHttpClient()->delete(secure_url("/api/tasks/{$taskId}"));
+            $taskResponse = $this->getHttpClient()->delete(secure_url("/api/v1/tasks/{$taskId}"));
             
             if (!$taskResponse->successful()) {
                 return [
