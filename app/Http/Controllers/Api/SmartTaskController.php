@@ -1311,8 +1311,42 @@ class SmartTaskController extends Controller
             
             $task = $taskResponse->json()['data'] ?? [];
             
+            // Format the response with more details
+            $response = "✅ **Task Updated Successfully!**\n\n🟡 **{$task['title']}**";
+            
+            // Add assigned user info
+            if (!empty($task['users']) && is_array($task['users'])) {
+                $userNames = array_map(function($user) {
+                    return $user['first_name'] . ' ' . $user['last_name'];
+                }, $task['users']);
+                $response .= "\n   └ 👤 Assigned to: " . implode(', ', $userNames);
+            }
+            
+            // Add status info
+            if (!empty($task['status']['title'])) {
+                $response .= "\n   └ 📊 Status: " . $task['status']['title'];
+            }
+            
+            // Add priority info
+            if (!empty($task['priority']['title'])) {
+                $response .= "\n   └ 🎯 Priority: " . $task['priority']['title'];
+            }
+            
+            // Add due date info
+            if (!empty($task['end_date'])) {
+                $dueDate = \Carbon\Carbon::parse($task['end_date'])->format('M j, Y');
+                $response .= "\n   └ 🗓️ Due: " . $dueDate;
+            }
+            
+            // Add project info
+            if (!empty($task['project']['title'])) {
+                $response .= "\n   └ 📁 Project: " . $task['project']['title'];
+            } else {
+                $response .= "\n   └ 📁 Project: No Project";
+            }
+            
             return [
-                'content' => "✅ **Task Updated Successfully!**\n\n🟡 **{$task['title']}**",
+                'content' => $response,
                 'data' => $task
             ];
             
