@@ -394,7 +394,8 @@ class SmartTaskController extends Controller
         $title = $params['title'] ?? 'New Task';
         $description = $params['description'] ?? '';
         $assignedTo = $params['user_name'] ?? null;
-        $isRecurring = $params['is_repeating'] ?? false;
+        $isRecurring = $params['is_recurring'] ?? $params['is_repeating'] ?? false;
+        $recurringPattern = $params['recurring_pattern'] ?? null;
         $repeatFrequency = $params['repeat_frequency'] ?? null;
         $priority = $params['priority'] ?? null;
         $dueDate = $params['due_date'] ?? null;
@@ -549,8 +550,7 @@ class SmartTaskController extends Controller
             
             // Calculate start date for recurring tasks
             $startDate = now()->format('Y-m-d');
-            if ($isRecurring) {
-                $recurringPattern = $this->extractRecurringPattern($message);
+            if ($isRecurring && $recurringPattern) {
                 $startDate = $this->calculateRecurringStartDate($recurringPattern);
             }
             
