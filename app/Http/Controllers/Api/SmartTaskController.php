@@ -651,6 +651,39 @@ class SmartTaskController extends Controller
     }
     
     /**
+     * Check if a string looks like a date
+     */
+    private function isDateString(string $str): bool
+    {
+        $str = trim($str);
+        
+        // Check for common date patterns
+        $datePatterns = [
+            '/^\d{4}-\d{2}-\d{2}$/', // YYYY-MM-DD
+            '/^\d{2}\/\d{2}\/\d{4}$/', // MM/DD/YYYY
+            '/^\d{2}-\d{2}-\d{4}$/', // MM-DD-YYYY
+            '/^[a-zA-Z]+ \d{1,2}$/', // October 22
+            '/^[a-zA-Z]+ \d{1,2}, \d{4}$/', // October 22, 2025
+            '/^\d{1,2} [a-zA-Z]+$/', // 22 October
+            '/^\d{1,2} [a-zA-Z]+ \d{4}$/', // 22 October 2025
+        ];
+        
+        foreach ($datePatterns as $pattern) {
+            if (preg_match($pattern, $str)) {
+                return true;
+            }
+        }
+        
+        // Try to parse with Carbon
+        try {
+            \Carbon\Carbon::parse($str);
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+    
+    /**
      * Reassign an existing task to a new user
      */
     private function reassignTask(int $taskId, string $assignedTo, string $taskTitle): array
@@ -1184,13 +1217,17 @@ class SmartTaskController extends Controller
      */
     private function updateTask(array $params): array
     {
+        // Handle different parameter formats from n8n
         $taskId = $params['task_id'] ?? null;
-        $taskTitle = $params['title'] ?? null;
+        $taskTitle = $params['title'] ?? $params['task_id'] ?? null; // n8n sometimes uses task_id as title
         $updateData = $params['update_data'] ?? [];
         
         // Handle direct field updates (like due_date, priority, etc.)
         if (isset($params['due_date'])) {
             $updateData['end_date'] = \Carbon\Carbon::parse($params['due_date'])->format('Y-m-d');
+        } elseif (isset($params['description']) && $this->isDateString($params['description'])) {
+            // n8n sometimes sends date in description field
+            $updateData['end_date'] = \Carbon\Carbon::parse($params['description'])->format('Y-m-d');
         }
         if (isset($params['priority'])) {
             $updateData['priority_id'] = $this->getPriorityId($params['priority']);
