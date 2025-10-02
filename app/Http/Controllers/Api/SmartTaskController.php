@@ -241,12 +241,12 @@ class SmartTaskController extends Controller
                     $displayName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
                     return "• {$displayName} ({$u['email']})";
                 })->join("\n");
-                
-                return [
-                    'content' => "❌ User '{$userName}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling or use a different name."
-                ];
-            }
             
+            return [
+                'content' => "❌ User '{$userName}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling or use a different name."
+            ];
+        }
+        
             $user = $foundUser;
             
             // Use the existing tasks endpoint with user filter
@@ -498,7 +498,7 @@ class SmartTaskController extends Controller
             if (!$taskResponse->successful()) {
                 if ($taskResponse->status() === 404) {
                     return [
-                        'content' => "❌ Task #{$taskId} not found. Please check the task ID and try again."
+                        'content' => "❌ Task not found. Please check the task details and try again."
                     ];
                 }
                 return [
@@ -511,7 +511,7 @@ class SmartTaskController extends Controller
             
             if (empty($task)) {
                 return [
-                    'content' => "❌ Task #{$taskId} not found. Please check the task ID and try again."
+                    'content' => "❌ Task not found. Please check the task details and try again."
                 ];
             }
             
@@ -524,7 +524,7 @@ class SmartTaskController extends Controller
             $dueDate = $task['end_date'] ? date('M j, Y', strtotime($task['end_date'])) : 'No due date';
             
             return [
-                'content' => "📊 **Task #{$task['id']} Status**\n\n🟡 **{$task['title']}**\n   └ 👤 Assigned to: {$assignees}\n   └ 📊 Status: {$status}\n   └ 🎯 Priority: {$priority}\n   └ 📁 Project: {$project}\n   └ 🗓️ Due: {$dueDate}\n\n💡 Need to update this task? Just ask: \"Mark task #{$task['id']} as completed\"",
+                'content' => "📊 **Task Status**\n\n🟡 **{$task['title']}**\n   └ 👤 Assigned to: {$assignees}\n   └ 📊 Status: {$status}\n   └ 🎯 Priority: {$priority}\n   └ 📁 Project: {$project}\n   └ 🗓️ Due: {$dueDate}\n\n💡 Need to update this task? Just ask: \"Mark this task as completed\"",
                 'data' => $task
             ];
             
@@ -601,7 +601,7 @@ class SmartTaskController extends Controller
             }
             
             $projectList = collect($projects)->map(function($p) {
-                return "• {$p['title']} (ID: {$p['id']})";
+                return "• {$p['title']}";
             })->join("\n");
             
             return [
@@ -743,7 +743,7 @@ class SmartTaskController extends Controller
             $task = $taskResponse->json()['data'] ?? [];
             
             return [
-                'content' => "✅ **Task #{$taskId} Updated Successfully!**\n\n🟡 **{$task['title']}**",
+                'content' => "✅ **Task Updated Successfully!**\n\n🟡 **{$task['title']}**",
                 'data' => $task
             ];
             
@@ -783,7 +783,7 @@ class SmartTaskController extends Controller
             $task = $taskResponse->json()['data'] ?? [];
             
             return [
-                'content' => "✅ **Task #{$taskId} Status Updated!**\n\n🟡 **{$task['title']}**\n   └ 📊 Status: " . ($task['status']['name'] ?? 'Unknown'),
+                'content' => "✅ **Task Status Updated!**\n\n🟡 **{$task['title']}**\n   └ 📊 Status: " . ($task['status']['name'] ?? 'Unknown'),
                 'data' => $task
             ];
             
@@ -823,7 +823,7 @@ class SmartTaskController extends Controller
             $task = $taskResponse->json()['data'] ?? [];
         
         return [
-                'content' => "✅ **Task #{$taskId} Priority Updated!**\n\n🟡 **{$task['title']}**\n   └ 🎯 Priority: " . ($task['priority']['name'] ?? 'Unknown'),
+                'content' => "✅ **Task Priority Updated!**\n\n🟡 **{$task['title']}**\n   └ 🎯 Priority: " . ($task['priority']['name'] ?? 'Unknown'),
             'data' => $task
         ];
             
@@ -858,7 +858,7 @@ class SmartTaskController extends Controller
             }
             
             return [
-                'content' => "✅ **Task #{$taskId} Deleted Successfully!**"
+                'content' => "✅ **Task Deleted Successfully!**"
             ];
             
         } catch (\Exception $e) {
