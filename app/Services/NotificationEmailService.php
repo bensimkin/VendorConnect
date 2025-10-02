@@ -94,6 +94,10 @@ class NotificationEmailService
             $typeIcon = $this->getTypeIcon($notification->type);
             $timeAgo = $notification->created_at->diffForHumans();
             
+            // Get the action URL from notification
+            $actionUrl = $notification->action_url ?? null;
+            $taskUrl = $actionUrl ? $appUrl . $actionUrl : null;
+            
             $notificationsHtml .= "
                 <div style='padding: 15px; border-left: 4px solid {$this->getPriorityColor($notification->priority)}; margin-bottom: 10px; background-color: #f8f9fa;'>
                     <div style='display: flex; align-items: center; margin-bottom: 8px;'>
@@ -102,10 +106,20 @@ class NotificationEmailService
                         <span style='margin-left: auto; font-size: 12px; color: #666;'>{$timeAgo}</span>
                     </div>
                     <p style='margin: 0; color: #666; font-size: 14px;'>{$notification->message}</p>
-                    <div style='margin-top: 8px;'>
+                    <div style='margin-top: 8px; display: flex; align-items: center; justify-content: space-between;'>
                         <span style='background-color: {$this->getPriorityColor($notification->priority)}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; text-transform: uppercase;'>
                             {$notification->priority}
-                        </span>
+                        </span>";
+            
+            // Add task link if available
+            if ($taskUrl) {
+                $notificationsHtml .= "
+                        <a href='{$taskUrl}' style='background-color: #28a745; color: white; padding: 4px 12px; text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: bold;'>
+                            View Task
+                        </a>";
+            }
+            
+            $notificationsHtml .= "
                     </div>
                 </div>
             ";
@@ -160,8 +174,19 @@ class NotificationEmailService
             $typeIcon = $this->getTypeIcon($notification->type);
             $timeAgo = $notification->created_at->diffForHumans();
             
+            // Get the action URL from notification
+            $actionUrl = $notification->action_url ?? null;
+            $taskUrl = $actionUrl ? $appUrl . $actionUrl : null;
+            
             $text .= "{$typeIcon} {$notification->title} ({$notification->priority}) - {$timeAgo}\n";
-            $text .= "   {$notification->message}\n\n";
+            $text .= "   {$notification->message}\n";
+            
+            // Add task link if available
+            if ($taskUrl) {
+                $text .= "   View Task: {$taskUrl}\n";
+            }
+            
+            $text .= "\n";
         }
         
         $text .= "View all notifications: {$appUrl}/notifications\n\n";
