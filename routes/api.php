@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\ClientCredentialController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\ApiKeyController;
+use App\Http\Controllers\Api\SmartTaskController;
 
 /*
 |--------------------------------------------------------------------------
@@ -72,6 +73,9 @@ Route::prefix('v1')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index']);
         Route::get('/dashboard/tasker', [DashboardController::class, 'taskerDashboard']);
         Route::get('/dashboard/requester', [DashboardController::class, 'requesterDashboard']);
+        
+        // Smart Task Management (Discord integration)
+        Route::post('/smart-task', [SmartTaskController::class, 'handleRequest']);
         
         // Profile management
         Route::prefix('profile')->group(function () {
