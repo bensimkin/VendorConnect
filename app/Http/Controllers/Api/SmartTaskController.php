@@ -331,7 +331,7 @@ class SmartTaskController extends Controller
             })->join("\n");
             
             return [
-                'content' => $this->generateConversationalResponse('user_not_found', ['user' => $userName]) . "\n\n👥 **Available users:**\n{$userList}"
+                'content' => "👤 I don't see anyone named \"{$userName}\" in our team. Let me show you who's available:\n\n👥 **Available users:**\n{$userList}\n\n💡 **Tips for finding users:**\n• Try just the first name (e.g., \"John\" instead of \"John Smith\")\n• Check the spelling\n• Ask me to list all users to see everyone available"
             ];
         }
         
@@ -541,7 +541,7 @@ class SmartTaskController extends Controller
             })->join("\n");
             
             return [
-                'content' => $this->generateConversationalResponse('user_not_found', ['user' => $assignedTo]) . "\n\n👥 **Available users:**\n{$userList}"
+                'content' => "👤 I don't see anyone named \"{$assignedTo}\" in our team. Let me show you who's available:\n\n👥 **Available users:**\n{$userList}\n\n💡 **Tips for finding users:**\n• Try just the first name (e.g., \"John\" instead of \"John Smith\")\n• Check the spelling\n• Ask me to list all users to see everyone available"
             ];
         }
         
@@ -990,7 +990,7 @@ class SmartTaskController extends Controller
                 })->join("\n");
                 
             return [
-                'content' => $this->generateConversationalResponse('user_not_found', ['user' => $assignedTo]) . "\n\n👥 **Available users:**\n{$userList}"
+                'content' => "👤 I don't see anyone named \"{$assignedTo}\" in our team. Let me show you who's available:\n\n👥 **Available users:**\n{$userList}\n\n💡 **Tips for finding users:**\n• Try just the first name (e.g., \"John\" instead of \"John Smith\")\n• Check the spelling\n• Ask me to list all users to see everyone available"
             ];
             }
             
@@ -1289,7 +1289,7 @@ class SmartTaskController extends Controller
                 })->join("\n");
                 
             return [
-                'content' => $this->generateConversationalResponse('project_not_found', ['project' => $projectName]) . "\n\n📁 **Available projects:**\n{$projectList}"
+                'content' => "📁 I don't see a project called \"{$projectName}\" in our system. Here's what I can find:\n\n📁 **Available projects:**\n{$projectList}\n\n💡 **To find projects, try:**\n• Ask me to list all projects\n• Use simpler project names\n• Check the spelling\n• Ask \"What projects are active?\" to see current projects"
             ];
             }
             
