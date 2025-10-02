@@ -1299,7 +1299,7 @@ class SmartTaskController extends Controller
                 $userName = trim(($sender['first_name'] ?? '') . ' ' . ($sender['last_name'] ?? ''));
             }
             
-            $sentAt = \Carbon\Carbon::parse($addedMessage['sent_at'])->format('M j, Y \a\t g:i A');
+            $sentAt = \Carbon\Carbon::parse($addedMessage['created_at'])->format('M j, Y \a\t g:i A');
             
             return [
                 'content' => "✅ **Message Added Successfully!**\n\n💬 **{$userName}** ({$sentAt})\n   └ {$message}\n\n📝 **Task:** {$taskTitle}\n\n💡 **To view all updates:**\n• Ask me to show updates for this task",
