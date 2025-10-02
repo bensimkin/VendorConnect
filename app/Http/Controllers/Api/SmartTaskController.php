@@ -214,7 +214,16 @@ class SmartTaskController extends Controller
                 return $this->searchContent($params);
                 
             case 'update_task':
-                return $this->updateTask($params);
+                $result = $this->updateTask($params);
+                // If task not found, try OpenAI fallback
+                if (isset($result['content']) && strpos($result['content'], 'Task not found') !== false) {
+                    Log::info('Smart API update_task failed, trying OpenAI fallback', [
+                        'params' => $params,
+                        'originalMessage' => $originalMessage
+                    ]);
+                    return $this->openAIFallback($originalMessage, $params);
+                }
+                return $result;
                 
             case 'update_task_status':
                 return $this->updateTaskStatus($params);
@@ -223,7 +232,16 @@ class SmartTaskController extends Controller
                 return $this->updateTaskPriority($params);
                 
             case 'delete_task':
-                return $this->deleteTask($params);
+                $result = $this->deleteTask($params);
+                // If task not found, try OpenAI fallback
+                if (isset($result['content']) && strpos($result['content'], 'Task not found') !== false) {
+                    Log::info('Smart API delete_task failed, trying OpenAI fallback', [
+                        'params' => $params,
+                        'originalMessage' => $originalMessage
+                    ]);
+                    return $this->openAIFallback($originalMessage, $params);
+                }
+                return $result;
                 
             default:
                 return [
