@@ -215,8 +215,8 @@ class SmartTaskController extends Controller
                 
             case 'update_task':
                 $result = $this->updateTask($params);
-                // If task not found, try OpenAI fallback
-                if (isset($result['content']) && strpos($result['content'], 'Task not found') !== false) {
+                // If task not found, try OpenAI fallback only if we have a message to analyze
+                if (isset($result['content']) && strpos($result['content'], 'Task Not Found') !== false && $originalMessage) {
                     Log::info('Smart API update_task failed, trying OpenAI fallback', [
                         'params' => $params,
                         'originalMessage' => $originalMessage
@@ -233,8 +233,8 @@ class SmartTaskController extends Controller
                 
             case 'delete_task':
                 $result = $this->deleteTask($params);
-                // If task not found, try OpenAI fallback
-                if (isset($result['content']) && strpos($result['content'], 'Task not found') !== false) {
+                // If task not found, try OpenAI fallback only if we have a message to analyze
+                if (isset($result['content']) && strpos($result['content'], 'Task Not Found') !== false && $originalMessage) {
                     Log::info('Smart API delete_task failed, trying OpenAI fallback', [
                         'params' => $params,
                         'originalMessage' => $originalMessage
@@ -1245,7 +1245,7 @@ class SmartTaskController extends Controller
         
         if (!$taskId) {
             return [
-                'content' => "❌ Task not found. Please check the task title or provide a task ID."
+                'content' => "❌ **Task Not Found**\n\nI couldn't find a task with the title \"{$taskTitle}\".\n\n💡 **Suggestions:**\n• Check the spelling of the task name\n• Try a partial match (e.g., \"cursor\" instead of \"Check cursor\")\n• Ask me to list all tasks to see what's available\n• Create a new task if this one doesn't exist yet"
             ];
         }
         
@@ -1407,7 +1407,7 @@ class SmartTaskController extends Controller
         
         if (!$taskId) {
             return [
-                'content' => "❌ Task not found. Please check the task title or provide a task ID."
+                'content' => "❌ **Task Not Found**\n\nI couldn't find a task with the title \"{$taskTitle}\".\n\n💡 **Suggestions:**\n• Check the spelling of the task name\n• Try a partial match (e.g., \"cursor\" instead of \"Check cursor\")\n• Ask me to list all tasks to see what's available"
             ];
         }
         
@@ -1539,9 +1539,19 @@ class SmartTaskController extends Controller
                 // AI provided a structured response, execute it
                 return $this->executeAction($parsedResponse['action'], $parsedResponse['params'] ?? [], $message);
             } else {
-                // AI provided a natural language response
+                // AI provided a natural language response - enhance it with API suggestions
+                $enhancedResponse = $aiResponse . "\n\n🔧 **Available Actions:**\n";
+                $enhancedResponse .= "• `create_task` - Create a new task\n";
+                $enhancedResponse .= "• `update_task` - Update an existing task\n";
+                $enhancedResponse .= "• `delete_task` - Delete a task\n";
+                $enhancedResponse .= "• `get_user_tasks` - Get tasks for a user\n";
+                $enhancedResponse .= "• `list_tasks` - List all tasks\n";
+                $enhancedResponse .= "• `get_projects` - List all projects\n";
+                $enhancedResponse .= "• `get_users` - List all users\n\n";
+                $enhancedResponse .= "💡 **Try rephrasing your request** or ask me to list available tasks/users to see what's available.";
+                
                 return [
-                    'content' => $aiResponse,
+                    'content' => $enhancedResponse,
                     'data' => ['ai_fallback' => true]
                 ];
             }
@@ -1553,7 +1563,7 @@ class SmartTaskController extends Controller
             ]);
             
             return [
-                'content' => "❌ I'm having trouble understanding your request. Please try rephrasing it or contact support if the issue persists."
+                'content' => "❌ **I'm having trouble understanding your request.**\n\n🔧 **Available Actions:**\n• `create_task` - Create a new task\n• `update_task` - Update an existing task\n• `delete_task` - Delete a task\n• `get_user_tasks` - Get tasks for a user\n• `list_tasks` - List all tasks\n• `get_projects` - List all projects\n• `get_users` - List all users\n\n💡 **Try rephrasing your request** or ask me to list available tasks/users to see what's available.\n\n🆘 **Still stuck?** Contact support if the issue persists."
             ];
         }
     }
