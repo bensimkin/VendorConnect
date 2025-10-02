@@ -541,7 +541,7 @@ class SmartTaskController extends Controller
         $recurringText = $isRecurring ? " (recurring weekly)" : "";
         
         return [
-                'content' => "✅ **Task Created Successfully!**\n\n🟡 **{$task['title']}**\n   └ 👤 Assigned to: {$displayName}\n   └ 📊 Status: Active\n   └ 🎯 Priority: Medium\n   └ 🗓️ Due: " . now()->addDays(7)->format('M j, Y') . "{$recurringText}\n\n💡 You can check on this task anytime by asking: \"What tasks does {$displayName} have?\"",
+                'content' => "✅ **Task Created Successfully!**\n\n🟡 **{$task['title']}**\n   └ 👤 Assigned to: {$displayName}\n   └ 📊 Status: Active\n   └ 🎯 Priority: " . ($task['priority']['title'] ?? 'Medium') . "\n   └ 🗓️ Due: " . (isset($task['end_date']) ? \Carbon\Carbon::parse($task['end_date'])->format('M j, Y') : now()->addDays(7)->format('M j, Y')) . "{$recurringText}\n\n💡 You can check on this task anytime by asking: \"What tasks does {$displayName} have?\"",
             'data' => [
                 'task' => $task,
                 'user' => $user
