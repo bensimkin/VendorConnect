@@ -225,18 +225,55 @@ class SmartTaskController extends Controller
             // Search for user by name (case-insensitive partial match)
             $foundUser = null;
             $userNameLower = strtolower($userName);
+            $candidates = [];
             
             foreach ($allUsers as $user) {
                 $fullName = strtolower($user['first_name'] . ' ' . $user['last_name']);
                 $firstName = strtolower($user['first_name']);
                 $lastName = strtolower($user['last_name']);
                 
-                if (strpos($fullName, $userNameLower) !== false || 
-                    strpos($firstName, $userNameLower) !== false || 
-                    strpos($lastName, $userNameLower) !== false) {
-                    $foundUser = $user;
-                    break;
+                $score = 0;
+                
+                // Exact first name match gets highest priority
+                if ($firstName === $userNameLower) {
+                    $score = 100;
                 }
+                // Exact full name match gets high priority
+                elseif ($fullName === $userNameLower) {
+                    $score = 90;
+                }
+                // First name starts with search term
+                elseif (strpos($firstName, $userNameLower) === 0) {
+                    $score = 80;
+                }
+                // Full name starts with search term
+                elseif (strpos($fullName, $userNameLower) === 0) {
+                    $score = 70;
+                }
+                // First name contains search term
+                elseif (strpos($firstName, $userNameLower) !== false) {
+                    $score = 60;
+                }
+                // Full name contains search term
+                elseif (strpos($fullName, $userNameLower) !== false) {
+                    $score = 50;
+                }
+                // Last name contains search term
+                elseif (strpos($lastName, $userNameLower) !== false) {
+                    $score = 40;
+                }
+                
+                if ($score > 0) {
+                    $candidates[] = ['user' => $user, 'score' => $score];
+                }
+            }
+            
+            // Sort candidates by score (highest first) and take the best match
+            if (!empty($candidates)) {
+                usort($candidates, function($a, $b) {
+                    return $b['score'] - $a['score'];
+                });
+                $foundUser = $candidates[0]['user'];
             }
             
             if (!$foundUser) {
@@ -319,42 +356,84 @@ class SmartTaskController extends Controller
         }
         
         try {
-            // Use the existing search endpoint to find users
-            $searchResponse = $this->getHttpClient()->get(secure_url('/api/v1/search'), [
-                'q' => $assignedTo,
-                'type' => 'users'
-            ]);
+            // Get all users and search locally for better matching
+            $usersResponse = $this->getHttpClient()->get(secure_url('/api/v1/users'));
             
-            if (!$searchResponse->successful()) {
+            if (!$usersResponse->successful()) {
                 return [
-                    'content' => "❌ Unable to search for users. Please try again."
+                    'content' => "❌ Unable to fetch users. Please try again."
                 ];
             }
             
-            $searchData = $searchResponse->json();
-            $users = $searchData['data']['users'] ?? [];
+            $usersData = $usersResponse->json();
+            $allUsers = $usersData['data'] ?? [];
             
-            if (empty($users)) {
-                // Get all users to show available options
-                $usersResponse = $this->getHttpClient()->get(secure_url('/api/v1/users'));
-                if ($usersResponse->successful()) {
-                    $allUsers = $usersResponse->json()['data'] ?? [];
-                    $userList = collect($allUsers)->map(function($u) {
-                        $displayName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
-                        return "• {$displayName} ({$u['email']})";
-            })->join("\n");
+            // Search for user by name (case-insensitive partial match)
+            $foundUser = null;
+            $userNameLower = strtolower($assignedTo);
+            $candidates = [];
             
-            return [
-                'content' => "❌ User '{$assignedTo}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling and try again."
-            ];
-        }
-        
+            foreach ($allUsers as $user) {
+                $fullName = strtolower($user['first_name'] . ' ' . $user['last_name']);
+                $firstName = strtolower($user['first_name']);
+                $lastName = strtolower($user['last_name']);
+                
+                $score = 0;
+                
+                // Exact first name match gets highest priority
+                if ($firstName === $userNameLower) {
+                    $score = 100;
+                }
+                // Exact full name match gets high priority
+                elseif ($fullName === $userNameLower) {
+                    $score = 90;
+                }
+                // First name starts with search term
+                elseif (strpos($firstName, $userNameLower) === 0) {
+                    $score = 80;
+                }
+                // Full name starts with search term
+                elseif (strpos($fullName, $userNameLower) === 0) {
+                    $score = 70;
+                }
+                // First name contains search term
+                elseif (strpos($firstName, $userNameLower) !== false) {
+                    $score = 60;
+                }
+                // Full name contains search term
+                elseif (strpos($fullName, $userNameLower) !== false) {
+                    $score = 50;
+                }
+                // Last name contains search term
+                elseif (strpos($lastName, $userNameLower) !== false) {
+                    $score = 40;
+                }
+                
+                if ($score > 0) {
+                    $candidates[] = ['user' => $user, 'score' => $score];
+                }
+            }
+            
+            // Sort candidates by score (highest first) and take the best match
+            if (!empty($candidates)) {
+                usort($candidates, function($a, $b) {
+                    return $b['score'] - $a['score'];
+                });
+                $foundUser = $candidates[0]['user'];
+            }
+            
+            if (!$foundUser) {
+                $userList = collect($allUsers)->map(function($u) {
+                    $displayName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
+                    return "• {$displayName} ({$u['email']})";
+                })->join("\n");
+                
                 return [
-                    'content' => "❌ User '{$assignedTo}' not found. Please check the spelling and try again."
+                    'content' => "❌ User '{$assignedTo}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling and try again."
                 ];
             }
             
-            $user = $users[0]; // Take the first match
+            $user = $foundUser;
             
             // Use the existing tasks endpoint to create a task
             $taskData = [
