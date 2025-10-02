@@ -237,6 +237,15 @@ class SmartTaskController extends Controller
                 // Exact first name match gets highest priority
                 if ($firstName === $userNameLower) {
                     $score = 100;
+                    // Bonus points for admin role when there's an exact first name match
+                    if (isset($user['roles']) && is_array($user['roles'])) {
+                        foreach ($user['roles'] as $role) {
+                            if (isset($role['name']) && strtolower($role['name']) === 'admin') {
+                                $score += 10; // Admin bonus
+                                break;
+                            }
+                        }
+                    }
                 }
                 // Exact full name match gets high priority
                 elseif ($fullName === $userNameLower) {
@@ -383,6 +392,15 @@ class SmartTaskController extends Controller
                 // Exact first name match gets highest priority
                 if ($firstName === $userNameLower) {
                     $score = 100;
+                    // Bonus points for admin role when there's an exact first name match
+                    if (isset($user['roles']) && is_array($user['roles'])) {
+                        foreach ($user['roles'] as $role) {
+                            if (isset($role['name']) && strtolower($role['name']) === 'admin') {
+                                $score += 10; // Admin bonus
+                                break;
+                            }
+                        }
+                    }
                 }
                 // Exact full name match gets high priority
                 elseif ($fullName === $userNameLower) {
