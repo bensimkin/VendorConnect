@@ -601,7 +601,7 @@ class SmartTaskController extends Controller
             }
             
             $projectList = collect($projects)->map(function($p) {
-                return "• {$p['name']} (ID: {$p['id']})";
+                return "• {$p['title']} (ID: {$p['id']})";
             })->join("\n");
             
             return [
