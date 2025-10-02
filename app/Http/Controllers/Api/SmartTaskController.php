@@ -970,7 +970,7 @@ class SmartTaskController extends Controller
             $task = $taskResponse->json()['data'] ?? [];
             
             return [
-                'content' => "✅ **Task Status Updated!**\n\n🟡 **{$task['title']}**\n   └ 📊 Status: " . ($task['status']['name'] ?? 'Unknown'),
+                'content' => "✅ **Task Status Updated!**\n\n🟡 **{$task['title']}**\n   └ 📊 Status: " . ($task['status']['title'] ?? 'Unknown'),
                 'data' => $task
             ];
             
@@ -1010,7 +1010,7 @@ class SmartTaskController extends Controller
             $task = $taskResponse->json()['data'] ?? [];
         
         return [
-                'content' => "✅ **Task Priority Updated!**\n\n🟡 **{$task['title']}**\n   └ 🎯 Priority: " . ($task['priority']['name'] ?? 'Unknown'),
+                'content' => "✅ **Task Priority Updated!**\n\n🟡 **{$task['title']}**\n   └ 🎯 Priority: " . ($task['priority']['title'] ?? 'Unknown'),
             'data' => $task
         ];
             
