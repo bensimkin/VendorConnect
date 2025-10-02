@@ -1228,10 +1228,55 @@ class SmartTaskController extends Controller
     private function deleteTask(array $params): array
     {
         $taskId = $params['task_id'] ?? null;
+        $taskTitle = $params['title'] ?? null;
+        
+        // If no task ID provided, search for task by title
+        if (!$taskId && $taskTitle) {
+            try {
+                // Search for tasks with the same title
+                $existingTasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
+                    'search' => $taskTitle,
+                    'per_page' => 50
+                ]);
+                
+                if ($existingTasksResponse->successful()) {
+                    $existingTasks = $existingTasksResponse->json()['data'] ?? [];
+                    
+                    // Look for exact title match
+                    foreach ($existingTasks as $task) {
+                        if (strtolower($task['title']) === strtolower($taskTitle)) {
+                            $taskId = $task['id'];
+                            break;
+                        }
+                    }
+                }
+                
+                // If search didn't find it, try getting all tasks and search locally
+                if (!$taskId) {
+                    $allTasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
+                        'per_page' => 100
+                    ]);
+                    
+                    if ($allTasksResponse->successful()) {
+                        $allTasks = $allTasksResponse->json()['data'] ?? [];
+                        
+                        // Look for exact title match in all tasks
+                        foreach ($allTasks as $task) {
+                            if (strtolower($task['title']) === strtolower($taskTitle)) {
+                                $taskId = $task['id'];
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Smart API deleteTask - Error searching for task', ['error' => $e->getMessage()]);
+            }
+        }
         
         if (!$taskId) {
             return [
-                'content' => "❌ Please specify a task ID to delete."
+                'content' => "❌ Task not found. Please check the task title or provide a task ID."
             ];
         }
         
