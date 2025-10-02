@@ -57,9 +57,10 @@ class TaskController extends BaseController
             if ($request->has('status_id')) {
                 $query->where('status_id', $request->status_id);
             } else {
-                $archiveStatus = Status::where('slug', 'archive')->first();
-                if ($archiveStatus) {
-                    $query->where('status_id', '!=', $archiveStatus->id);
+                // By default, exclude archived and completed tasks
+                $excludeStatuses = Status::whereIn('slug', ['archive', 'completed'])->pluck('id');
+                if ($excludeStatuses->isNotEmpty()) {
+                    $query->whereNotIn('status_id', $excludeStatuses);
                 }
             }
 
