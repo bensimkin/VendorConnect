@@ -1410,7 +1410,7 @@ class SmartTaskController extends Controller
             if (!empty($results['projects'])) {
                 $content .= "📁 **Projects** (" . count($results['projects']) . ")\n";
                 foreach (array_slice($results['projects'], 0, 5) as $project) {
-                    $content .= "• {$project['name']}\n";
+                    $content .= "• {$project['title']}\n";
                 }
             }
             
