@@ -218,6 +218,15 @@ return [
         // 'ExampleClass' => App\Example\ExampleClass::class,
     ])->toArray(),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Smart API Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for the Smart API functionality
+    |
+    */
 
+    'smart_api_key' => env('SMART_API_KEY'),
 
 ];

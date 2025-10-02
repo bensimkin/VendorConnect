@@ -16,7 +16,7 @@ class SmartTaskController extends Controller
     private function getHttpClient()
     {
         return Http::withHeaders([
-            'X-API-Key' => 'vck_IuYqGalsAzWt6TP8y2eg0ZhRj3sJNekU8lonoOtI'
+            'X-API-Key' => config('app.smart_api_key', env('SMART_API_KEY'))
         ]);
     }
     
@@ -445,12 +445,12 @@ class SmartTaskController extends Controller
                     $displayName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
                     return "• {$displayName} ({$u['email']})";
                 })->join("\n");
-                
-                return [
-                    'content' => "❌ User '{$assignedTo}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling and try again."
-                ];
-            }
             
+            return [
+                'content' => "❌ User '{$assignedTo}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling and try again."
+            ];
+        }
+        
             $user = $foundUser;
             
             // Use the existing tasks endpoint to create a task
