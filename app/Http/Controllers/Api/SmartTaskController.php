@@ -576,6 +576,27 @@ class SmartTaskController extends Controller
     }
     
     /**
+     * Get status ID from status name
+     */
+    private function getStatusId(?string $status): ?int
+    {
+        if (!$status) {
+            return null;
+        }
+        
+        $statusMap = [
+            'active' => 20,
+            'completed' => 17,
+            'pending' => 21,
+            'in_progress' => 22,
+            'cancelled' => 23,
+            'archive' => 24,
+        ];
+        
+        return $statusMap[strtolower($status)] ?? null;
+    }
+    
+    /**
      * Reassign an existing task to a new user
      */
     private function reassignTask(int $taskId, string $assignedTo, string $taskTitle): array
@@ -1110,11 +1131,67 @@ class SmartTaskController extends Controller
     private function updateTask(array $params): array
     {
         $taskId = $params['task_id'] ?? null;
+        $taskTitle = $params['title'] ?? null;
         $updateData = $params['update_data'] ?? [];
+        
+        // Handle direct field updates (like due_date, priority, etc.)
+        if (isset($params['due_date'])) {
+            $updateData['end_date'] = \Carbon\Carbon::parse($params['due_date'])->format('Y-m-d');
+        }
+        if (isset($params['priority'])) {
+            $updateData['priority_id'] = $this->getPriorityId($params['priority']);
+        }
+        if (isset($params['status'])) {
+            $updateData['status_id'] = $this->getStatusId($params['status']);
+        }
+        
+        // If no task ID provided, search for task by title
+        if (!$taskId && $taskTitle) {
+            try {
+                // Search for tasks with the same title
+                $existingTasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
+                    'search' => $taskTitle,
+                    'per_page' => 50
+                ]);
+                
+                if ($existingTasksResponse->successful()) {
+                    $existingTasks = $existingTasksResponse->json()['data'] ?? [];
+                    
+                    // Look for exact title match
+                    foreach ($existingTasks as $task) {
+                        if (strtolower($task['title']) === strtolower($taskTitle)) {
+                            $taskId = $task['id'];
+                            break;
+                        }
+                    }
+                }
+                
+                // If search didn't find it, try getting all tasks and search locally
+                if (!$taskId) {
+                    $allTasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
+                        'per_page' => 100
+                    ]);
+                    
+                    if ($allTasksResponse->successful()) {
+                        $allTasks = $allTasksResponse->json()['data'] ?? [];
+                        
+                        // Look for exact title match in all tasks
+                        foreach ($allTasks as $task) {
+                            if (strtolower($task['title']) === strtolower($taskTitle)) {
+                                $taskId = $task['id'];
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Smart API updateTask - Error searching for task', ['error' => $e->getMessage()]);
+            }
+        }
         
         if (!$taskId) {
             return [
-                'content' => "❌ Please specify a task ID to update."
+                'content' => "❌ Task not found. Please check the task title or provide a task ID."
             ];
         }
         
