@@ -19,6 +19,22 @@ class SmartTaskController extends Controller
             'X-API-Key' => 'vck_IuYqGalsAzWt6TP8y2eg0ZhRj3sJNekU8lonoOtI'
         ]);
     }
+    
+    /**
+     * Log HTTP request details for debugging
+     */
+    private function logHttpRequest($method, $url, $data = null, $response = null)
+    {
+        Log::info('Smart API HTTP Request', [
+            'method' => $method,
+            'url' => $url,
+            'data' => $data,
+            'response_status' => $response ? $response->status() : null,
+            'response_body' => $response ? $response->body() : null,
+            'response_headers' => $response ? $response->headers() : null,
+            'successful' => $response ? $response->successful() : null
+        ]);
+    }
     /**
      * Smart task management endpoint that executes actions determined by n8n AI
      * 
@@ -36,11 +52,17 @@ class SmartTaskController extends Controller
             Log::info('Smart Task Request', [
                 'action' => $action,
                 'params' => $params,
-                'message' => $originalMessage
+                'message' => $originalMessage,
+                'all_input' => $request->all()
             ]);
             
             // Execute the action determined by n8n AI
             $result = $this->executeAction($action, $params, $originalMessage);
+            
+            Log::info('Smart Task Response', [
+                'action' => $action,
+                'result' => $result
+            ]);
             
             return response()->json([
                 'success' => true,
@@ -121,6 +143,12 @@ class SmartTaskController extends Controller
      */
     private function executeAction(string $action, array $params, string $originalMessage): array
     {
+        Log::info('Smart API executeAction', [
+            'action' => $action,
+            'params' => $params,
+            'originalMessage' => $originalMessage
+        ]);
+        
         switch ($action) {
             case 'get_user_tasks':
                 return $this->getUserTasks($params);
@@ -203,12 +231,12 @@ class SmartTaskController extends Controller
                         $displayName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
                         return "• {$displayName} ({$u['email']})";
                     })->join("\n");
-                    
-                    return [
-                        'content' => "❌ User '{$userName}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling or use a different name."
-                    ];
-                }
-                
+            
+            return [
+                'content' => "❌ User '{$userName}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling or use a different name."
+            ];
+        }
+        
                 return [
                     'content' => "❌ User '{$userName}' not found. Please check the spelling and try again."
                 ];
@@ -232,12 +260,12 @@ class SmartTaskController extends Controller
             
             if (empty($tasks)) {
                 $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
-                return [
+            return [
                     'content' => "📋 {$displayName} has no tasks assigned.\n\n💡 You can create a task for them by saying: \"Create a task for {$displayName} to [action]\""
-                ];
-            }
-            
-            // Format tasks
+            ];
+        }
+        
+        // Format tasks
             $taskList = collect($tasks)->map(function($task) {
                 $status = $task['status']['name'] ?? 'Unknown';
                 $priority = $task['priority']['name'] ?? 'Medium';
@@ -248,14 +276,14 @@ class SmartTaskController extends Controller
             })->join("\n\n");
             
             $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
-            
-            return [
+        
+        return [
                 'content' => "📋 **{$displayName}'s Tasks** (" . count($tasks) . " total)\n\n{$taskList}\n\n💡 Need to create a task? Just ask: \"Create a task for {$displayName} to [action]\"",
-                'data' => [
-                    'user' => $user,
-                    'tasks' => $tasks
-                ]
-            ];
+            'data' => [
+                'user' => $user,
+                'tasks' => $tasks
+            ]
+        ];
             
         } catch (\Exception $e) {
             Log::error('Smart Task getUserTasks Error', ['error' => $e->getMessage()]);
@@ -307,12 +335,12 @@ class SmartTaskController extends Controller
                         $displayName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
                         return "• {$displayName} ({$u['email']})";
                     })->join("\n");
-                    
-                    return [
-                        'content' => "❌ User '{$assignedTo}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling and try again."
-                    ];
-                }
-                
+            
+            return [
+                'content' => "❌ User '{$assignedTo}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling and try again."
+            ];
+        }
+        
                 return [
                     'content' => "❌ User '{$assignedTo}' not found. Please check the spelling and try again."
                 ];
@@ -322,16 +350,16 @@ class SmartTaskController extends Controller
             
             // Use the existing tasks endpoint to create a task
             $taskData = [
-                'title' => $title,
+            'title' => $title,
                 'description' => "Task created via Smart API: {$title}",
-                'status_id' => 20, // Active
-                'priority_id' => 2, // Medium
-                'project_id' => 19, // Default project
+            'status_id' => 20, // Active
+            'priority_id' => 2, // Medium
+            'project_id' => 19, // Default project
                 'start_date' => now()->format('Y-m-d'),
                 'end_date' => now()->addDays(7)->format('Y-m-d'),
-                'is_repeating' => $isRecurring,
-                'repeat_frequency' => $isRecurring ? 'weekly' : null,
-                'repeat_interval' => $isRecurring ? 1 : null,
+            'is_repeating' => $isRecurring,
+            'repeat_frequency' => $isRecurring ? 'weekly' : null,
+            'repeat_interval' => $isRecurring ? 1 : null,
                 'user_ids' => [$user['id']] // Assign to user
             ];
             
@@ -345,15 +373,15 @@ class SmartTaskController extends Controller
             
             $task = $taskResponse->json()['data'] ?? [];
             $displayName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
-            $recurringText = $isRecurring ? " (recurring weekly)" : "";
-            
-            return [
+        $recurringText = $isRecurring ? " (recurring weekly)" : "";
+        
+        return [
                 'content' => "✅ **Task Created Successfully!**\n\n🟡 **{$task['title']}**\n   └ 👤 Assigned to: {$displayName}\n   └ 📊 Status: Active\n   └ 🎯 Priority: Medium\n   └ 🗓️ Due: " . now()->addDays(7)->format('M j, Y') . "{$recurringText}\n\n💡 You can check on this task anytime by asking: \"What tasks does {$displayName} have?\"",
-                'data' => [
-                    'task' => $task,
-                    'user' => $user
-                ]
-            ];
+            'data' => [
+                'task' => $task,
+                'user' => $user
+            ]
+        ];
             
         } catch (\Exception $e) {
             Log::error('Smart Task createTask Error', ['error' => $e->getMessage()]);
@@ -370,22 +398,41 @@ class SmartTaskController extends Controller
     {
         $filters = $analysis['filters'] ?? [];
         
+        Log::info('Smart API listTasks called', [
+            'filters' => $filters,
+            'analysis' => $analysis
+        ]);
+        
         try {
             // Build query parameters for the existing tasks endpoint
             $queryParams = [];
             
-            if (isset($filters['status'])) {
+        if (isset($filters['status'])) {
                 $queryParams['status_id'] = $filters['status'];
-            }
-            
-            if (isset($filters['user_id'])) {
+        }
+        
+        if (isset($filters['user_id'])) {
                 $queryParams['user_id'] = $filters['user_id'];
             }
             
+            $url = secure_url('/api/tasks');
+            Log::info('Smart API making tasks request', [
+                'url' => $url,
+                'queryParams' => $queryParams
+            ]);
+            
             // Use the existing tasks endpoint
-            $tasksResponse = $this->getHttpClient()->get(secure_url('/api/tasks'), $queryParams);
+            $tasksResponse = $this->getHttpClient()->get($url, $queryParams);
+            
+            // Log the response details
+            $this->logHttpRequest('GET', $url, $queryParams, $tasksResponse);
             
             if (!$tasksResponse->successful()) {
+                Log::error('Smart API tasks request failed', [
+                    'status' => $tasksResponse->status(),
+                    'body' => $tasksResponse->body(),
+                    'headers' => $tasksResponse->headers()
+                ]);
                 return [
                     'content' => "❌ Unable to fetch tasks. Please try again."
                 ];
@@ -395,12 +442,12 @@ class SmartTaskController extends Controller
             $tasks = $tasksData['data'] ?? [];
             
             if (empty($tasks)) {
-                return [
-                    'content' => "📋 No tasks found matching your criteria.\n\n💡 Try asking:\n• \"What tasks are active?\"\n• \"Show me all tasks\"\n• \"What tasks does [name] have?\""
-                ];
-            }
-            
-            // Format tasks
+            return [
+                'content' => "📋 No tasks found matching your criteria.\n\n💡 Try asking:\n• \"What tasks are active?\"\n• \"Show me all tasks\"\n• \"What tasks does [name] have?\""
+            ];
+        }
+        
+        // Format tasks
             $taskList = collect($tasks)->map(function($task) {
                 $assignees = collect($task['users'] ?? [])->map(function($u) {
                     return trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
@@ -411,12 +458,12 @@ class SmartTaskController extends Controller
                 $dueDate = $task['end_date'] ? date('M j, Y', strtotime($task['end_date'])) : 'No due date';
                 
                 return "🟡 **{$task['title']}**\n   └ 👤 {$assignees} | 📊 {$status} | 🎯 {$priority} | 📁 {$project} | 🗓️ {$dueDate}";
-            })->join("\n\n");
-            
-            return [
+        })->join("\n\n");
+        
+        return [
                 'content' => "📋 **Tasks Found** (" . count($tasks) . " total)\n\n{$taskList}\n\n💡 Need to create a task? Just ask: \"Create a task for [name] to [action]\"",
-                'data' => $tasks
-            ];
+            'data' => $tasks
+        ];
             
         } catch (\Exception $e) {
             Log::error('Smart Task listTasks Error', ['error' => $e->getMessage()]);
@@ -769,11 +816,11 @@ class SmartTaskController extends Controller
             }
             
             $task = $taskResponse->json()['data'] ?? [];
-            
-            return [
+        
+        return [
                 'content' => "✅ **Task #{$taskId} Priority Updated!**\n\n🟡 **{$task['title']}**\n   └ 🎯 Priority: " . ($task['priority']['name'] ?? 'Unknown'),
-                'data' => $task
-            ];
+            'data' => $task
+        ];
             
         } catch (\Exception $e) {
             Log::error('Smart Task updateTaskPriority Error', ['error' => $e->getMessage()]);
