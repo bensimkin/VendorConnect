@@ -1036,42 +1036,22 @@ class SmartTaskController extends Controller
         ]);
         
         try {
-            // Build query parameters for the existing tasks endpoint
-            $queryParams = [];
+            // Use dashboard endpoint to get all tasks across all projects
+            $dashboardResponse = $this->getHttpClient()->get(secure_url('/api/v1/dashboard'));
             
-        if (isset($filters['status'])) {
-                $queryParams['status_id'] = $filters['status'];
-        }
-        
-        if (isset($filters['user_id'])) {
-                $queryParams['user_id'] = $filters['user_id'];
-            }
-            
-            $url = secure_url('/api/v1/tasks');
-            Log::info('Smart API making tasks request', [
-                'url' => $url,
-                'queryParams' => $queryParams
-            ]);
-            
-            // Use the existing tasks endpoint
-            $tasksResponse = $this->getHttpClient()->get($url, $queryParams);
-            
-            // Log the response details
-            $this->logHttpRequest('GET', $url, $queryParams, $tasksResponse);
-            
-            if (!$tasksResponse->successful()) {
-                Log::error('Smart API tasks request failed', [
-                    'status' => $tasksResponse->status(),
-                    'body' => $tasksResponse->body(),
-                    'headers' => $tasksResponse->headers()
+            if (!$dashboardResponse->successful()) {
+                Log::error('Smart API dashboard request failed', [
+                    'status' => $dashboardResponse->status(),
+                    'body' => $dashboardResponse->body()
                 ]);
                 return [
                     'content' => $this->generateConversationalResponse('api_error') . "\n\nI'm having trouble accessing the task list right now."
                 ];
             }
             
-            $tasksData = $tasksResponse->json();
-            $tasks = $tasksData['data'] ?? [];
+            $dashboardData = $dashboardResponse->json();
+            $data = $dashboardData['data'] ?? [];
+            $tasks = $data['recent_tasks'] ?? [];
             
             if (empty($tasks)) {
             return [
@@ -1084,9 +1064,9 @@ class SmartTaskController extends Controller
                 $assignees = collect($task['users'] ?? [])->map(function($u) {
                     return trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
                 })->join(', ');
-                $status = $task['status']['name'] ?? 'Unknown';
-                $priority = $task['priority']['name'] ?? 'Medium';
-                $project = $task['project']['name'] ?? 'No Project';
+                $status = $task['status']['title'] ?? 'Unknown';
+                $priority = $task['priority']['title'] ?? 'Medium';
+                $project = $task['project']['title'] ?? 'No Project';
                 $dueDate = $task['end_date'] ? date('M j, Y', strtotime($task['end_date'])) : 'No due date';
                 
                 return "🟡 **{$task['title']}**\n   └ 👤 {$assignees} | 📊 {$status} | 🎯 {$priority} | 📁 {$project} | 🗓️ {$dueDate}";
