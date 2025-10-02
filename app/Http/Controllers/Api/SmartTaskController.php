@@ -1435,7 +1435,40 @@ class SmartTaskController extends Controller
             }
             
             if (empty($results['tasks']) && empty($results['users']) && empty($results['projects'])) {
-                $content = "🤔 Hmm, I couldn't find anything matching \"{$query}\". Let me help you out!\n\n💡 **Try these instead:**\n• Use simpler keywords (e.g., \"tasks\" instead of \"quarterly report tasks\")\n• Check your spelling\n• Ask me to list all tasks, users, or projects to see what's available\n• Try searching for just part of what you're looking for";
+                // Check if this looks like a project status/progress query
+                $queryLower = strtolower($query);
+                $projectKeywords = ['status of project', 'progress of project', 'project status', 'project progress', 'how is project', 'project update'];
+                
+                $isProjectQuery = false;
+                foreach ($projectKeywords as $keyword) {
+                    if (strpos($queryLower, $keyword) !== false) {
+                        $isProjectQuery = true;
+                        break;
+                    }
+                }
+                
+                if ($isProjectQuery) {
+                    // Extract potential project name from the query
+                    $projectName = $this->extractProjectNameFromQuery($query);
+                    
+                    if ($projectName) {
+                        $content = "🤔 I couldn't find \"{$query}\" in the search results, but it looks like you're asking about project status!\n\n";
+                        $content .= "💡 **Try asking:** \"What's the progress of {$projectName}?\" or \"Show me the status of {$projectName} project\"\n\n";
+                        $content .= "🔧 **Available Actions:**\n";
+                        $content .= "• Ask for project progress: \"progress of [project name]\"\n";
+                        $content .= "• List all projects: \"show me all projects\"\n";
+                        $content .= "• Get dashboard overview: \"show me the dashboard\"";
+                    } else {
+                        $content = "🤔 I couldn't find anything matching \"{$query}\", but it looks like you're asking about project status!\n\n";
+                        $content .= "💡 **Try these instead:**\n";
+                        $content .= "• \"What's the progress of [project name]?\"\n";
+                        $content .= "• \"Show me the status of [project name] project\"\n";
+                        $content .= "• \"List all projects\" to see available projects\n";
+                        $content .= "• \"Show me the dashboard\" for overall status";
+                    }
+                } else {
+                    $content = "🤔 Hmm, I couldn't find anything matching \"{$query}\". Let me help you out!\n\n💡 **Try these instead:**\n• Use simpler keywords (e.g., \"tasks\" instead of \"quarterly report tasks\")\n• Check your spelling\n• Ask me to list all tasks, users, or projects to see what's available\n• Try searching for just part of what you're looking for";
+                }
             }
             
             return [
@@ -1449,6 +1482,37 @@ class SmartTaskController extends Controller
                 'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble searching for that."
             ];
         }
+    }
+    
+    /**
+     * Extract project name from a query string
+     */
+    private function extractProjectNameFromQuery(string $query): ?string
+    {
+        $queryLower = strtolower($query);
+        
+        // Common patterns for project queries
+        $patterns = [
+            '/status of project (.+)/i',
+            '/progress of project (.+)/i',
+            '/project status (.+)/i',
+            '/project progress (.+)/i',
+            '/how is project (.+)/i',
+            '/project update (.+)/i',
+            '/status of (.+) project/i',
+            '/progress of (.+) project/i',
+        ];
+        
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $query, $matches)) {
+                $projectName = trim($matches[1]);
+                // Remove common words that might be at the end
+                $projectName = preg_replace('/\s+(project|status|progress|update)$/i', '', $projectName);
+                return $projectName;
+            }
+        }
+        
+        return null;
     }
     
     /**
