@@ -358,6 +358,12 @@ class SmartTaskController extends Controller
         $isRecurring = $params['is_repeating'] ?? false;
         $repeatFrequency = $params['repeat_frequency'] ?? null;
         
+        Log::info('Smart API createTask - Starting task creation', [
+            'title' => $title,
+            'assigned_to' => $assignedTo,
+            'params' => $params
+        ]);
+        
         if (!$assignedTo) {
             return [
                 'content' => "❌ Please specify who to assign the task to. Example: \"create task for [name] to [action]\""
