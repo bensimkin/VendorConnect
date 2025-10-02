@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use OpenAI\Laravel\Facades\OpenAI;
 
 class SmartTaskController extends Controller
 {
@@ -56,8 +57,19 @@ class SmartTaskController extends Controller
                 'all_input' => $request->all()
             ]);
             
-            // Execute the action determined by n8n AI
-            $result = $this->executeAction($action, $params, $originalMessage);
+            // If no action provided or action is unknown, use OpenAI fallback
+            if (!$action || $action === 'unknown' || $action === 'fallback') {
+                Log::info('Smart API using OpenAI fallback', [
+                    'reason' => 'No action or unknown action',
+                    'action' => $action,
+                    'message' => $originalMessage
+                ]);
+                
+                $result = $this->openAIFallback($originalMessage, $params);
+            } else {
+                // Execute the action determined by n8n AI
+                $result = $this->executeAction($action, $params, $originalMessage);
+            }
             
             Log::info('Smart Task Response', [
                 'action' => $action,
@@ -75,6 +87,30 @@ class SmartTaskController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+            
+            // If there's an error and we have a message, try OpenAI fallback as last resort
+            $originalMessage = $request->input('message', '');
+            if ($originalMessage) {
+                try {
+                    Log::info('Smart API trying OpenAI fallback after error', [
+                        'error' => $e->getMessage(),
+                        'message' => $originalMessage
+                    ]);
+                    
+                    $fallbackResult = $this->openAIFallback($originalMessage, $request->input('params', []));
+                    
+                    return response()->json([
+                        'success' => true,
+                        'content' => $fallbackResult['content'],
+                        'data' => $fallbackResult['data'] ?? null
+                    ]);
+                } catch (\Exception $fallbackError) {
+                    Log::error('Smart API OpenAI fallback also failed', [
+                        'original_error' => $e->getMessage(),
+                        'fallback_error' => $fallbackError->getMessage()
+                    ]);
+                }
+            }
             
             return response()->json([
                 'success' => false,
@@ -1435,5 +1471,130 @@ class SmartTaskController extends Controller
             return (int) $matches[1];
         }
         return null;
+    }
+    
+    /**
+     * OpenAI fallback for complex requests
+     */
+    private function openAIFallback(string $message, array $params = []): array
+    {
+        try {
+            $apiKey = config('app.openai_api_key');
+            if (!$apiKey) {
+                return [
+                    'content' => "❌ OpenAI API key not configured. Please contact your administrator."
+                ];
+            }
+            
+            // Create the system prompt with API documentation
+            $systemPrompt = $this->getSystemPrompt();
+            
+            // Create the user prompt
+            $userPrompt = "User request: \"{$message}\"\n\nParameters: " . json_encode($params, JSON_PRETTY_PRINT);
+            
+            Log::info('Smart API OpenAI Fallback', [
+                'message' => $message,
+                'params' => $params
+            ]);
+            
+            $response = OpenAI::chat()->create([
+                'model' => 'gpt-4',
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $userPrompt]
+                ],
+                'max_tokens' => 1000,
+                'temperature' => 0.3
+            ]);
+            
+            $aiResponse = $response->choices[0]->message->content;
+            
+            Log::info('Smart API OpenAI Response', [
+                'response' => $aiResponse
+            ]);
+            
+            // Try to parse the AI response as JSON
+            $parsedResponse = json_decode($aiResponse, true);
+            
+            if ($parsedResponse && isset($parsedResponse['action'])) {
+                // AI provided a structured response, execute it
+                return $this->executeAction($parsedResponse['action'], $parsedResponse['params'] ?? [], $message);
+            } else {
+                // AI provided a natural language response
+                return [
+                    'content' => $aiResponse,
+                    'data' => ['ai_fallback' => true]
+                ];
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Smart API OpenAI Fallback Error', [
+                'error' => $e->getMessage(),
+                'message' => $message
+            ]);
+            
+            return [
+                'content' => "❌ I'm having trouble understanding your request. Please try rephrasing it or contact support if the issue persists."
+            ];
+        }
+    }
+    
+    /**
+     * Get the system prompt for OpenAI
+     */
+    private function getSystemPrompt(): string
+    {
+        return "You are an intelligent task management assistant for VendorConnect. You help users manage tasks, projects, and team members through natural language commands.
+
+AVAILABLE ACTIONS:
+1. create_task - Create a new task
+   Parameters: title, description, user_name, priority (low/medium/high/urgent), due_date, project_id
+   
+2. update_task - Update an existing task
+   Parameters: title (to find task), due_date, priority, status, description
+   
+3. delete_task - Delete a task
+   Parameters: title (to find task) or task_id
+   
+4. get_user_tasks - Get tasks for a specific user
+   Parameters: user_name
+   
+5. list_tasks - List tasks with filters
+   Parameters: status, priority, user_name, project_name
+   
+6. get_task_status - Get status of a specific task
+   Parameters: title (to find task) or task_id
+   
+7. get_projects - List all projects
+   Parameters: none
+   
+8. get_project_progress - Get progress of a specific project
+   Parameters: project_name
+   
+9. get_users - List all users
+   Parameters: none
+   
+10. get_dashboard - Get dashboard overview
+    Parameters: none
+
+RESPONSE FORMAT:
+If you can determine the correct action and parameters, respond with JSON:
+{
+  \"action\": \"action_name\",
+  \"params\": {
+    \"param1\": \"value1\",
+    \"param2\": \"value2\"
+  }
+}
+
+If you cannot determine the action or need clarification, respond with natural language explaining what you understand and what additional information you need.
+
+EXAMPLES:
+- \"create a task for John to review the proposal\" → {\"action\": \"create_task\", \"params\": {\"title\": \"Review the proposal\", \"user_name\": \"John\"}}
+- \"what tasks does Sarah have?\" → {\"action\": \"get_user_tasks\", \"params\": {\"user_name\": \"Sarah\"}}
+- \"delete the marketing task\" → {\"action\": \"delete_task\", \"params\": {\"title\": \"marketing task\"}}
+- \"change the due date for project review to next Friday\" → {\"action\": \"update_task\", \"params\": {\"title\": \"project review\", \"due_date\": \"next Friday\"}}
+
+Always be helpful and provide clear, actionable responses.";
     }
 }

@@ -19,6 +19,7 @@
         "laravel/ui": "^4.2",
         "league/flysystem-aws-s3-v3": "^3.22",
         "munafio/chatify": "^1.6",
+        "openai-php/client": "^0.10.1",
         "protonemedia/laravel-cross-eloquent-search": "^3.1",
         "psr/container": "^2.0",
         "sendgrid/sendgrid": "^8.1",

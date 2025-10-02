@@ -228,5 +228,6 @@ return [
     */
 
     'smart_api_key' => env('SMART_API_KEY'),
+    'openai_api_key' => env('OPENAI_API_KEY'),
 
 ];
