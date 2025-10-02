@@ -439,6 +439,11 @@ class SmartTaskController extends Controller
                 // If no exact match, try fuzzy matching
                 $bestMatch = $this->findBestTaskMatch($title, $existingTasks);
                 if ($bestMatch) {
+                    // Check if this is a disambiguation response
+                    if (isset($bestMatch['content']) && isset($bestMatch['data']['disambiguation'])) {
+                        return $bestMatch; // Return the disambiguation response
+                    }
+                    
                     Log::info('Smart API createTask - Found fuzzy match, reassigning', [
                         'existing_task_id' => $bestMatch['id'],
                         'existing_title' => $bestMatch['title'],
@@ -664,20 +669,45 @@ class SmartTaskController extends Controller
     private function findBestTaskMatch(string $searchTitle, array $tasks): ?array
     {
         $searchTitle = strtolower(trim($searchTitle));
-        $bestMatch = null;
-        $bestScore = 0;
+        $matches = [];
         
         foreach ($tasks as $task) {
             $taskTitle = strtolower(trim($task['title']));
             $score = $this->calculateTaskMatchScore($searchTitle, $taskTitle);
             
-            if ($score > $bestScore && $score >= 0.6) { // Minimum 60% match
-                $bestScore = $score;
-                $bestMatch = $task;
+            if ($score >= 0.6) { // Minimum 60% match
+                $matches[] = [
+                    'task' => $task,
+                    'score' => $score
+                ];
             }
         }
         
-        return $bestMatch;
+        if (empty($matches)) {
+            return null;
+        }
+        
+        // Sort by score (highest first)
+        usort($matches, function($a, $b) {
+            return $b['score'] <=> $a['score'];
+        });
+        
+        // If only one match, return it
+        if (count($matches) === 1) {
+            return $matches[0]['task'];
+        }
+        
+        // If multiple matches with similar high scores, ask for disambiguation
+        $topMatches = array_filter($matches, function($match) use ($matches) {
+            return $match['score'] >= $matches[0]['score'] - 0.1; // Within 10% of best score
+        });
+        
+        if (count($topMatches) > 1) {
+            return $this->createDisambiguationResponse($searchTitle, $topMatches);
+        }
+        
+        // Return the best match
+        return $matches[0]['task'];
     }
     
     /**
@@ -713,6 +743,58 @@ class SmartTaskController extends Controller
         }
         
         return $matches / $totalWords;
+    }
+    
+    /**
+     * Create a disambiguation response when multiple tasks match
+     */
+    private function createDisambiguationResponse(string $searchTitle, array $matches): array
+    {
+        $response = "🤔 **Multiple tasks found for \"{$searchTitle}\"**\n\n";
+        $response .= "I found " . count($matches) . " similar tasks. Which one did you mean?\n\n";
+        
+        foreach ($matches as $index => $match) {
+            $task = $match['task'];
+            $score = round($match['score'] * 100);
+            
+            // Get task details
+            $assignedTo = 'Unassigned';
+            if (!empty($task['users']) && is_array($task['users'])) {
+                $userNames = array_map(function($user) {
+                    return $user['first_name'] . ' ' . $user['last_name'];
+                }, $task['users']);
+                $assignedTo = implode(', ', $userNames);
+            }
+            
+            $status = $task['status']['title'] ?? 'Unknown';
+            $priority = $task['priority']['title'] ?? 'Unknown';
+            $dueDate = 'No due date';
+            if (!empty($task['end_date'])) {
+                $dueDate = \Carbon\Carbon::parse($task['end_date'])->format('M j, Y');
+            }
+            
+            $response .= "**" . ($index + 1) . ".** 🟡 **{$task['title']}** ({$score}% match)\n";
+            $response .= "   └ 👤 Assigned to: {$assignedTo}\n";
+            $response .= "   └ 📊 Status: {$status}\n";
+            $response .= "   └ 🎯 Priority: {$priority}\n";
+            $response .= "   └ 🗓️ Due: {$dueDate}\n\n";
+        }
+        
+        $response .= "💡 **To specify which task, try:**\n";
+        $response .= "• \"Update the first one\" or \"Update the second one\"\n";
+        $response .= "• \"Update [exact task title]\"\n";
+        $response .= "• \"Update the one assigned to [user name]\"\n";
+        $response .= "• \"Update the one due [date]\"\n\n";
+        $response .= "Or be more specific with the task name to avoid confusion.";
+        
+        return [
+            'content' => $response,
+            'data' => [
+                'disambiguation' => true,
+                'matches' => $matches,
+                'search_title' => $searchTitle
+            ]
+        ];
     }
     
     /**
@@ -1306,6 +1388,10 @@ class SmartTaskController extends Controller
                     if (!$taskId) {
                         $bestMatch = $this->findBestTaskMatch($taskTitle, $tasks);
                         if ($bestMatch) {
+                            // Check if this is a disambiguation response
+                            if (isset($bestMatch['content']) && isset($bestMatch['data']['disambiguation'])) {
+                                return $bestMatch; // Return the disambiguation response
+                            }
                             $taskId = $bestMatch['id'];
                         }
                     }
