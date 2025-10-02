@@ -208,7 +208,7 @@ class SmartTaskController extends Controller
         
         try {
             // Use the existing search endpoint to find users
-            $searchResponse = $this->getHttpClient()->get(secure_url('/api/search'), [
+            $searchResponse = $this->getHttpClient()->get(secure_url('/api/v1/search'), [
                 'q' => $userName,
                 'type' => 'users'
             ]);
@@ -224,13 +224,13 @@ class SmartTaskController extends Controller
             
             if (empty($users)) {
                 // Get all users to show available options
-                $usersResponse = $this->getHttpClient()->get(secure_url('/api/users'));
+                $usersResponse = $this->getHttpClient()->get(secure_url('/api/v1/users'));
                 if ($usersResponse->successful()) {
                     $allUsers = $usersResponse->json()['data'] ?? [];
                     $userList = collect($allUsers)->map(function($u) {
                         $displayName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
                         return "• {$displayName} ({$u['email']})";
-                    })->join("\n");
+            })->join("\n");
             
             return [
                 'content' => "❌ User '{$userName}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling or use a different name."
@@ -245,7 +245,7 @@ class SmartTaskController extends Controller
             $user = $users[0]; // Take the first match
             
             // Use the existing tasks endpoint with user filter
-            $tasksResponse = $this->getHttpClient()->get(secure_url('/api/tasks'), [
+            $tasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
                 'user_id' => $user['id']
             ]);
             
@@ -312,7 +312,7 @@ class SmartTaskController extends Controller
         
         try {
             // Use the existing search endpoint to find users
-            $searchResponse = $this->getHttpClient()->get(secure_url('/api/search'), [
+            $searchResponse = $this->getHttpClient()->get(secure_url('/api/v1/search'), [
                 'q' => $assignedTo,
                 'type' => 'users'
             ]);
@@ -328,13 +328,13 @@ class SmartTaskController extends Controller
             
             if (empty($users)) {
                 // Get all users to show available options
-                $usersResponse = $this->getHttpClient()->get(secure_url('/api/users'));
+                $usersResponse = $this->getHttpClient()->get(secure_url('/api/v1/users'));
                 if ($usersResponse->successful()) {
                     $allUsers = $usersResponse->json()['data'] ?? [];
                     $userList = collect($allUsers)->map(function($u) {
                         $displayName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
                         return "• {$displayName} ({$u['email']})";
-                    })->join("\n");
+            })->join("\n");
             
             return [
                 'content' => "❌ User '{$assignedTo}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling and try again."
@@ -363,7 +363,7 @@ class SmartTaskController extends Controller
                 'user_ids' => [$user['id']] // Assign to user
             ];
             
-            $taskResponse = $this->getHttpClient()->post(secure_url('/api/tasks'), $taskData);
+            $taskResponse = $this->getHttpClient()->post(secure_url('/api/v1/tasks'), $taskData);
             
             if (!$taskResponse->successful()) {
                 return [
@@ -415,7 +415,7 @@ class SmartTaskController extends Controller
                 $queryParams['user_id'] = $filters['user_id'];
             }
             
-            $url = secure_url('/api/tasks');
+            $url = secure_url('/api/v1/tasks');
             Log::info('Smart API making tasks request', [
                 'url' => $url,
                 'queryParams' => $queryParams
@@ -488,7 +488,7 @@ class SmartTaskController extends Controller
         
         try {
             // Use the existing tasks endpoint to get a specific task
-            $taskResponse = $this->getHttpClient()->get(secure_url("/api/tasks/{$taskId}"));
+            $taskResponse = $this->getHttpClient()->get(secure_url("/api/v1/tasks/{$taskId}"));
             
             if (!$taskResponse->successful()) {
                 if ($taskResponse->status() === 404) {
@@ -537,7 +537,7 @@ class SmartTaskController extends Controller
     private function getUsers(array $params): array
     {
         try {
-            $usersResponse = $this->getHttpClient()->get(secure_url('/api/users'));
+            $usersResponse = $this->getHttpClient()->get(secure_url('/api/v1/users'));
             
             if (!$usersResponse->successful()) {
                 return [
@@ -578,7 +578,7 @@ class SmartTaskController extends Controller
     private function getProjects(array $params): array
     {
         try {
-            $projectsResponse = $this->getHttpClient()->get(secure_url('/api/projects'));
+            $projectsResponse = $this->getHttpClient()->get(secure_url('/api/v1/projects'));
             
             if (!$projectsResponse->successful()) {
                 return [
@@ -618,7 +618,7 @@ class SmartTaskController extends Controller
     private function getDashboard(array $params): array
     {
         try {
-            $dashboardResponse = $this->getHttpClient()->get(secure_url('/api/dashboard'));
+            $dashboardResponse = $this->getHttpClient()->get(secure_url('/api/v1/dashboard'));
             
             if (!$dashboardResponse->successful()) {
                 return [
@@ -656,7 +656,7 @@ class SmartTaskController extends Controller
         }
         
         try {
-            $searchResponse = $this->getHttpClient()->get(secure_url('/api/search'), [
+            $searchResponse = $this->getHttpClient()->get(secure_url('/api/v1/search'), [
                 'q' => $query
             ]);
             
