@@ -1218,9 +1218,23 @@ class SmartTaskController extends Controller
     private function updateTask(array $params): array
     {
         // Handle different parameter formats from n8n
-        $taskId = $params['task_id'] ?? null;
-        $taskTitle = $params['title'] ?? $params['task_id'] ?? null; // n8n sometimes uses task_id as title
+        $taskId = null;
+        $taskTitle = null;
         $updateData = $params['update_data'] ?? [];
+        
+        // Determine if task_id is a numeric ID or a title string
+        if (isset($params['task_id'])) {
+            if (is_numeric($params['task_id'])) {
+                $taskId = (int) $params['task_id'];
+            } else {
+                $taskTitle = $params['task_id']; // Treat as title
+            }
+        }
+        
+        // Use title parameter if provided
+        if (isset($params['title'])) {
+            $taskTitle = $params['title'];
+        }
         
         // Handle direct field updates (like due_date, priority, etc.)
         if (isset($params['due_date'])) {
