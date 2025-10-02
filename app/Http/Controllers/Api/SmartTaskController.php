@@ -168,6 +168,9 @@ class SmartTaskController extends Controller
             case 'get_projects':
                 return $this->getProjects($params);
                 
+            case 'get_project_progress':
+                return $this->getProjectProgress($params);
+                
             case 'get_dashboard':
                 return $this->getDashboard($params);
                 
@@ -240,7 +243,7 @@ class SmartTaskController extends Controller
                 $userList = collect($allUsers)->map(function($u) {
                     $displayName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
                     return "• {$displayName} ({$u['email']})";
-                })->join("\n");
+            })->join("\n");
             
             return [
                 'content' => "❌ User '{$userName}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling or use a different name."
@@ -613,6 +616,93 @@ class SmartTaskController extends Controller
             Log::error('Smart Task getProjects Error', ['error' => $e->getMessage()]);
             return [
                 'content' => "❌ Sorry, I encountered an error while fetching projects. Please try again."
+            ];
+        }
+    }
+    
+    /**
+     * Get project progress using existing API endpoints
+     */
+    private function getProjectProgress(array $params): array
+    {
+        $projectName = $params['project_name'] ?? null;
+        
+        if (!$projectName) {
+            return [
+                'content' => "❌ Please specify a project name. Example: \"what's the progress of [project name]\""
+            ];
+        }
+        
+        try {
+            // Get all projects and search for the specified project
+            $projectsResponse = $this->getHttpClient()->get(secure_url('/api/v1/projects'));
+            
+            if (!$projectsResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to fetch projects. Please try again."
+                ];
+            }
+            
+            $projectsData = $projectsResponse->json();
+            $allProjects = $projectsData['data'] ?? [];
+            
+            // Search for project by name (case-insensitive partial match)
+            $foundProject = null;
+            $projectNameLower = strtolower($projectName);
+            
+            foreach ($allProjects as $project) {
+                $title = strtolower($project['title']);
+                
+                if (strpos($title, $projectNameLower) !== false) {
+                    $foundProject = $project;
+                    break;
+                }
+            }
+            
+            if (!$foundProject) {
+                $projectList = collect($allProjects)->map(function($p) {
+                    return "• {$p['title']}";
+                })->join("\n");
+                
+                return [
+                    'content' => "❌ Project '{$projectName}' not found.\n\n📁 Available projects:\n{$projectList}\n\nPlease check the spelling or use a different name."
+                ];
+            }
+            
+            // Format project progress information
+            $totalTasks = $foundProject['total_tasks'] ?? 0;
+            $completedTasks = $foundProject['completed_tasks'] ?? 0;
+            $activeTasks = $foundProject['active_tasks'] ?? 0;
+            $overdueTasks = $foundProject['overdue_tasks'] ?? 0;
+            $status = $foundProject['status']['title'] ?? 'Unknown';
+            
+            $progressPercentage = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
+            
+            $progressBar = str_repeat('🟩', min(10, $progressPercentage / 10)) . str_repeat('⬜', max(0, 10 - ($progressPercentage / 10)));
+            
+            $content = "📊 **Project Progress: {$foundProject['title']}**\n\n";
+            $content .= "📈 **Overall Progress: {$progressPercentage}%**\n";
+            $content .= "{$progressBar}\n\n";
+            $content .= "📋 **Task Breakdown:**\n";
+            $content .= "   • Total Tasks: {$totalTasks}\n";
+            $content .= "   • Completed: {$completedTasks}\n";
+            $content .= "   • Active: {$activeTasks}\n";
+            $content .= "   • Overdue: {$overdueTasks}\n\n";
+            $content .= "📊 **Status:** {$status}\n";
+            
+            if ($foundProject['description']) {
+                $content .= "\n📝 **Description:** {$foundProject['description']}\n";
+            }
+            
+            return [
+                'content' => $content,
+                'data' => $foundProject
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task getProjectProgress Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => "❌ Sorry, I encountered an error while fetching project progress. Please try again."
             ];
         }
     }
