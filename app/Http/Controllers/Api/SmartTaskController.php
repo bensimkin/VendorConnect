@@ -364,6 +364,29 @@ class SmartTaskController extends Controller
             ];
         }
         
+        // First, check if a task with this title already exists
+        try {
+            $existingTasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
+                'search' => $title,
+                'per_page' => 10
+            ]);
+            
+            if ($existingTasksResponse->successful()) {
+                $existingTasks = $existingTasksResponse->json()['data'] ?? [];
+                
+                // Look for exact title match
+                foreach ($existingTasks as $task) {
+                    if (strtolower($task['title']) === strtolower($title)) {
+                        // Found existing task, reassign it instead of creating new one
+                        return $this->reassignTask($task['id'], $assignedTo, $title);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Smart API createTask - Error checking existing tasks', ['error' => $e->getMessage()]);
+            // Continue with normal task creation if search fails
+        }
+        
         try {
             // Get all users and search locally for better matching
             $usersResponse = $this->getHttpClient()->get(secure_url('/api/v1/users'));
@@ -492,6 +515,127 @@ class SmartTaskController extends Controller
             Log::error('Smart Task createTask Error', ['error' => $e->getMessage()]);
             return [
                 'content' => "❌ Sorry, I encountered an error while creating the task. Please try again."
+            ];
+        }
+    }
+    
+    /**
+     * Reassign an existing task to a new user
+     */
+    private function reassignTask(int $taskId, string $assignedTo, string $taskTitle): array
+    {
+        try {
+            // Get all users and search for the target user
+            $usersResponse = $this->getHttpClient()->get(secure_url('/api/v1/users'));
+            
+            if (!$usersResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to fetch users. Please try again."
+                ];
+            }
+            
+            $usersData = $usersResponse->json();
+            $allUsers = $usersData['data'] ?? [];
+            
+            // Search for user by name (case-insensitive partial match)
+            $foundUser = null;
+            $userNameLower = strtolower($assignedTo);
+            $candidates = [];
+            
+            foreach ($allUsers as $user) {
+                $fullName = strtolower($user['first_name'] . ' ' . $user['last_name']);
+                $firstName = strtolower($user['first_name']);
+                $lastName = strtolower($user['last_name']);
+                
+                $score = 0;
+                
+                // Exact first name match gets highest priority
+                if ($firstName === $userNameLower) {
+                    $score = 100;
+                    // Bonus points for admin role when there's an exact first name match
+                    if (isset($user['roles']) && is_array($user['roles'])) {
+                        foreach ($user['roles'] as $role) {
+                            if (isset($role['name']) && strtolower($role['name']) === 'admin') {
+                                $score += 10; // Admin bonus
+                                break;
+                            }
+                        }
+                    }
+                }
+                // Exact full name match gets high priority
+                elseif ($fullName === $userNameLower) {
+                    $score = 90;
+                }
+                // First name starts with search term
+                elseif (strpos($firstName, $userNameLower) === 0) {
+                    $score = 80;
+                }
+                // Full name starts with search term
+                elseif (strpos($fullName, $userNameLower) === 0) {
+                    $score = 70;
+                }
+                // First name contains search term
+                elseif (strpos($firstName, $userNameLower) !== false) {
+                    $score = 60;
+                }
+                // Full name contains search term
+                elseif (strpos($fullName, $userNameLower) !== false) {
+                    $score = 50;
+                }
+                // Last name contains search term
+                elseif (strpos($lastName, $userNameLower) !== false) {
+                    $score = 40;
+                }
+                
+                if ($score > 0) {
+                    $candidates[] = ['user' => $user, 'score' => $score];
+                }
+            }
+            
+            // Sort candidates by score (highest first) and take the best match
+            if (!empty($candidates)) {
+                usort($candidates, function($a, $b) {
+                    return $b['score'] - $a['score'];
+                });
+                $foundUser = $candidates[0]['user'];
+            }
+            
+            if (!$foundUser) {
+                $userList = collect($allUsers)->map(function($u) {
+                    $displayName = trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
+                    return "• {$displayName} ({$u['email']})";
+                })->join("\n");
+                
+                return [
+                    'content' => "❌ User '{$assignedTo}' not found.\n\n👥 Available users:\n{$userList}\n\nPlease check the spelling or use a different name."
+                ];
+            }
+            
+            // Update the task to assign it to the new user
+            $updateData = [
+                'user_ids' => [$foundUser['id']]
+            ];
+            
+            $taskResponse = $this->getHttpClient()->put(secure_url("/api/v1/tasks/{$taskId}"), $updateData);
+            
+            if (!$taskResponse->successful()) {
+                return [
+                    'content' => "❌ Unable to reassign task. Please try again."
+                ];
+            }
+            
+            $task = $taskResponse->json()['data'] ?? [];
+            $displayName = trim(($foundUser['first_name'] ?? '') . ' ' . ($foundUser['last_name'] ?? ''));
+            
+            return [
+                'content' => "✅ **Task Reassigned Successfully!**\n\n🟡 **{$taskTitle}**\n   └ 👤 Reassigned to: {$displayName}\n   └ 📊 Status: " . ($task['status']['title'] ?? 'Active') . "\n   └ 🎯 Priority: " . ($task['priority']['title'] ?? 'Medium') . "\n   └ 🗓️ Due: " . (isset($task['end_date']) ? \Carbon\Carbon::parse($task['end_date'])->format('M j, Y') : 'Not set') . "\n\n💡 You can check on this task anytime by asking: \"What tasks does {$displayName} have?\"",
+                'data' => $task
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task reassignTask Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => "❌ Sorry, I encountered an error while reassigning the task. Please try again."
             ];
         }
     }
