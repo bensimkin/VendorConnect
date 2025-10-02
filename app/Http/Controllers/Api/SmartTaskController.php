@@ -201,6 +201,9 @@ class SmartTaskController extends Controller
             case 'get_task_status':
                 return $this->getTaskStatus($params);
                 
+            case 'get_task_updates':
+                return $this->getTaskUpdates($params);
+                
             case 'get_users':
                 return $this->getUsers($params);
                 
@@ -1151,6 +1154,82 @@ class SmartTaskController extends Controller
     }
     
     /**
+     * Get task updates/messages using existing API endpoints
+     */
+    private function getTaskUpdates(array $params): array
+    {
+        $taskId = $params['task_id'] ?? null;
+        $taskTitle = $params['task_title'] ?? null;
+        
+        // If no task ID provided, try to find task by title
+        if (!$taskId && $taskTitle) {
+            try {
+                $tasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
+                    'search' => $taskTitle,
+                    'per_page' => 200
+                ]);
+                
+                if ($tasksResponse->successful()) {
+                    $tasks = $tasksResponse->json()['data'] ?? [];
+                    foreach ($tasks as $task) {
+                        if (strtolower($task['title']) === strtolower($taskTitle)) {
+                            $taskId = $task['id'];
+                            break;
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Smart Task getTaskUpdates - Error finding task by title', ['error' => $e->getMessage()]);
+            }
+        }
+        
+        if (!$taskId) {
+            return [
+                'content' => "❌ **Task Not Found**\n\nI couldn't find a task with the specified title or ID.\n\n💡 **Suggestions:**\n• Check the spelling of the task name\n• Try a partial match (e.g., \"GHL\" instead of \"Update GHL Sales Data\")\n• Ask me to list all tasks to see what's available"
+            ];
+        }
+        
+        try {
+            // Get task messages
+            $messagesResponse = $this->getHttpClient()->get(secure_url("/api/v1/tasks/{$taskId}/messages"));
+            
+            if (!$messagesResponse->successful()) {
+                return [
+                    'content' => $this->generateConversationalResponse('api_error') . "\n\nI'm having trouble accessing the task updates right now."
+                ];
+            }
+            
+            $messagesData = $messagesResponse->json();
+            $messages = $messagesData['data'] ?? [];
+            
+            if (empty($messages)) {
+                return [
+                    'content' => "📝 **No Updates Found**\n\nThis task doesn't have any messages or updates yet.\n\n💡 **To add an update:**\n• Ask me to add a message to this task\n• Or update the task status/description"
+                ];
+            }
+            
+            // Format messages
+            $updatesList = collect($messages)->map(function($message) {
+                $senderName = trim(($message['sender']['first_name'] ?? '') . ' ' . ($message['sender']['last_name'] ?? ''));
+                $sentAt = \Carbon\Carbon::parse($message['sent_at'])->format('M j, Y \a\t g:i A');
+                
+                return "💬 **{$senderName}** ({$sentAt})\n   └ {$message['message_text']}";
+            })->join("\n\n");
+            
+            return [
+                'content' => "📝 **Task Updates** (" . count($messages) . " total)\n\n{$updatesList}\n\n💡 **To add an update:**\n• Ask me to add a message to this task",
+                'data' => $messages
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Smart Task getTaskUpdates Error', ['error' => $e->getMessage()]);
+            return [
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble getting the task updates."
+            ];
+        }
+    }
+    
+    /**
      * Get users using existing API endpoints
      */
     private function getUsers(array $params): array
@@ -1924,6 +2003,8 @@ class SmartTaskController extends Controller
                         return $this->listTasks($params);
                     case 'get_task_status':
                         return $this->getTaskStatus($params);
+                    case 'get_task_updates':
+                        return $this->getTaskUpdates($params);
                     case 'get_users':
                         return $this->getUsers($params);
                     case 'get_projects':
