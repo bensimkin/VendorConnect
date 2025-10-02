@@ -1497,7 +1497,7 @@ class SmartTaskController extends Controller
                 'params' => $params
             ]);
             
-            $client = new Client($apiKey);
+            $client = \OpenAI::client($apiKey);
             $response = $client->chat()->create([
                 'model' => 'gpt-4',
                 'messages' => [
