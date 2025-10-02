@@ -25,20 +25,20 @@ class PasswordResetMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            'Reset Your Password - ' . config('app.name')
+            subject: 'Reset Your Password - ' . config('app.name')
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            'emails.password-reset',
-            'emails.password-reset-text',
-            [
+            view: 'emails.password-reset',
+            with: [
                 'user' => $this->user,
                 'resetUrl' => $this->resetUrl,
                 'appName' => config('app.name', 'VendorConnect'),
-            ]
+            ],
+            text: 'emails.password-reset-text'
         );
     }
 }
