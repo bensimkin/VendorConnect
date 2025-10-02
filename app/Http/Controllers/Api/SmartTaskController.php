@@ -1018,7 +1018,7 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart Task reassignTask Error', ['error' => $e->getMessage()]);
             return [
-                'content' => "❌ Sorry, I encountered an error while reassigning the task. Please try again."
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble reassigning that task for you."
             ];
         }
     }
@@ -1158,7 +1158,7 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart Task getTaskStatus Error', ['error' => $e->getMessage()]);
             return [
-                'content' => "❌ Sorry, I encountered an error while fetching task status. Please try again."
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble getting the task status."
             ];
         }
     }
@@ -1199,7 +1199,7 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart Task getUsers Error', ['error' => $e->getMessage()]);
             return [
-                'content' => "❌ Sorry, I encountered an error while fetching users. Please try again."
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble getting the user list."
             ];
         }
     }
@@ -1239,7 +1239,7 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart Task getProjects Error', ['error' => $e->getMessage()]);
             return [
-                'content' => "❌ Sorry, I encountered an error while fetching projects. Please try again."
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble getting the project list."
             ];
         }
     }
@@ -1326,7 +1326,7 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart Task getProjectProgress Error', ['error' => $e->getMessage()]);
             return [
-                'content' => "❌ Sorry, I encountered an error while fetching project progress. Please try again."
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble getting the project progress."
             ];
         }
     }
@@ -1356,7 +1356,7 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart Task getDashboard Error', ['error' => $e->getMessage()]);
             return [
-                'content' => "❌ Sorry, I encountered an error while fetching dashboard data. Please try again."
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble getting the dashboard data."
             ];
         }
     }
@@ -1426,7 +1426,7 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart Task searchContent Error', ['error' => $e->getMessage()]);
             return [
-                'content' => "❌ Sorry, I encountered an error while searching. Please try again."
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble searching for that."
             ];
         }
     }
@@ -1605,7 +1605,7 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart Task updateTaskStatus Error', ['error' => $e->getMessage()]);
             return [
-                'content' => "❌ Sorry, I encountered an error while updating task status. Please try again."
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble updating the task status."
             ];
         }
     }
@@ -1645,7 +1645,7 @@ class SmartTaskController extends Controller
         } catch (\Exception $e) {
             Log::error('Smart Task updateTaskPriority Error', ['error' => $e->getMessage()]);
             return [
-                'content' => "❌ Sorry, I encountered an error while updating task priority. Please try again."
+                'content' => $this->generateConversationalResponse('api_error') . "\n\nI had trouble updating the task priority."
             ];
         }
     }
