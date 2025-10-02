@@ -1348,8 +1348,28 @@ class SmartTaskController extends Controller
             $dashboardData = $dashboardResponse->json();
             $data = $dashboardData['data'] ?? [];
             
+            // Extract task statistics from the correct data structure
+            $overview = $data['overview'] ?? [];
+            $taskStats = $data['task_statistics'] ?? [];
+            $statusStats = $taskStats['by_status'] ?? [];
+            
+            // Calculate active and completed tasks from status statistics
+            $activeTasks = 0;
+            $completedTasks = 0;
+            
+            foreach ($statusStats as $statusId => $count) {
+                // Status ID 20 = Active, Status ID 17 = Completed
+                if ($statusId == 20) {
+                    $activeTasks = $count;
+                } elseif ($statusId == 17) {
+                    $completedTasks = $count;
+                }
+            }
+            
+            $totalTasks = $overview['total_tasks'] ?? array_sum($statusStats);
+            
             return [
-                'content' => "📊 **Dashboard Overview**\n\n• Total Tasks: " . ($data['total_tasks'] ?? 'N/A') . "\n• Active Tasks: " . ($data['active_tasks'] ?? 'N/A') . "\n• Completed Tasks: " . ($data['completed_tasks'] ?? 'N/A'),
+                'content' => "📊 **Dashboard Overview**\n\n• Total Tasks: {$totalTasks}\n• Active Tasks: {$activeTasks}\n• Completed Tasks: {$completedTasks}",
                 'data' => $data
             ];
             
