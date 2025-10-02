@@ -1517,13 +1517,13 @@ class SmartTaskController extends Controller
             
             $client = \OpenAI::client($apiKey);
             $response = $client->chat()->create([
-                'model' => 'gpt-4',
+                'model' => 'gpt-3.5-turbo',
                 'messages' => [
                     ['role' => 'system', 'content' => $systemPrompt],
                     ['role' => 'user', 'content' => $userPrompt]
                 ],
-                'max_tokens' => 1000,
-                'temperature' => 0.3
+                'max_tokens' => 500,
+                'temperature' => 0.1
             ]);
             
             $aiResponse = $response->choices[0]->message->content;
@@ -1563,57 +1563,22 @@ class SmartTaskController extends Controller
      */
     private function getSystemPrompt(): string
     {
-        return "You are an intelligent task management assistant for VendorConnect. You help users manage tasks, projects, and team members through natural language commands.
+        return "You are a task management assistant. Analyze the user request and return JSON with the correct action and parameters.
 
-AVAILABLE ACTIONS:
-1. create_task - Create a new task
-   Parameters: title, description, user_name, priority (low/medium/high/urgent), due_date, project_id
-   
-2. update_task - Update an existing task
-   Parameters: title (to find task), due_date, priority, status, description
-   
-3. delete_task - Delete a task
-   Parameters: title (to find task) or task_id
-   
-4. get_user_tasks - Get tasks for a specific user
-   Parameters: user_name
-   
-5. list_tasks - List tasks with filters
-   Parameters: status, priority, user_name, project_name
-   
-6. get_task_status - Get status of a specific task
-   Parameters: title (to find task) or task_id
-   
-7. get_projects - List all projects
-   Parameters: none
-   
-8. get_project_progress - Get progress of a specific project
-   Parameters: project_name
-   
-9. get_users - List all users
-   Parameters: none
-   
-10. get_dashboard - Get dashboard overview
-    Parameters: none
+ACTIONS:
+- create_task: title, user_name, description, priority, due_date
+- update_task: title, due_date, priority, status, description  
+- delete_task: title
+- get_user_tasks: user_name
+- list_tasks: status, priority, user_name
+- get_projects: (no params)
+- get_users: (no params)
 
-RESPONSE FORMAT:
-If you can determine the correct action and parameters, respond with JSON:
-{
-  \"action\": \"action_name\",
-  \"params\": {
-    \"param1\": \"value1\",
-    \"param2\": \"value2\"
-  }
-}
-
-If you cannot determine the action or need clarification, respond with natural language explaining what you understand and what additional information you need.
+RESPONSE: Always return JSON only:
+{\"action\": \"action_name\", \"params\": {\"param\": \"value\"}}
 
 EXAMPLES:
-- \"create a task for John to review the proposal\" → {\"action\": \"create_task\", \"params\": {\"title\": \"Review the proposal\", \"user_name\": \"John\"}}
-- \"what tasks does Sarah have?\" → {\"action\": \"get_user_tasks\", \"params\": {\"user_name\": \"Sarah\"}}
-- \"delete the marketing task\" → {\"action\": \"delete_task\", \"params\": {\"title\": \"marketing task\"}}
-- \"change the due date for project review to next Friday\" → {\"action\": \"update_task\", \"params\": {\"title\": \"project review\", \"due_date\": \"next Friday\"}}
-
-Always be helpful and provide clear, actionable responses.";
+\"create task for John to review proposal\" → {\"action\": \"create_task\", \"params\": {\"title\": \"review proposal\", \"user_name\": \"John\"}}
+\"change due date for Check cursor to Oct 15\" → {\"action\": \"update_task\", \"params\": {\"title\": \"Check cursor\", \"due_date\": \"2025-10-15\"}}";
     }
 }
