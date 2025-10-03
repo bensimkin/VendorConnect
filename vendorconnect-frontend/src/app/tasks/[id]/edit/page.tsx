@@ -411,20 +411,17 @@ export default function EditTaskPage() {
     }
   };
 
-  if (loading) return (
-    <MainLayout>
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="mt-2 text-muted-foreground">Loading task...</p>
-        </div>
-      </div>
-    </MainLayout>
-  );
-
   return (
     <MainLayout>
-      <div className="space-y-6">
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-muted-foreground">Loading task...</p>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Button
@@ -858,6 +855,7 @@ export default function EditTaskPage() {
           </div>
         </form>
       </div>
+      )}
     </MainLayout>
   );
 }
