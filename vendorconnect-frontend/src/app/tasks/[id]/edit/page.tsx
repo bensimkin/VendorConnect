@@ -424,12 +424,6 @@ export default function EditTaskPage() {
     );
   }
 
-  // Debug: Check if data is loaded
-
-  // Debug: Log current state before render
-
-
-
   return (
     <MainLayout>
       <div className="space-y-6">
