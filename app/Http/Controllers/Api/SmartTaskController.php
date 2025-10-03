@@ -1074,9 +1074,11 @@ class SmartTaskController extends Controller
     private function listTasks(array $analysis): array
     {
         $filters = $analysis['filters'] ?? [];
+        $isOverdueRequest = isset($filters['overdue']) && $filters['overdue'] === true;
         
         Log::info('Smart API listTasks called', [
             'filters' => $filters,
+            'is_overdue_request' => $isOverdueRequest,
             'analysis' => $analysis
         ]);
         
@@ -1096,15 +1098,34 @@ class SmartTaskController extends Controller
             
             $dashboardData = $dashboardResponse->json();
             $data = $dashboardData['data'] ?? [];
-            $tasks = $data['recent_tasks'] ?? [];
+            
+            // Choose the correct task list based on filter
+            if ($isOverdueRequest) {
+                $tasks = $data['overdue_tasks'] ?? [];
+                $taskTypeLabel = "Overdue Tasks";
+            } else {
+                $tasks = $data['recent_tasks'] ?? [];
+                $taskTypeLabel = "Tasks Found";
+            }
+            
+            // Filter out completed and archived tasks
+            $tasks = collect($tasks)->filter(function($task) {
+                $statusSlug = strtolower($task['status']['slug'] ?? $task['status']['title'] ?? '');
+                return !in_array($statusSlug, ['completed', 'archive', 'archived']);
+            })->values()->all();
             
             if (empty($tasks)) {
-            return [
-                'content' => "📋 No tasks found matching your criteria.\n\n💡 Try asking:\n• \"What tasks are active?\"\n• \"Show me all tasks\"\n• \"What tasks does [name] have?\""
-            ];
-        }
-        
-        // Format tasks
+                if ($isOverdueRequest) {
+                    return [
+                        'content' => "✅ **Great news!** No overdue tasks.\n\n💡 Everything is on track!"
+                    ];
+                }
+                return [
+                    'content' => "📋 No tasks found matching your criteria.\n\n💡 Try asking:\n• \"What tasks are active?\"\n• \"Show me all tasks\"\n• \"What tasks does [name] have?\""
+                ];
+            }
+            
+            // Format tasks
             $taskList = collect($tasks)->map(function($task) {
                 $assignees = collect($task['users'] ?? [])->map(function($u) {
                     return trim(($u['first_name'] ?? '') . ' ' . ($u['last_name'] ?? ''));
@@ -1114,13 +1135,24 @@ class SmartTaskController extends Controller
                 $project = $task['project']['title'] ?? 'No Project';
                 $dueDate = $task['end_date'] ? date('M j, Y', strtotime($task['end_date'])) : 'No due date';
                 
-                return "🟡 **{$task['title']}**\n   └ 👤 {$assignees} | 📊 {$status} | 🎯 {$priority} | 📁 {$project} | 🗓️ {$dueDate}";
-        })->join("\n\n");
-        
-        return [
-                'content' => "📋 **Tasks Found** (" . count($tasks) . " total)\n\n{$taskList}\n\n💡 Need to create a task? Just ask: \"Create a task for [name] to [action]\"",
-            'data' => $tasks
-        ];
+                // Calculate days overdue if this is an overdue request
+                $overdueInfo = '';
+                if ($task['end_date']) {
+                    $dueTime = strtotime($task['end_date']);
+                    $now = time();
+                    if ($dueTime < $now) {
+                        $daysOverdue = floor(($now - $dueTime) / 86400);
+                        $overdueInfo = " | 🚨 {$daysOverdue} days overdue";
+                    }
+                }
+                
+                return "🔴 **{$task['title']}**\n   └ 👤 {$assignees} | 📊 {$status} | 🎯 {$priority} | 📁 {$project} | 🗓️ {$dueDate}{$overdueInfo}";
+            })->join("\n\n");
+            
+            return [
+                'content' => "📋 **{$taskTypeLabel}** (" . count($tasks) . " total)\n\n{$taskList}\n\n💡 Need to create a task? Just ask: \"Create a task for [name] to [action]\"",
+                'data' => $tasks
+            ];
             
         } catch (\Exception $e) {
             Log::error('Smart Task listTasks Error', ['error' => $e->getMessage()]);
