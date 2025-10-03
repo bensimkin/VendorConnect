@@ -114,6 +114,13 @@ class GenerateRepeatingTasks extends Command
                 return null;
         }
 
+        // Skip weekends if the option is enabled (default is true)
+        if ($task->skip_weekends ?? true) {
+            while ($nextDate->isWeekend()) {
+                $nextDate->addDay();
+            }
+        }
+
         // Only return if the next date is in the future
         return $nextDate->isFuture() ? $nextDate : null;
     }

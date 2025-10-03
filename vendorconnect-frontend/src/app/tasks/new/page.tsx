@@ -114,6 +114,7 @@ function NewTaskPageContent() {
     is_repeating: false,
     repeat_frequency: '',
     repeat_interval: 1,
+    skip_weekends: true,
     repeat_until: '',
     repeat_start: '',
   });
@@ -310,6 +311,7 @@ function NewTaskPageContent() {
         is_repeating: formData.is_repeating,
         repeat_frequency: formData.repeat_frequency || null,
         repeat_interval: formData.repeat_interval,
+        skip_weekends: formData.skip_weekends,
         repeat_until: formData.repeat_until || null,
         repeat_start: formData.repeat_start || null,
         template_id: selectedTemplate ? parseInt(selectedTemplate) : null,
@@ -891,6 +893,19 @@ function NewTaskPageContent() {
                       />
                       <p className="text-xs text-muted-foreground">Leave empty to repeat indefinitely</p>
                     </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2 pl-6">
+                    <input
+                      type="checkbox"
+                      id="skip_weekends"
+                      checked={formData.skip_weekends}
+                      onChange={(e) => setFormData({ ...formData, skip_weekends: e.target.checked })}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <Label htmlFor="skip_weekends" className="text-sm font-normal cursor-pointer">
+                      Skip weekends (automatically move tasks that fall on Saturday/Sunday to Monday)
+                    </Label>
                   </div>
 
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">

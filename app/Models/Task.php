@@ -31,6 +31,7 @@ class Task extends Model implements HasMedia
         'is_repeating',
         'repeat_frequency',
         'repeat_interval',
+        'skip_weekends',
         'repeat_until',
         'repeat_start',
         'repeat_active',
@@ -46,6 +47,7 @@ class Task extends Model implements HasMedia
     protected $casts = [
         'is_repeating' => 'boolean',
         'repeat_active' => 'boolean',
+        'skip_weekends' => 'boolean',
         'repeat_until' => 'date',
         'repeat_start' => 'date',
         'last_repeated_at' => 'datetime',
