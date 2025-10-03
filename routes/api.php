@@ -128,6 +128,12 @@ Route::delete('/{taskId}/deliverables/{deliverableId}/files/{mediaId}', [TaskDel
             // Task information
             Route::get('/{id}/information', [TaskController::class, 'getInformation']);
             
+            // Client brief and brand guide files (accessible on task page)
+            Route::get('/{id}/client-brief-files', [TaskController::class, 'getClientBriefAndFiles']);
+            Route::put('/{id}/client-brief', [TaskController::class, 'updateClientBrief']);
+            Route::post('/{id}/files', [TaskController::class, 'uploadTaskFile']);
+            Route::delete('/{taskId}/files/{fileId}', [TaskController::class, 'deleteTaskFile']);
+            
             // Task repetition
             Route::post('/{id}/stop-repetition', [TaskController::class, 'stopRepetition']);
             Route::post('/{id}/resume-repetition', [TaskController::class, 'resumeRepetition']);

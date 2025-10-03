@@ -23,6 +23,7 @@ use App\Models\TaskBriefChecklist;
 use App\Models\Portfolio;
 use App\Models\TaskAssignmentHistory;
 use App\Services\NotificationService;
+use App\Models\TaskFile;
 
 class TaskController extends BaseController
 {
@@ -1347,6 +1348,202 @@ class TaskController extends BaseController
             return $this->sendResponse($childTasks, 'Repeating task history retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error retrieving repeating task history: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get client brief and brand guide files for a task
+     * Accessible to all users who can view the task
+     */
+    public function getClientBriefAndFiles($id)
+    {
+        try {
+            $task = Task::with(['brandGuideFiles', 'clientFiles'])->find($id);
+
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+
+            // Check if user has access to this task
+            $user = Auth::user();
+            if (!$this->hasAdminAccess($user)) {
+                if ($user->hasRole('Requester')) {
+                    // Requesters can only access tasks they created or are assigned to
+                    if ($task->created_by !== $user->id && !$task->users->contains($user->id)) {
+                        return $this->sendUnauthorized('You do not have access to this task');
+                    }
+                } elseif ($user->hasRole('Tasker')) {
+                    // Taskers can only access tasks they're assigned to
+                    if (!$task->users->contains($user->id)) {
+                        return $this->sendUnauthorized('You do not have access to this task');
+                    }
+                }
+            }
+
+            return $this->sendResponse([
+                'task_id' => $task->id,
+                'task_title' => $task->title,
+                'client_brief' => $task->client_brief,
+                'brand_guide_files' => $task->brandGuideFiles->map(function($file) {
+                    return [
+                        'id' => $file->id,
+                        'file_name' => $file->file_name,
+                        'file_path' => $file->file_path,
+                        'file_type' => $file->file_type,
+                        'file_size' => $file->file_size,
+                        'description' => $file->description,
+                        'created_at' => $file->created_at,
+                    ];
+                }),
+                'client_files' => $task->clientFiles->map(function($file) {
+                    return [
+                        'id' => $file->id,
+                        'file_name' => $file->file_name,
+                        'file_path' => $file->file_path,
+                        'file_type' => $file->file_type,
+                        'file_size' => $file->file_size,
+                        'description' => $file->description,
+                        'created_at' => $file->created_at,
+                    ];
+                }),
+            ], 'Client brief and files retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving client brief and files: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update task client brief
+     */
+    public function updateClientBrief(Request $request, $id)
+    {
+        try {
+            $task = Task::find($id);
+
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+
+            // Check permissions
+            $user = Auth::user();
+            if (!$this->hasAdminAccess($user) && !$user->hasRole('Requester')) {
+                return $this->sendUnauthorized('You do not have permission to update client brief');
+            }
+
+            // Requesters can only update tasks they created
+            if ($user->hasRole('Requester') && $task->created_by !== $user->id) {
+                return $this->sendUnauthorized('You can only update your own tasks');
+            }
+
+            $validator = Validator::make($request->all(), [
+                'client_brief' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendValidationError($validator->errors());
+            }
+
+            $task->update([
+                'client_brief' => $request->client_brief
+            ]);
+
+            return $this->sendResponse($task, 'Client brief updated successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error updating client brief: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Upload task files (brand guide or client files)
+     */
+    public function uploadTaskFile(Request $request, $id)
+    {
+        try {
+            $task = Task::find($id);
+
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+
+            // Check permissions
+            $user = Auth::user();
+            if (!$this->hasAdminAccess($user) && !$user->hasRole('Requester')) {
+                return $this->sendUnauthorized('You do not have permission to upload files');
+            }
+
+            // Requesters can only upload to tasks they created
+            if ($user->hasRole('Requester') && $task->created_by !== $user->id) {
+                return $this->sendUnauthorized('You can only upload files to your own tasks');
+            }
+
+            $validator = Validator::make($request->all(), [
+                'file' => 'required|file|max:10240', // 10MB max
+                'file_category' => 'required|in:brand_guide,client_file',
+                'description' => 'nullable|string|max:500',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendValidationError($validator->errors());
+            }
+
+            $file = $request->file('file');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('task_files/' . $task->id, $fileName, 'public');
+
+            $taskFile = $task->taskFiles()->create([
+                'file_path' => $filePath,
+                'file_category' => $request->file_category,
+                'file_name' => $file->getClientOriginalName(),
+                'file_type' => $file->getClientMimeType(),
+                'file_size' => $file->getSize(),
+                'description' => $request->description,
+            ]);
+
+            return $this->sendResponse($taskFile, 'File uploaded successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error uploading file: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete task file
+     */
+    public function deleteTaskFile($taskId, $fileId)
+    {
+        try {
+            $task = Task::find($taskId);
+
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+
+            // Check permissions
+            $user = Auth::user();
+            if (!$this->hasAdminAccess($user) && !$user->hasRole('Requester')) {
+                return $this->sendUnauthorized('You do not have permission to delete files');
+            }
+
+            // Requesters can only delete files from tasks they created
+            if ($user->hasRole('Requester') && $task->created_by !== $user->id) {
+                return $this->sendUnauthorized('You can only delete files from your own tasks');
+            }
+
+            $file = $task->taskFiles()->find($fileId);
+
+            if (!$file) {
+                return $this->sendNotFound('File not found');
+            }
+
+            // Delete file from storage
+            if (Storage::disk('public')->exists($file->file_path)) {
+                Storage::disk('public')->delete($file->file_path);
+            }
+
+            $file->delete();
+
+            return $this->sendResponse(null, 'File deleted successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error deleting file: ' . $e->getMessage());
         }
     }
 }
