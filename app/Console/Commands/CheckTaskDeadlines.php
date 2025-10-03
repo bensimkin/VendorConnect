@@ -31,8 +31,8 @@ class CheckTaskDeadlines extends Command
             ->get();
 
         foreach ($tasksDueSoon as $task) {
-            // Skip completed tasks
-            if ($task->status && strtolower($task->status->name) === 'completed') {
+            // Skip completed and archived tasks
+            if ($task->status && (strtolower($task->status->slug) === 'completed' || strtolower($task->status->slug) === 'archive')) {
                 continue;
             }
 
@@ -55,8 +55,8 @@ class CheckTaskDeadlines extends Command
             ->get();
 
         foreach ($overdueTasks as $task) {
-            // Skip completed tasks
-            if ($task->status && strtolower($task->status->name) === 'completed') {
+            // Skip completed and archived tasks
+            if ($task->status && (strtolower($task->status->slug) === 'completed' || strtolower($task->status->slug) === 'archive')) {
                 continue;
             }
 
