@@ -412,6 +412,14 @@ class SmartTaskController extends Controller
         $templateId = $params['template_id'] ?? null;
         $templateName = $params['template_name'] ?? null;
         
+        // Use default user "Kristine" if no user is specified
+        if (!$assignedTo || trim($assignedTo) === '') {
+            $assignedTo = 'Kristine';
+            Log::info('Smart API createTask - No user specified, using default', [
+                'default_user' => $assignedTo
+            ]);
+        }
+        
         Log::info('Smart API createTask - Starting task creation', [
             'title' => $title,
             'assigned_to' => $assignedTo,
@@ -419,12 +427,6 @@ class SmartTaskController extends Controller
             'template_name' => $templateName,
             'params' => $params
         ]);
-        
-        if (!$assignedTo) {
-            return [
-                'content' => "❌ Please specify who to assign the task to. Example: \"create task for [name] to [action]\""
-            ];
-        }
         
         // First, check if a task with this title already exists (optimized single call)
         try {
