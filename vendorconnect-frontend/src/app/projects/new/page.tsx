@@ -104,7 +104,7 @@ function NewProjectPageContent() {
 
     setSaving(true);
     try {
-      const payload = {
+      const payload: any = {
         ...formData,
         start_date: formData.start_date,
         end_date: formData.end_date || null, // Set to null if empty
@@ -115,10 +115,10 @@ function NewProjectPageContent() {
       // Only include client fields based on settings
       if (settings.allow_multiple_clients_per_project) {
         payload.client_ids = formData.client_ids;
-        // Don't set client_id when multiple clients are enabled
-      } else {
-        payload.client_id = formData.client_id ? String(parseInt(formData.client_id)) : undefined;
-        // Don't include client_ids at all when multiple clients are disabled
+        delete payload.client_id; // Remove single client_id when multiple clients enabled
+      } else if (formData.client_id) {
+        payload.client_id = formData.client_id;
+        delete payload.client_ids; // Remove client_ids when single client mode
       }
 
       console.log('Project creation payload:', payload);
