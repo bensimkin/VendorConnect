@@ -8,8 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Save, Trash2, Plus, X, FileText } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'react-hot-toast';
 
@@ -411,17 +410,22 @@ export default function EditTaskPage() {
     }
   };
 
-  return (
-    <MainLayout>
-      {loading ? (
+  if (loading) {
+    return (
+      <MainLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
             <p className="mt-2 text-muted-foreground">Loading task...</p>
           </div>
         </div>
-      ) : (
-        <div className="space-y-6">
+      </MainLayout>
+    );
+  }
+
+  return (
+    <MainLayout>
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Button
@@ -429,7 +433,7 @@ export default function EditTaskPage() {
               size="sm"
               onClick={() => router.push(`/tasks/${taskId}`)}
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Task
             </Button>
             <h1 className="text-2xl font-bold">Edit Task</h1>
@@ -443,7 +447,7 @@ export default function EditTaskPage() {
               <CardTitle>Task Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="title">Title *</Label>
                   <Input
@@ -459,8 +463,10 @@ export default function EditTaskPage() {
                   <select
                     id="status"
                     value={formData.status_id || ''}
-                    onChange={(e) => setFormData({ ...formData, status_id: parseInt(e.target.value) || null })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    onChange={(e) =>
+                      setFormData({ ...formData, status_id: parseInt(e.target.value) || null })
+                    }
+                    className="w-full rounded-md border px-3 py-2"
                   >
                     <option value="">Select Status</option>
                     {statuses.map((status) => (
@@ -476,10 +482,11 @@ export default function EditTaskPage() {
                   <select
                     id="priority"
                     value={formData.priority_id || ''}
-                    onChange={(e) => setFormData({ ...formData, priority_id: parseInt(e.target.value) || null })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    onChange={(e) =>
+                      setFormData({ ...formData, priority_id: parseInt(e.target.value) || null })
+                    }
+                    className="w-full rounded-md border px-3 py-2"
                   >
-                    {/* Debug: Priorities count: {priorities.length} */}
                     <option value="">Select Priority</option>
                     {priorities.map((priority) => (
                       <option key={priority.id} value={priority.id}>
@@ -494,11 +501,13 @@ export default function EditTaskPage() {
                   <select
                     id="assigned_to"
                     value={formData.user_ids[0] || ''}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      user_ids: e.target.value ? [parseInt(e.target.value)] : [] 
-                    })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        user_ids: e.target.value ? [parseInt(e.target.value)] : [],
+                      })
+                    }
+                    className="w-full rounded-md border px-3 py-2"
                   >
                     <option value="">Select User</option>
                     {users.map((user) => (
@@ -514,11 +523,13 @@ export default function EditTaskPage() {
                   <select
                     id="client"
                     value={formData.client_ids[0] || ''}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      client_ids: e.target.value ? [parseInt(e.target.value)] : [] 
-                    })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        client_ids: e.target.value ? [parseInt(e.target.value)] : [],
+                      })
+                    }
+                    className="w-full rounded-md border px-3 py-2"
                   >
                     <option value="">Select Client</option>
                     {clients.map((client) => (
@@ -534,10 +545,11 @@ export default function EditTaskPage() {
                   <select
                     id="project"
                     value={formData.project_id || ''}
-                    onChange={(e) => setFormData({ ...formData, project_id: parseInt(e.target.value) || null })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    onChange={(e) =>
+                      setFormData({ ...formData, project_id: parseInt(e.target.value) || null })
+                    }
+                    className="w-full rounded-md border px-3 py-2"
                   >
-                    {/* Debug: Projects count: {projects.length} */}
                     <option value="">Select Project</option>
                     {projects.map((project) => (
                       <option key={project.id} value={project.id}>
@@ -564,7 +576,12 @@ export default function EditTaskPage() {
                       id="close_deadline"
                       type="checkbox"
                       checked={formData.close_deadline === 1}
-                      onChange={(e) => setFormData({ ...formData, close_deadline: e.target.checked ? 1 : 0 })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          close_deadline: e.target.checked ? 1 : 0,
+                        })
+                      }
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                     />
                     <span className="text-sm text-muted-foreground">
@@ -578,8 +595,10 @@ export default function EditTaskPage() {
                   <select
                     id="task_type"
                     value={formData.task_type_id || ''}
-                    onChange={(e) => setFormData({ ...formData, task_type_id: parseInt(e.target.value) || null })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    onChange={(e) =>
+                      setFormData({ ...formData, task_type_id: parseInt(e.target.value) || null })
+                    }
+                    className="w-full rounded-md border px-3 py-2"
                   >
                     <option value="">Select Task Type</option>
                     {taskTypes.map((type) => (
@@ -595,15 +614,19 @@ export default function EditTaskPage() {
                   <Input
                     id="deliverable_quantity"
                     type="number"
-                    min="1"
+                    min={1}
                     value={formData.deliverable_quantity}
-                    onChange={(e) => setFormData({ ...formData, deliverable_quantity: parseInt(e.target.value) || 1 })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        deliverable_quantity: parseInt(e.target.value) || 1,
+                      })
+                    }
                     placeholder="e.g., 6"
                     className="w-full"
                   />
                   <p className="text-xs text-muted-foreground">Number of deliverables needed</p>
                 </div>
-
               </div>
 
               {/* Repeatable Task Settings */}
@@ -620,78 +643,86 @@ export default function EditTaskPage() {
                 </div>
 
                 {formData.is_repeating && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pl-6 border-l-2 border-gray-200">
-                    <div className="space-y-2">
-                      <Label htmlFor="repeat_frequency">Frequency</Label>
-                      <select
-                        id="repeat_frequency"
-                        value={formData.repeat_frequency}
-                        onChange={(e) => setFormData({ ...formData, repeat_frequency: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-md"
-                      >
-                        <option value="">Select frequency</option>
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="yearly">Yearly</option>
-                      </select>
+                  <>
+                    <div className="grid grid-cols-1 gap-4 border-l-2 border-gray-200 pl-6 md:grid-cols-2 lg:grid-cols-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="repeat_frequency">Frequency</Label>
+                        <select
+                          id="repeat_frequency"
+                          value={formData.repeat_frequency}
+                          onChange={(e) =>
+                            setFormData({ ...formData, repeat_frequency: e.target.value })
+                          }
+                          className="w-full rounded-md border px-3 py-2"
+                        >
+                          <option value="">Select frequency</option>
+                          <option value="daily">Daily</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="monthly">Monthly</option>
+                          <option value="yearly">Yearly</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="repeat_interval">Every</Label>
+                        <Input
+                          id="repeat_interval"
+                          type="number"
+                          min={1}
+                          value={formData.repeat_interval}
+                          onChange={(e) =>
+                            setFormData({ ...formData, repeat_interval: parseInt(e.target.value) || 1 })
+                          }
+                          className="w-full"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {formData.repeat_frequency === 'daily' && 'days'}
+                          {formData.repeat_frequency === 'weekly' && 'weeks'}
+                          {formData.repeat_frequency === 'monthly' && 'months'}
+                          {formData.repeat_frequency === 'yearly' && 'years'}
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="repeat_start">Start (Optional)</Label>
+                        <Input
+                          id="repeat_start"
+                          type="date"
+                          value={formData.repeat_start}
+                          onChange={(e) => setFormData({ ...formData, repeat_start: e.target.value })}
+                          min={formData.end_date}
+                        />
+                        <p className="text-xs text-muted-foreground">When to start repeating</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="repeat_until">Until (Optional)</Label>
+                        <Input
+                          id="repeat_until"
+                          type="date"
+                          value={formData.repeat_until}
+                          onChange={(e) => setFormData({ ...formData, repeat_until: e.target.value })}
+                          min={formData.repeat_start || formData.end_date}
+                        />
+                        <p className="text-xs text-muted-foreground">Leave empty to repeat indefinitely</p>
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="repeat_interval">Every</Label>
-                      <Input
-                        id="repeat_interval"
-                        type="number"
-                        min="1"
-                        value={formData.repeat_interval}
-                        onChange={(e) => setFormData({ ...formData, repeat_interval: parseInt(e.target.value) || 1 })}
-                        className="w-full"
+                    <div className="mt-4 flex items-center space-x-2 pl-6">
+                      <input
+                        type="checkbox"
+                        id="skip_weekends"
+                        checked={formData.skip_weekends}
+                        onChange={(e) =>
+                          setFormData({ ...formData, skip_weekends: e.target.checked })
+                        }
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <p className="text-xs text-muted-foreground">
-                        {formData.repeat_frequency === 'daily' && 'days'}
-                        {formData.repeat_frequency === 'weekly' && 'weeks'}
-                        {formData.repeat_frequency === 'monthly' && 'months'}
-                        {formData.repeat_frequency === 'yearly' && 'years'}
-                      </p>
+                      <Label htmlFor="skip_weekends" className="cursor-pointer text-sm font-normal">
+                        Skip weekends (automatically move tasks that fall on Saturday/Sunday to Monday)
+                      </Label>
                     </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="repeat_start">Start (Optional)</Label>
-                      <Input
-                        id="repeat_start"
-                        type="date"
-                        value={formData.repeat_start}
-                        onChange={(e) => setFormData({ ...formData, repeat_start: e.target.value })}
-                        min={formData.end_date}
-                      />
-                      <p className="text-xs text-muted-foreground">When to start repeating</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="repeat_until">Until (Optional)</Label>
-                      <Input
-                        id="repeat_until"
-                        type="date"
-                        value={formData.repeat_until}
-                        onChange={(e) => setFormData({ ...formData, repeat_until: e.target.value })}
-                        min={formData.repeat_start || formData.end_date}
-                      />
-                      <p className="text-xs text-muted-foreground">Leave empty to repeat indefinitely</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2 pl-6 mt-4">
-                    <input
-                      type="checkbox"
-                      id="skip_weekends"
-                      checked={formData.skip_weekends}
-                      onChange={(e) => setFormData({ ...formData, skip_weekends: e.target.checked })}
-                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <Label htmlFor="skip_weekends" className="text-sm font-normal cursor-pointer">
-                      Skip weekends (automatically move tasks that fall on Saturday/Sunday to Monday)
-                    </Label>
-                  </div>
+                  </>
                 )}
               </div>
 
@@ -726,12 +757,12 @@ export default function EditTaskPage() {
                   placeholder="Enter task notes, brief, or additional instructions"
                   rows={4}
                 />
-                <p className="text-xs text-muted-foreground">Additional instructions, brief, or notes for the task</p>
+                <p className="text-xs text-muted-foreground">
+                  Additional instructions, brief, or notes for the task
+                </p>
               </div>
             </CardContent>
           </Card>
-
-
 
           {/* Template Questions */}
           {templateQuestions.length > 0 && (
@@ -746,24 +777,30 @@ export default function EditTaskPage() {
                     {question.question_type === 'textarea' ? (
                       <Textarea
                         value={questionAnswers[question.id] || ''}
-                        onChange={(e) => setQuestionAnswers({
-                          ...questionAnswers,
-                          [question.id]: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setQuestionAnswers({
+                            ...questionAnswers,
+                            [question.id]: e.target.value,
+                          })
+                        }
                         rows={3}
                       />
                     ) : question.question_type === 'select' ? (
                       <select
-                        className="w-full px-3 py-2 border rounded-md"
+                        className="w-full rounded-md border px-3 py-2"
                         value={questionAnswers[question.id] || ''}
-                        onChange={(e) => setQuestionAnswers({
-                          ...questionAnswers,
-                          [question.id]: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setQuestionAnswers({
+                            ...questionAnswers,
+                            [question.id]: e.target.value,
+                          })
+                        }
                       >
                         <option value="">Select an option</option>
                         {(question.options || []).map((option, idx) => (
-                          <option key={idx} value={option}>{option}</option>
+                          <option key={idx} value={option}>
+                            {option}
+                          </option>
                         ))}
                       </select>
                     ) : question.question_type === 'radio' ? (
@@ -775,10 +812,12 @@ export default function EditTaskPage() {
                               name={`question-${question.id}`}
                               value={option}
                               checked={questionAnswers[question.id] === option}
-                              onChange={(e) => setQuestionAnswers({
-                                ...questionAnswers,
-                                [question.id]: e.target.value
-                              })}
+                              onChange={(e) =>
+                                setQuestionAnswers({
+                                  ...questionAnswers,
+                                  [question.id]: e.target.value,
+                                })
+                              }
                             />
                             <span>{option}</span>
                           </label>
@@ -789,10 +828,12 @@ export default function EditTaskPage() {
                         <input
                           type="checkbox"
                           checked={questionAnswers[question.id] === 'Yes'}
-                          onChange={(e) => setQuestionAnswers({
-                            ...questionAnswers,
-                            [question.id]: e.target.checked ? 'Yes' : 'No'
-                          })}
+                          onChange={(e) =>
+                            setQuestionAnswers({
+                              ...questionAnswers,
+                              [question.id]: e.target.checked ? 'Yes' : 'No',
+                            })
+                          }
                           className="mr-2"
                         />
                         <span>Check if applicable</span>
@@ -801,10 +842,12 @@ export default function EditTaskPage() {
                       <Input
                         type="text"
                         value={questionAnswers[question.id] || ''}
-                        onChange={(e) => setQuestionAnswers({
-                          ...questionAnswers,
-                          [question.id]: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setQuestionAnswers({
+                            ...questionAnswers,
+                            [question.id]: e.target.value,
+                          })
+                        }
                       />
                     )}
                   </div>
@@ -825,10 +868,12 @@ export default function EditTaskPage() {
                     <input
                       type="checkbox"
                       checked={checklistCompleted[index] || false}
-                      onChange={(e) => setChecklistCompleted({
-                        ...checklistCompleted,
-                        [index]: e.target.checked
-                      })}
+                      onChange={(e) =>
+                        setChecklistCompleted({
+                          ...checklistCompleted,
+                          [index]: e.target.checked,
+                        })
+                      }
                       className="mr-2"
                     />
                     <span className={checklistCompleted[index] ? 'line-through text-muted-foreground' : ''}>
@@ -855,7 +900,6 @@ export default function EditTaskPage() {
           </div>
         </form>
       </div>
-      )}
     </MainLayout>
   );
 }

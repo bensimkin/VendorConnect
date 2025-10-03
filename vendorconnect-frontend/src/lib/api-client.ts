@@ -4,11 +4,11 @@ import { toast } from 'react-hot-toast';
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 if (!API_URL) {
-  throw new Error('NEXT_PUBLIC_API_URL is not defined');
+  console.warn('NEXT_PUBLIC_API_URL is not defined. Falling back to relative API requests.');
 }
 
 export const apiClient = axios.create({
-  baseURL: API_URL,
+  baseURL: API_URL || undefined,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -17,9 +17,11 @@ export const apiClient = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token');
-    console.log('API Request - Token:', token ? 'Present' : 'Missing');
-    console.log('API Request - URL:', config.url);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    if (process.env.NODE_ENV === 'development') {
+      console.log('API Request - Token:', token ? 'Present' : 'Missing');
+      console.log('API Request - URL:', config.url);
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -36,9 +38,11 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Clear token and redirect to login
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     } else if (error.response?.status === 403) {
       toast.error('You do not have permission to perform this action');
     } else if (error.response?.status === 422) {
