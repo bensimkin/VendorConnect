@@ -163,4 +163,9 @@ class Task extends Model implements HasMedia
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function notifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable');
+    }
+
 }
