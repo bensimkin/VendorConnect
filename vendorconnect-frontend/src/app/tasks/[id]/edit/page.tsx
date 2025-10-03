@@ -179,10 +179,6 @@ export default function EditTaskPage() {
     repeat_start: '',
   });
 
-  // Debug: Log form data changes
-  useEffect(() => {
-  }, [formData]);
-
   useEffect(() => {
     fetchData();
   }, [taskId]);
