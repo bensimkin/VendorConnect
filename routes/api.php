@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\ClientCredentialController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\ApiKeyController;
+use App\Http\Controllers\Api\SmartTaskController;
 
 /*
 |--------------------------------------------------------------------------
@@ -317,6 +318,9 @@ Route::prefix('priorities')->group(function () {
             Route::delete('/{id}', [ApiKeyController::class, 'destroy']);
             Route::post('/{id}/regenerate', [ApiKeyController::class, 'regenerate']);
         });
+
+        // Smart Task API - AI-powered task management via n8n
+        Route::post('/smart-task', [SmartTaskController::class, 'handleRequest']);
 
     });
 });
