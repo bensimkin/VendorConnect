@@ -66,6 +66,14 @@ export default function TaskerDashboardPage() {
 
   useEffect(() => {
     fetchTaskerDashboardData();
+    
+    // Auto-refresh every 30 seconds
+    const intervalId = setInterval(() => {
+      fetchTaskerDashboardData();
+    }, 30000);
+    
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, [timeRange]);
 
   const fetchTaskerDashboardData = async () => {

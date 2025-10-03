@@ -99,6 +99,14 @@ export default function RequesterDashboardPage() {
 
   useEffect(() => {
     fetchRequesterDashboardData();
+    
+    // Auto-refresh every 30 seconds
+    const intervalId = setInterval(() => {
+      fetchRequesterDashboardData();
+    }, 30000);
+    
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, [timeRange]);
 
   const fetchRequesterDashboardData = async () => {

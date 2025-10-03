@@ -113,6 +113,14 @@ function TasksPageContent() {
   useEffect(() => {
     fetchTasks();
     fetchFilterOptions();
+    
+    // Auto-refresh every 30 seconds
+    const intervalId = setInterval(() => {
+      fetchTasks(searchTerm);
+    }, 30000);
+    
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   // Debounced search effect
