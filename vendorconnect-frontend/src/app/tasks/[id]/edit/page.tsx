@@ -411,18 +411,16 @@ export default function EditTaskPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <MainLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="mt-2 text-muted-foreground">Loading task...</p>
-          </div>
+  if (loading) return (
+    <MainLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="mt-2 text-muted-foreground">Loading task...</p>
         </div>
-      </MainLayout>
-    );
-  }
+      </div>
+    </MainLayout>
+  );
 
   return (
     <MainLayout>
