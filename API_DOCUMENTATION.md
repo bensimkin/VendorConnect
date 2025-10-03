@@ -975,8 +975,25 @@ multipart/form-data with photo file
 }
 ```
 
+**Alternative - Using Template Name**:
+```json
+{
+  "template_name": "Web Development Template",
+  "status_id": 1,
+  "priority_id": 2,
+  "project_id": 1,
+  "start_date": "2025-08-01",
+  "end_date": "2025-08-31",
+  "user_ids": [1, 2]
+}
+```
+
 **Template Integration**:
-- If `template_id` is provided, the task will inherit:
+- **BOTH `template_id` (numeric) OR `template_name` (string) are supported**
+- If `template_id` is provided, the task will be created from that template ID
+- If `template_name` is provided, the task will be created from the template with that exact title
+- Template priority: `template_id` takes precedence if both are provided
+- The task will inherit:
   - Template title and description
   - Template questions and checklist
   - Template deliverable quantity

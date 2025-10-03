@@ -185,35 +185,38 @@ class TaskController extends BaseController
 
             DB::beginTransaction();
 
-            // Get template data if template_id is provided
+            // Get template data if template_id or template_name is provided
             $template = null;
             $templateQuestions = null;
             $templateChecklist = null;
             
+            // Support both template_id (numeric) and template_name (string)
             if ($request->has('template_id') && $request->template_id) {
                 $template = \App\Models\TaskBriefTemplates::find($request->template_id);
+            } elseif ($request->has('template_name') && $request->template_name) {
+                $template = \App\Models\TaskBriefTemplates::where('title', $request->template_name)->first();
+            }
+            
+            if ($template) {
+                // Get template questions
+                $questions = \App\Models\TaskBriefQuestion::where('task_brief_templates_id', $template->id)->get();
+                $templateQuestions = $questions->map(function($question) {
+                    return [
+                        'id' => $question->id,
+                        'question_text' => $question->question_text,
+                        'question_type' => $question->question_type,
+                        'options' => $question->options,
+                    ];
+                })->toArray();
                 
-                if ($template) {
-                    // Get template questions
-                    $questions = \App\Models\TaskBriefQuestion::where('task_brief_templates_id', $template->id)->get();
-                    $templateQuestions = $questions->map(function($question) {
-                        return [
-                            'id' => $question->id,
-                            'question_text' => $question->question_text,
-                            'question_type' => $question->question_type,
-                            'options' => $question->options,
-                        ];
-                    })->toArray();
-                    
-                    // Get template checklist items
-                    $checklists = \App\Models\TaskBriefChecklist::where('task_brief_templates_id', $template->id)->get();
-                    $templateChecklist = $checklists->map(function($checklist) {
-                        return [
-                            'id' => $checklist->id,
-                            'checklist' => $checklist->checklist,
-                        ];
-                    })->toArray();
-                }
+                // Get template checklist items
+                $checklists = \App\Models\TaskBriefChecklist::where('task_brief_templates_id', $template->id)->get();
+                $templateChecklist = $checklists->map(function($checklist) {
+                    return [
+                        'id' => $checklist->id,
+                        'checklist' => $checklist->checklist,
+                    ];
+                })->toArray();
             }
 
             $task = Task::create([
