@@ -117,7 +117,7 @@ function NewProjectPageContent() {
         payload.client_ids = formData.client_ids;
         // Don't set client_id when multiple clients are enabled
       } else {
-        payload.client_id = parseInt(formData.client_id);
+        payload.client_id = formData.client_id ? String(parseInt(formData.client_id)) : undefined;
         // Don't include client_ids at all when multiple clients are disabled
       }
 
