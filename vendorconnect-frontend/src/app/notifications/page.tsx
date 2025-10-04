@@ -108,7 +108,7 @@ export default function NotificationsPage() {
         {/* Header */}
         <Card className="mb-6">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between  flex-wrap gap-2">
               <div className="flex items-center space-x-3">
                 <Bell className="h-8 w-8 text-blue-600" />
                 <div>
@@ -118,7 +118,7 @@ export default function NotificationsPage() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -242,7 +242,7 @@ export default function NotificationsPage() {
                 }`}
               >
                 <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between flex-wrap gap-2">
                     <div className="flex items-start space-x-3 flex-1">
                       <div className="text-2xl">
                         {getTypeIcon(notification.type)}
@@ -273,7 +273,7 @@ export default function NotificationsPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2 ml-4">
+                    <div className="flex items-center space-x-2 ml-4 flex-wrap gap-2">
                       {notification.action_url && (
                         <Button
                           variant="outline"

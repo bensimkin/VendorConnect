@@ -178,7 +178,7 @@ export default function GlobalSearch() {
   };
 
   return (
-    <div ref={searchRef} className="relative flex-1 max-w-md">
+    <div ref={searchRef} className="relative flex-1 max-w-md self-center">
       <div className="relative">
         <Search className="pointer-events-none absolute inset-y-0 left-0 h-full w-5 text-muted-foreground ml-3" />
         <Input

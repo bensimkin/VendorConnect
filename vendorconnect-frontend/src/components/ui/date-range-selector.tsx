@@ -43,7 +43,7 @@ const timeRangeOptions = [
 
 export default function DateRangeSelector({ value, onChange, className }: DateRangeSelectorProps) {
   return (
-    <div className={cn('flex gap-2', className)}>
+    <div className={cn('flex gap-2 flex-wrap', className)}>
       {timeRangeOptions.map((option) => {
         const Icon = option.icon;
         const isSelected = value === option.value;
