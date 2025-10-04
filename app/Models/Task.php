@@ -22,6 +22,7 @@ class Task extends Model implements HasMedia
         'end_date',
         'description',
         'standard_brief',
+        'client_brief',
         'user_id',
         'admin_id',
         'created_by',
@@ -168,6 +169,21 @@ class Task extends Model implements HasMedia
     public function notifications()
     {
         return $this->morphMany(Notification::class, 'notifiable');
+    }
+
+    public function taskFiles()
+    {
+        return $this->hasMany(TaskFile::class);
+    }
+
+    public function brandGuideFiles()
+    {
+        return $this->hasMany(TaskFile::class)->where('file_category', 'brand_guide');
+    }
+
+    public function clientFiles()
+    {
+        return $this->hasMany(TaskFile::class)->where('file_category', 'client_file');
     }
 
 }

@@ -17,6 +17,7 @@ import { ArrowLeft, Edit, Trash2, Calendar, User, Tag, MessageSquare, Paperclip,
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '@/lib/auth-store';
+import ClientBriefSection from '@/components/tasks/ClientBriefSection';
 
 interface TaskDetail {
   id: number;
@@ -1161,6 +1162,13 @@ export default function TaskDetailPage() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Client Brief & Files */}
+            <ClientBriefSection
+              taskId={task.id}
+              canEdit={true}
+              createdBy={task.created_by?.id}
+            />
           </div>
         </div>
       </div>
