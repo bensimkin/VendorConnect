@@ -346,10 +346,15 @@ class SmartTaskController extends Controller
         
             $user = $foundUser;
             
-            // Use the existing tasks endpoint with user filter
-            $tasksResponse = $this->getHttpClient()->get(secure_url('/api/v1/tasks'), [
-                'user_id' => $user['id']
-            ]);
+            // Use the existing tasks endpoint with user filter and status filter
+            $queryParams = ["user_id" => $user["id"]];
+            if (isset($params["status"]) && $params["status"] === "completed") {
+                $queryParams["status_id"] = 17; // Completed status ID
+            } elseif (isset($params["status"]) && $params["status"] === "active") {
+                $queryParams["status_id"] = 20; // Active status ID
+            }
+            
+            $tasksResponse = $this->getHttpClient()->get(secure_url("/api/v1/tasks"), $queryParams);
             
             if (!$tasksResponse->successful()) {
             return [

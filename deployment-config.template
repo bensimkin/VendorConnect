@@ -1,0 +1,29 @@
+# VendorConnect Deployment Configuration Template
+# Copy this file and customize for your server
+
+# Server Domain (REQUIRED - Change this for each server)
+NEXT_PUBLIC_DOMAIN=your-domain-here.com
+
+# API URL (Auto-generated from domain)
+NEXT_PUBLIC_API_URL=https://your-domain-here.com/api/v1
+
+# Database Configuration
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=vendorconnect
+DB_USERNAME=vendorconnect
+DB_PASSWORD=your-db-password-here
+
+# App Configuration
+APP_NAME=VendorConnect
+APP_ENV=production
+APP_KEY=your-app-key-here
+APP_DEBUG=false
+APP_URL=https://your-domain-here.com
+
+# Sanctum Configuration
+SANCTUM_STATEFUL_DOMAINS=your-domain-here.com
+
+# Session Configuration
+SESSION_DOMAIN=your-domain-here.com
