@@ -612,7 +612,7 @@ export default function DashboardPage() {
             <div className="space-y-4">
               {data?.overdue_tasks && data.overdue_tasks.length > 0 ? (
                 data.overdue_tasks.slice(0, 5).map((task, index: number) => (
-                  <div key={index} className="flex items-center justify-between p-3 border border-red-200 rounded-lg bg-red-50">
+                  <div key={index} className="flex items-center justify-between p-3 border border-red-200 rounded-lg bg-red-50 overflow-x-auto">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-medium text-sm text-red-800">{task.title}</h4>
