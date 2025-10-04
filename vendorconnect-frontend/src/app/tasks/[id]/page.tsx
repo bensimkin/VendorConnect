@@ -1166,8 +1166,6 @@ export default function TaskDetailPage() {
             {/* Client Brief & Files */}
             <ClientBriefSection
               taskId={task.id}
-              canEdit={true}
-              createdBy={task.created_by?.id}
             />
           </div>
         </div>
