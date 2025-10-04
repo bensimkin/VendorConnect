@@ -41,6 +41,11 @@ class TaskDeadlineAlert extends Mailable
     {
         return new Content(
             view: 'view.email.task_deadline_alert',
+            with: [
+                'task' => $this->task,
+                'username' => $this->username,
+                'appName' => config('app.name', 'VendorConnect'),
+            ]
         );
     }
 

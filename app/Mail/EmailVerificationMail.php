@@ -25,20 +25,20 @@ class EmailVerificationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            'Verify Your Email Address - ' . config('app.name')
+            subject: 'Verify Your Email Address - ' . config('app.name')
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            'emails.email-verification',
-            'emails.email-verification-text',
-            [
+            view: 'emails.email-verification',
+            with: [
                 'user' => $this->user,
                 'verificationUrl' => $this->verificationUrl,
                 'appName' => config('app.name', 'VendorConnect'),
-            ]
+            ],
+            text: 'emails.email-verification-text'
         );
     }
 }

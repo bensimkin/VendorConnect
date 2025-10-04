@@ -23,19 +23,19 @@ class WelcomeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            'Welcome to ' . config('app.name')
+            subject: 'Welcome to ' . config('app.name')
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            'emails.welcome',
-            'emails.welcome-text',
-            [
+            view: 'emails.welcome',
+            with: [
                 'user' => $this->user,
                 'appName' => config('app.name', 'VendorConnect'),
-            ]
+            ],
+            text: 'emails.welcome-text'
         );
     }
 }
