@@ -22,10 +22,23 @@ interface TaskFile {
   created_at: string;
 }
 
+interface ClientBrief {
+  client_id: number;
+  client_name: string;
+  brief: string;
+}
+
+interface Client {
+  id: number;
+  name: string;
+  company: string | null;
+}
+
 interface ClientBriefData {
   task_id: number;
   task_title: string;
-  client_brief: string | null;
+  clients: Client[];
+  client_briefs: ClientBrief[];
   brand_guide_files: TaskFile[];
   client_files: TaskFile[];
 }
@@ -61,7 +74,9 @@ export default function ClientBriefSection({ taskId, canEdit = false, createdBy 
       const response = await apiClient.get(`/tasks/${taskId}/client-brief-files`);
       if (response.data.success) {
         setData(response.data.data);
-        setBriefText(response.data.data.client_brief || '');
+        // Set brief text from the first client brief if available
+        const firstBrief = response.data.data.client_briefs?.[0];
+        setBriefText(firstBrief?.brief || '');
       }
     } catch (error) {
       console.error('Failed to fetch client brief data:', error);
@@ -77,18 +92,39 @@ export default function ClientBriefSection({ taskId, canEdit = false, createdBy 
       return;
     }
 
+    if (!data?.clients?.length) {
+      toast.error('No clients found for this task');
+      return;
+    }
+
     setSavingBrief(true);
     try {
-      await apiClient.put(`/tasks/${taskId}/client-brief`, {
+      // For now, update the first client's brief
+      // In a more advanced implementation, you might want to let users choose which client
+      const firstClient = data.clients[0];
+      
+      if (!firstClient || !firstClient.id) {
+        toast.error('Invalid client data');
+        return;
+      }
+
+      console.log('Saving brief for client:', firstClient.id, 'with text:', briefText);
+      
+      const response = await apiClient.put(`/clients/${firstClient.id}/client-brief`, {
         client_brief: briefText,
       });
+      
+      console.log('Save response:', response.data);
       toast.success('Client brief updated successfully');
       setEditingBrief(false);
       fetchClientBriefData();
     } catch (error: any) {
       console.error('Failed to update client brief:', error);
+      console.error('Error response:', error.response?.data);
       if (error.response?.status === 403) {
         toast.error('You do not have permission to update this brief');
+      } else if (error.response?.status === 422) {
+        toast.error('Validation error: ' + (error.response?.data?.message || 'Invalid data'));
       } else {
         toast.error('Failed to update client brief');
       }
@@ -103,6 +139,11 @@ export default function ClientBriefSection({ taskId, canEdit = false, createdBy 
       return;
     }
 
+    if (!data?.clients?.length) {
+      toast.error('No clients found for this task');
+      return;
+    }
+
     setUploading(true);
     try {
       const formData = new FormData();
@@ -112,12 +153,15 @@ export default function ClientBriefSection({ taskId, canEdit = false, createdBy 
         formData.append('description', uploadForm.description);
       }
 
-      await apiClient.post(`/tasks/${taskId}/files`, formData, {
+      console.log('Uploading file for client:', data.clients[0].id, 'category:', uploadForm.category);
+
+      const response = await apiClient.post(`/clients/${data.clients[0].id}/files`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
+      console.log('Upload response:', response.data);
       toast.success('File uploaded successfully');
       setShowUploadForm(false);
       setSelectedFile(null);
@@ -125,8 +169,11 @@ export default function ClientBriefSection({ taskId, canEdit = false, createdBy 
       fetchClientBriefData();
     } catch (error: any) {
       console.error('Failed to upload file:', error);
+      console.error('Error response:', error.response?.data);
       if (error.response?.status === 403) {
         toast.error('You do not have permission to upload files');
+      } else if (error.response?.status === 422) {
+        toast.error('Validation error: ' + (error.response?.data?.message || 'Invalid data'));
       } else {
         toast.error('Failed to upload file');
       }
@@ -238,7 +285,8 @@ export default function ClientBriefSection({ taskId, canEdit = false, createdBy 
                   variant="outline"
                   onClick={() => {
                     setEditingBrief(false);
-                    setBriefText(data?.client_brief || '');
+                    const firstBrief = data?.client_briefs?.[0];
+                    setBriefText(firstBrief?.brief || '');
                   }}
                   disabled={savingBrief}
                 >
@@ -249,10 +297,21 @@ export default function ClientBriefSection({ taskId, canEdit = false, createdBy 
             </div>
           ) : (
             <div className="bg-blue-50 p-3 rounded-md">
-              {data?.client_brief ? (
-                <p className="text-sm whitespace-pre-wrap text-gray-700">
-                  {data.client_brief}
-                </p>
+              {data?.client_briefs && data.client_briefs.length > 0 ? (
+                <div className="space-y-3">
+                  {data.client_briefs.map((clientBrief, index) => (
+                    <div key={clientBrief.client_id} className="border-b border-blue-200 pb-2 last:border-b-0 last:pb-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-xs">
+                          {clientBrief.client_name}
+                        </Badge>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap text-gray-700">
+                        {clientBrief.brief}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <p className="text-sm text-gray-500 italic">
                   No client brief added yet
@@ -471,7 +530,7 @@ export default function ClientBriefSection({ taskId, canEdit = false, createdBy 
         )}
 
         {/* Empty State */}
-        {!data?.client_brief &&
+        {(!data?.client_briefs || data.client_briefs.length === 0) &&
           (!data?.brand_guide_files || data.brand_guide_files.length === 0) &&
           (!data?.client_files || data.client_files.length === 0) &&
           !userCanEdit && (

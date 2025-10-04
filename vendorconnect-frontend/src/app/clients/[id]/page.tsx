@@ -12,6 +12,7 @@ import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
 import { useAuthStore } from '@/lib/auth-store';
 import { filterSensitiveClientData, hasAdminPrivileges } from '@/lib/utils/role-utils';
+import ClientBriefSection from '@/components/clients/ClientBriefSection';
 
 interface Client {
   id: number;
@@ -385,6 +386,9 @@ export default function ClientDetailPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Client Brief & Files */}
+            <ClientBriefSection clientId={client.id} />
 
             {/* Only show notes to admin users */}
             {hasAdminPrivileges(user) && client.notes && (

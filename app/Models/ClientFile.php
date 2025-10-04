@@ -12,6 +12,11 @@ class ClientFile extends Model
     protected $fillable = [
         'client_id',
         'file_path',
+        'file_category',
+        'file_name',
+        'file_type',
+        'file_size',
+        'description',
     ];
 
     public function client()

@@ -457,4 +457,185 @@ class ClientController extends BaseController
             return $this->sendServerError('Error retrieving client tasks: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get client brief and files
+     */
+    public function getClientBriefAndFiles($id)
+    {
+        try {
+            $client = Client::with(['brandGuideFiles', 'generalClientFiles'])->find($id);
+
+            if (!$client) {
+                return $this->sendNotFound('Client not found');
+            }
+
+            // Check permissions
+            $user = Auth::user();
+            if (!$this->hasAdminAccess($user) && !$user->hasRole('Requester')) {
+                return $this->sendUnauthorized('You do not have permission to view client brief and files');
+            }
+
+            return $this->sendResponse([
+                'client_id' => $client->id,
+                'client_name' => $client->name,
+                'client_brief' => $client->client_brief,
+                'brand_guide_files' => $client->brandGuideFiles->map(function($file) {
+                    return [
+                        'id' => $file->id,
+                        'file_name' => $file->file_name,
+                        'file_path' => $file->file_path,
+                        'file_type' => $file->file_type,
+                        'file_size' => $file->file_size,
+                        'description' => $file->description,
+                        'created_at' => $file->created_at,
+                    ];
+                }),
+                'client_files' => $client->generalClientFiles->map(function($file) {
+                    return [
+                        'id' => $file->id,
+                        'file_name' => $file->file_name,
+                        'file_path' => $file->file_path,
+                        'file_type' => $file->file_type,
+                        'file_size' => $file->file_size,
+                        'description' => $file->description,
+                        'created_at' => $file->created_at,
+                    ];
+                }),
+            ], 'Client brief and files retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving client brief and files: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update client brief
+     */
+    public function updateClientBrief(Request $request, $id)
+    {
+        try {
+            $client = Client::find($id);
+
+            if (!$client) {
+                return $this->sendNotFound('Client not found');
+            }
+
+            // Check permissions
+            $user = Auth::user();
+            if (!$this->hasAdminAccess($user) && !$user->hasRole('Requester')) {
+                return $this->sendUnauthorized('You do not have permission to update client brief');
+            }
+
+            $validator = Validator::make($request->all(), [
+                'client_brief' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendValidationError($validator->errors());
+            }
+
+            $client->update([
+                'client_brief' => $request->client_brief
+            ]);
+
+            return $this->sendResponse([
+                'client_id' => $client->id,
+                'client_name' => $client->name,
+                'client_brief' => $client->client_brief,
+            ], 'Client brief updated successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error updating client brief: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Upload client file
+     */
+    public function uploadClientFile(Request $request, $id)
+    {
+        try {
+            $client = Client::find($id);
+
+            if (!$client) {
+                return $this->sendNotFound('Client not found');
+            }
+
+            // Check permissions
+            $user = Auth::user();
+            if (!$this->hasAdminAccess($user) && !$user->hasRole('Requester')) {
+                return $this->sendUnauthorized('You do not have permission to upload files');
+            }
+
+            $validator = Validator::make($request->all(), [
+                'file' => 'required|file|max:10240', // 10MB max
+                'file_category' => 'required|in:brand_guide,client_file',
+                'description' => 'nullable|string|max:500',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendValidationError($validator->errors());
+            }
+
+            $file = $request->file('file');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('client_files/' . $client->id, $fileName, 'public');
+
+            $clientFile = $client->clientFiles()->create([
+                'file_path' => $filePath,
+                'file_category' => $request->file_category,
+                'file_name' => $file->getClientOriginalName(),
+                'file_type' => $file->getClientMimeType(),
+                'file_size' => $file->getSize(),
+                'description' => $request->description,
+            ]);
+
+            return $this->sendResponse([
+                'file_id' => $clientFile->id,
+                'client_id' => $client->id,
+                'client_name' => $client->name,
+                'file_name' => $clientFile->file_name,
+                'file_path' => $clientFile->file_path,
+                'file_category' => $clientFile->file_category,
+            ], 'File uploaded successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error uploading file: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete client file
+     */
+    public function deleteClientFile($clientId, $fileId)
+    {
+        try {
+            $client = Client::find($clientId);
+
+            if (!$client) {
+                return $this->sendNotFound('Client not found');
+            }
+
+            // Check permissions
+            $user = Auth::user();
+            if (!$this->hasAdminAccess($user) && !$user->hasRole('Requester')) {
+                return $this->sendUnauthorized('You do not have permission to delete files');
+            }
+
+            $file = $client->clientFiles()->find($fileId);
+
+            if (!$file) {
+                return $this->sendNotFound('File not found');
+            }
+
+            // Delete the physical file
+            if (\Storage::disk('public')->exists($file->file_path)) {
+                \Storage::disk('public')->delete($file->file_path);
+            }
+
+            $file->delete();
+
+            return $this->sendResponse(null, 'File deleted successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error deleting file: ' . $e->getMessage());
+        }
+    }
 }

@@ -41,6 +41,7 @@ class Client extends Authenticatable implements MustVerifyEmail
         'internal_purpose',
         'admin_id',
         'client_note',
+        'client_brief',
     ];
 
     // protected $appends = ['name'];  // REMOVED: Causes duplicate fields in API
@@ -106,6 +107,21 @@ class Client extends Authenticatable implements MustVerifyEmail
     public function credentials()
     {
         return $this->hasMany(ClientCredential::class);
+    }
+
+    public function clientFiles()
+    {
+        return $this->hasMany(ClientFile::class);
+    }
+
+    public function brandGuideFiles()
+    {
+        return $this->hasMany(ClientFile::class)->where('file_category', 'brand_guide');
+    }
+
+    public function generalClientFiles()
+    {
+        return $this->hasMany(ClientFile::class)->where('file_category', 'client_file');
     }
 
     public function status_projects($status_id)
