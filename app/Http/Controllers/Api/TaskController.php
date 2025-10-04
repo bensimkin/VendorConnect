@@ -255,6 +255,9 @@ class TaskController extends BaseController
                 foreach ($request->user_ids as $userId) {
                     $this->trackAssignmentHistory($task, $userId, 'assigned');
                 }
+                
+                // Grant client access to assigned users
+                $this->grantClientAccessToUsers($task, $request->user_ids);
             }
 
             // Attach clients to the project's client list
@@ -466,6 +469,11 @@ class TaskController extends BaseController
                 }
                 
                 $task->users()->sync($request->user_ids);
+                
+                // Grant client access to newly assigned users
+                if (!empty($addedUserIds)) {
+                    $this->grantClientAccessToUsers($task, $addedUserIds);
+                }
             }
 
             // Sync clients to the project's client list
@@ -1347,6 +1355,34 @@ class TaskController extends BaseController
             return $this->sendResponse($childTasks, 'Repeating task history retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error retrieving repeating task history: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Grant client access to users when they are assigned to a task
+     * 
+     * @param Task $task
+     * @param array $userIds
+     * @return void
+     */
+    private function grantClientAccessToUsers($task, array $userIds)
+    {
+        // Get all clients associated with the task's project
+        $task->load('project.clients');
+        
+        if (!$task->project || !$task->project->clients || $task->project->clients->isEmpty()) {
+            return;
+        }
+
+        $clientIds = $task->project->clients->pluck('id')->toArray();
+
+        // Grant access to each assigned user for all project clients
+        foreach ($userIds as $userId) {
+            $user = User::find($userId);
+            if ($user) {
+                // Sync without detaching existing client relationships
+                $user->clients()->syncWithoutDetaching($clientIds);
+            }
         }
     }
 }

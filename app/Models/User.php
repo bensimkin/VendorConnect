@@ -210,6 +210,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Notification::class);
     }
 
+    public function clients()
+    {
+        return $this->belongsToMany(Client::class, 'client_user');
+    }
+
     /**
      * Send the password reset notification using SendGrid.
      */

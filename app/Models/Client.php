@@ -78,10 +78,10 @@ class Client extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Workspace::class);
     }
 
-    // public function users()
-    // {
-    //     return $this->belongsToMany(User::class, 'client_user');
-    // }
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'client_user');
+    }
 
     public function getresult()
     {
