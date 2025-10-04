@@ -405,7 +405,7 @@ class SmartTaskController extends Controller
      */
     private function createTask(array $params): array
     {
-        $title = $params['title'] ?? 'New Task';
+        $title = $this->capitalizeTitle($params['title'] ?? 'New Task');
         $description = $params['description'] ?? '';
         $assignedTo = $params['user_name'] ?? null;
         $isRecurring = $params['is_recurring'] ?? $params['is_repeating'] ?? false;
@@ -2379,5 +2379,39 @@ EXAMPLES:
         
         // Default: start next week
         return $today->addWeek()->format('Y-m-d');
+    }
+
+    /**
+     * Capitalize task title properly (Title Case)
+     * Capitalizes first letter of each word except for common articles/prepositions
+     */
+    private function capitalizeTitle(string $title): string
+    {
+        // Words that should not be capitalized unless they're the first word
+        $exceptions = ['a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'if', 'in', 'nor', 'of', 'on', 'or', 'so', 'the', 'to', 'up', 'yet', 'with'];
+        
+        // Split title into words
+        $words = explode(' ', trim($title));
+        $capitalizedWords = [];
+        
+        foreach ($words as $index => $word) {
+            // Clean the word (remove punctuation for processing)
+            $cleanWord = preg_replace('/[^a-zA-Z0-9]/', '', $word);
+            $punctuation = preg_replace('/[a-zA-Z0-9]/', '', $word);
+            
+            // Always capitalize the first word
+            if ($index === 0) {
+                $capitalizedWords[] = ucfirst(strtolower($cleanWord)) . $punctuation;
+            } else {
+                // Check if word is in exceptions list
+                if (in_array(strtolower($cleanWord), $exceptions)) {
+                    $capitalizedWords[] = strtolower($cleanWord) . $punctuation;
+                } else {
+                    $capitalizedWords[] = ucfirst(strtolower($cleanWord)) . $punctuation;
+                }
+            }
+        }
+        
+        return implode(' ', $capitalizedWords);
     }
 }
