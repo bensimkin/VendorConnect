@@ -142,9 +142,9 @@ export default function ClientBriefSection({ taskId }: ClientBriefSectionProps) 
                       Edit on Client Page
                     </Button>
                   </div>
-                  <p className="text-sm whitespace-pre-wrap text-gray-700">
+                  <div className="text-sm whitespace-pre-wrap text-gray-700 break-all overflow-hidden overflow-y-auto max-h-60">
                     {brief.brief}
-                  </p>
+                  </div>
                 </div>
               ))}
             </div>

@@ -641,9 +641,9 @@ export default function TaskDetailPage() {
                 <CardTitle>Description</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                <div className="text-sm text-muted-foreground whitespace-pre-wrap break-all overflow-hidden overflow-y-auto max-h-96">
                   {task.description || 'No description provided'}
-                </p>
+                </div>
               </CardContent>
             </Card>
 
@@ -654,9 +654,9 @@ export default function TaskDetailPage() {
                   <CardTitle>Brief</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    <div className="text-sm text-muted-foreground whitespace-pre-wrap break-all overflow-hidden overflow-y-auto max-h-96">
                       {task.standard_brief ?? task.template?.standard_brief ?? task.template_standard_brief ?? 'No brief provided'}
-                    </p>
+                    </div>
                 </CardContent>
               </Card>
             )}
@@ -668,9 +668,9 @@ export default function TaskDetailPage() {
                   <CardTitle>Notes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  <div className="text-sm text-muted-foreground whitespace-pre-wrap break-all overflow-hidden overflow-y-auto max-h-96">
                     {task.note}
-                  </p>
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -838,7 +838,7 @@ export default function TaskDetailPage() {
                             </Button>
                           )}
                         </div>
-                        <p className="text-sm text-gray-700 ml-10">
+                        <p className="text-sm text-gray-700 ml-10 whitespace-pre-wrap break-words">
                           {comment.message_text}
                         </p>
                       </div>
