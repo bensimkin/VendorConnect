@@ -641,7 +641,7 @@ export default function TaskDetailPage() {
                 <CardTitle>Description</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-sm text-muted-foreground whitespace-pre-wrap break-all overflow-hidden overflow-y-auto max-h-96">
+                <div className="text-sm text-muted-foreground whitespace-pre-wrap break-words overflow-hidden overflow-y-auto max-h-96" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                   {task.description || 'No description provided'}
                 </div>
               </CardContent>
@@ -654,7 +654,7 @@ export default function TaskDetailPage() {
                   <CardTitle>Brief</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-sm text-muted-foreground whitespace-pre-wrap break-all overflow-hidden overflow-y-auto max-h-96">
+                    <div className="text-sm text-muted-foreground whitespace-pre-wrap break-words overflow-hidden overflow-y-auto max-h-96" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                       {task.standard_brief ?? task.template?.standard_brief ?? task.template_standard_brief ?? 'No brief provided'}
                     </div>
                 </CardContent>
@@ -668,7 +668,7 @@ export default function TaskDetailPage() {
                   <CardTitle>Notes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-sm text-muted-foreground whitespace-pre-wrap break-all overflow-hidden overflow-y-auto max-h-96">
+                  <div className="text-sm text-muted-foreground whitespace-pre-wrap break-words overflow-hidden overflow-y-auto max-h-96" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                     {task.note}
                   </div>
                 </CardContent>

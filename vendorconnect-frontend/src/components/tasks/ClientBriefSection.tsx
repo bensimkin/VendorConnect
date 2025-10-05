@@ -142,7 +142,7 @@ export default function ClientBriefSection({ taskId }: ClientBriefSectionProps) 
                       Edit on Client Page
                     </Button>
                   </div>
-                  <div className="text-sm whitespace-pre-wrap text-gray-700 break-all overflow-hidden overflow-y-auto max-h-60">
+                  <div className="text-sm whitespace-pre-wrap text-gray-700 break-words overflow-hidden overflow-y-auto max-h-60" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                     {brief.brief}
                   </div>
                 </div>
