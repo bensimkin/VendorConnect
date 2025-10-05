@@ -248,10 +248,8 @@ export default function ClientDetailPage() {
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <Button
+        <div>
+          <Button
               variant="ghost"
               onClick={() => router.push('/clients')}
               className="flex items-center space-x-2"
@@ -259,12 +257,17 @@ export default function ClientDetailPage() {
               <ArrowLeft className="h-4 w-4" />
               <span>Back to Clients</span>
             </Button>
+        </div>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-2">
+          <div className="flex items-center space-x-4">
+            
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{`${client.first_name || ''} ${client.last_name || ''}`.trim()}</h1>
               <p className="text-gray-600 dark:text-gray-400">Client Details</p>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center flex-wrap gap-2">
             <Button
               variant="outline"
               onClick={() => router.push(`/projects/new?client_id=${clientId}`)}

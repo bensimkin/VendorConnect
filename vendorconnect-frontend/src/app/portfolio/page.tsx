@@ -174,7 +174,7 @@ export default function PortfolioPage() {
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-2xl font-bold">Portfolio</h1>
             <p className="text-muted-foreground">View all client deliverables and work samples</p>
@@ -271,7 +271,7 @@ export default function PortfolioPage() {
               </div>
             </div>
 
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <Button variant="outline" onClick={clearFilters}>
                 Clear Filters
               </Button>

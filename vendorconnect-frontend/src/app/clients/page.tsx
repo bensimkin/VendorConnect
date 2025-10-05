@@ -130,7 +130,7 @@ export default function ClientsPage() {
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Clients</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">

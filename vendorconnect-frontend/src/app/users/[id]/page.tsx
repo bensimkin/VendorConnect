@@ -123,7 +123,7 @@ export default function UserDetailPage() {
       <MainLayout>
         <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center flex-wrap gap-4">
           <Button
             variant="ghost"
             size="icon"

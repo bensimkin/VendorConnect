@@ -138,7 +138,7 @@ export default function TaskTypesPage() {
             <RoleGuard allowedRoles={['admin', 'sub_admin']}>
       <MainLayout>
         <div className="max-w-4xl mx-auto space-y-8">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center flex-wrap gap-2">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Task Types</h1>
             <p className="text-muted-foreground">Manage the types of tasks available in your system</p>
