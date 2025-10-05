@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '@/lib/auth-store';
 import ClientBriefSection from '@/components/tasks/ClientBriefSection';
+import { LinkifyContent } from '@/lib/utils/text-utils';
 
 interface TaskDetail {
   id: number;
@@ -642,7 +643,7 @@ export default function TaskDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-muted-foreground whitespace-pre-wrap break-words overflow-hidden overflow-y-auto max-h-96" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                  {task.description || 'No description provided'}
+                  <LinkifyContent>{task.description || 'No description provided'}</LinkifyContent>
                 </div>
               </CardContent>
             </Card>
@@ -655,7 +656,7 @@ export default function TaskDetailPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="text-sm text-muted-foreground whitespace-pre-wrap break-words overflow-hidden overflow-y-auto max-h-96" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                      {task.standard_brief ?? task.template?.standard_brief ?? task.template_standard_brief ?? 'No brief provided'}
+                      <LinkifyContent>{task.standard_brief ?? task.template?.standard_brief ?? task.template_standard_brief ?? 'No brief provided'}</LinkifyContent>
                     </div>
                 </CardContent>
               </Card>
@@ -669,7 +670,7 @@ export default function TaskDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-muted-foreground whitespace-pre-wrap break-words overflow-hidden overflow-y-auto max-h-96" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                    {task.note}
+                    <LinkifyContent>{task.note}</LinkifyContent>
                   </div>
                 </CardContent>
               </Card>

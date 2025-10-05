@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
+import { LinkifyContent } from '@/lib/utils/text-utils';
 
 interface ClientFile {
   id: number;
@@ -281,7 +282,7 @@ export default function ClientBriefSection({ clientId }: ClientBriefSectionProps
             <div className="bg-blue-50 p-3 rounded-md">
               {data?.client_brief ? (
                 <div className="text-sm whitespace-pre-wrap text-gray-700 break-words overflow-hidden overflow-y-auto max-h-60" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                  {data.client_brief}
+                  <LinkifyContent>{data.client_brief}</LinkifyContent>
                 </div>
               ) : (
                 <p className="text-sm text-gray-500 italic">

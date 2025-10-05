@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import apiClient from '@/lib/api-client';
 import { FileText, Download, File, FolderOpen, ExternalLink } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { LinkifyContent } from '@/lib/utils/text-utils';
 
 interface TaskFile {
   id: number;
@@ -143,7 +144,7 @@ export default function ClientBriefSection({ taskId }: ClientBriefSectionProps) 
                     </Button>
                   </div>
                   <div className="text-sm whitespace-pre-wrap text-gray-700 break-words overflow-hidden overflow-y-auto max-h-60" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                    {brief.brief}
+                    <LinkifyContent>{brief.brief}</LinkifyContent>
                   </div>
                 </div>
               ))}
