@@ -1389,12 +1389,12 @@ class TaskController extends BaseController
 
     /**
      * Get client brief and brand guide files for a task
-     * Accessible to all users who can view the task
+     * Now pulls from client-level data so all tasks for the same client share the same brief and files
      */
     public function getClientBriefAndFiles($id)
     {
         try {
-            $task = Task::with(['brandGuideFiles', 'clientFiles'])->find($id);
+            $task = Task::with(['project.clients.brandGuideFiles', 'project.clients.generalClientFiles'])->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -1416,13 +1416,49 @@ class TaskController extends BaseController
                 }
             }
 
+            // Get all clients associated with this task's project
+            $clients = $task->project ? $task->project->clients : collect();
+            
+            // Aggregate client briefs and files from all clients
+            $clientBriefs = [];
+            $brandGuideFiles = collect();
+            $clientFiles = collect();
+
+            foreach ($clients as $client) {
+                if ($client->client_brief) {
+                    $clientBriefs[] = [
+                        'client_id' => $client->id,
+                        'client_name' => $client->name,
+                        'brief' => $client->client_brief
+                    ];
+                }
+                
+                // Collect brand guide files
+                if ($client->brandGuideFiles) {
+                    $brandGuideFiles = $brandGuideFiles->merge($client->brandGuideFiles);
+                }
+                
+                // Collect general client files
+                if ($client->generalClientFiles) {
+                    $clientFiles = $clientFiles->merge($client->generalClientFiles);
+                }
+            }
+
             return $this->sendResponse([
                 'task_id' => $task->id,
                 'task_title' => $task->title,
-                'client_brief' => $task->client_brief,
-                'brand_guide_files' => $task->brandGuideFiles->map(function($file) {
+                'clients' => $clients->map(function($client) {
+                    return [
+                        'id' => $client->id,
+                        'name' => $client->name,
+                        'company' => $client->company
+                    ];
+                }),
+                'client_briefs' => $clientBriefs,
+                'brand_guide_files' => $brandGuideFiles->map(function($file) {
                     return [
                         'id' => $file->id,
+                        'client_id' => $file->client_id,
                         'file_name' => $file->file_name,
                         'file_path' => $file->file_path,
                         'file_type' => $file->file_type,
@@ -1431,9 +1467,10 @@ class TaskController extends BaseController
                         'created_at' => $file->created_at,
                     ];
                 }),
-                'client_files' => $task->clientFiles->map(function($file) {
+                'client_files' => $clientFiles->map(function($file) {
                     return [
                         'id' => $file->id,
+                        'client_id' => $file->client_id,
                         'file_name' => $file->file_name,
                         'file_path' => $file->file_path,
                         'file_type' => $file->file_type,
@@ -1449,12 +1486,13 @@ class TaskController extends BaseController
     }
 
     /**
-     * Update task client brief
+     * Update client brief for a specific client
+     * This method now updates the client's brief, which will be shared across all tasks for that client
      */
     public function updateClientBrief(Request $request, $id)
     {
         try {
-            $task = Task::find($id);
+            $task = Task::with('project.clients')->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -1472,6 +1510,7 @@ class TaskController extends BaseController
             }
 
             $validator = Validator::make($request->all(), [
+                'client_id' => 'required|exists:clients,id',
                 'client_brief' => 'required|string',
             ]);
 
@@ -1479,23 +1518,37 @@ class TaskController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $task->update([
+            // Verify the client is associated with this task's project
+            $client = $task->project->clients->find($request->client_id);
+            if (!$client) {
+                return $this->sendError('Client is not associated with this task\'s project');
+            }
+
+            // Update the client's brief
+            $client->update([
                 'client_brief' => $request->client_brief
             ]);
 
-            return $this->sendResponse($task, 'Client brief updated successfully');
+            return $this->sendResponse([
+                'client_id' => $client->id,
+                'client_name' => $client->name,
+                'client_brief' => $client->client_brief,
+                'task_id' => $task->id,
+                'task_title' => $task->title
+            ], 'Client brief updated successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error updating client brief: ' . $e->getMessage());
         }
     }
 
     /**
-     * Upload task files (brand guide or client files)
+     * Upload client files (brand guide or client files) for a specific client
+     * Files are now stored at client level and shared across all tasks for that client
      */
     public function uploadTaskFile(Request $request, $id)
     {
         try {
-            $task = Task::find($id);
+            $task = Task::with('project.clients')->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -1516,17 +1569,24 @@ class TaskController extends BaseController
                 'file' => 'required|file|max:10240', // 10MB max
                 'file_category' => 'required|in:brand_guide,client_file',
                 'description' => 'nullable|string|max:500',
+                'client_id' => 'required|exists:clients,id',
             ]);
 
             if ($validator->fails()) {
                 return $this->sendValidationError($validator->errors());
             }
 
+            // Verify the client is associated with this task's project
+            $client = $task->project->clients->find($request->client_id);
+            if (!$client) {
+                return $this->sendError('Client is not associated with this task\'s project');
+            }
+
             $file = $request->file('file');
             $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('task_files/' . $task->id, $fileName, 'public');
+            $filePath = $file->storeAs('client_files/' . $client->id, $fileName, 'public');
 
-            $taskFile = $task->taskFiles()->create([
+            $clientFile = $client->clientFiles()->create([
                 'file_path' => $filePath,
                 'file_category' => $request->file_category,
                 'file_name' => $file->getClientOriginalName(),
@@ -1535,7 +1595,16 @@ class TaskController extends BaseController
                 'description' => $request->description,
             ]);
 
-            return $this->sendResponse($taskFile, 'File uploaded successfully');
+            return $this->sendResponse([
+                'file_id' => $clientFile->id,
+                'client_id' => $client->id,
+                'client_name' => $client->name,
+                'file_name' => $clientFile->file_name,
+                'file_path' => $clientFile->file_path,
+                'file_category' => $clientFile->file_category,
+                'task_id' => $task->id,
+                'task_title' => $task->title
+            ], 'File uploaded successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error uploading file: ' . $e->getMessage());
         }

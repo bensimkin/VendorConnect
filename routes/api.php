@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\ClientCredentialController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\ApiKeyController;
 use App\Http\Controllers\Api\SmartTaskController;
+use App\Http\Controllers\Api\HealthCheckController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,6 +41,9 @@ use App\Http\Controllers\Api\SmartTaskController;
 
 // Public routes (no authentication required)
 Route::prefix('v1')->group(function () {
+    
+    // Health check routes (no authentication required)
+    Route::get('/health/smart-api', [HealthCheckController::class, 'smartApiHealth']);
     
     // Authentication routes
     Route::post('/auth/login', [AuthController::class, 'login']);
@@ -249,6 +253,12 @@ Route::prefix('priorities')->group(function () {
             Route::get('/{id}/projects', [ClientController::class, 'projects']);
             Route::get('/{id}/tasks', [ClientController::class, 'tasks']);
             Route::get('/{id}/portfolio', [PortfolioController::class, 'clientPortfolio']);
+            
+            // Client brief and files
+            Route::get('/{id}/client-brief-files', [ClientController::class, 'getClientBriefAndFiles']);
+            Route::put('/{id}/client-brief', [ClientController::class, 'updateClientBrief']);
+            Route::post('/{id}/files', [ClientController::class, 'uploadClientFile']);
+            Route::delete('/{clientId}/files/{fileId}', [ClientController::class, 'deleteClientFile']);
             Route::get('/{id}/portfolio/stats', [PortfolioController::class, 'clientStats']);
             
             // Client Credentials
