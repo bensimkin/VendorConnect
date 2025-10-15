@@ -92,9 +92,17 @@ class Task extends Model implements HasMedia
     {
         return $this->belongsToMany(User::class, 'task_user');
     }
-    public function clients()
+    
+    // Define clients as an accessor so it's not treated as a saveable attribute
+    public function getClientsAttribute()
     {
         return $this->project ? $this->project->clients : collect();
+    }
+    
+    // Define deliverables_count as an accessor so it's not treated as a saveable attribute
+    public function getDeliverablesCountAttribute()
+    {
+        return $this->deliverables ? $this->deliverables->count() : 0;
     }
 
     public function taskUsers()

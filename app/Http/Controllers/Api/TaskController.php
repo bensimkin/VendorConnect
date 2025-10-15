@@ -105,7 +105,8 @@ class TaskController extends BaseController
 
             $tasks = $query->paginate($request->get('per_page', 15));
 
-            // Apply role-based data protection to task users and add clients
+            // Apply role-based data protection to task users
+            // Note: clients and deliverables_count are now handled by model accessors
             $tasks->getCollection()->transform(function ($task) use ($user) {
                 if ($task->users) {
                     if (!$this->hasAdminAccess($user)) {
@@ -116,16 +117,6 @@ class TaskController extends BaseController
                         }
                     }
                 }
-                
-                // Add clients from project to task response
-                if ($task->project && $task->project->clients) {
-                    $task->clients = $task->project->clients;
-                } else {
-                    $task->clients = collect();
-                }
-                
-                // Add deliverables count
-                $task->deliverables_count = $task->deliverables ? $task->deliverables->count() : 0;
                 
                 return $task;
             });

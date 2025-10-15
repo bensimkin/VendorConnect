@@ -150,12 +150,7 @@ class ProjectController extends BaseController
                 })->count() : 0;
                 $project->overdue_tasks = $overdueTasks;
                 
-                // Add deliverables count to tasks
-                if ($project->tasks) {
-                    $project->tasks->each(function ($task) {
-                        $task->deliverables_count = $task->deliverables ? $task->deliverables->count() : 0;
-                    });
-                }
+                // Note: deliverables_count is now automatically available via Task model accessor
             }
 
             if ($request->get('per_page') === 'all') {

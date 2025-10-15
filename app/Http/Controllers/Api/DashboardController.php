@@ -87,10 +87,7 @@ class DashboardController extends BaseController
                 ->limit(10)
                 ->get();
 
-            // Add deliverables count to recent tasks
-            $recentTasks->each(function ($task) {
-                $task->deliverables_count = $task->deliverables ? $task->deliverables->count() : 0;
-            });
+            // Note: deliverables_count is now automatically available via Task model accessor
 
             // Get user activity
             $userActivity = $this->getUserActivity($dateRange);
@@ -431,10 +428,7 @@ class DashboardController extends BaseController
                 ->limit(10)
                 ->get();
 
-            // Add deliverables count to recent tasks
-            $recentTasks->each(function ($task) {
-                $task->deliverables_count = $task->deliverables ? $task->deliverables->count() : 0;
-            });
+            // Note: deliverables_count is now automatically available via Task model accessor
 
             // Upcoming deadlines (next 7 days)
             $upcomingDeadlines = Task::with(['priority'])
@@ -650,10 +644,7 @@ class DashboardController extends BaseController
                 ->limit(10)
                 ->get();
 
-            // Add deliverables count to recent tasks
-            $recentTasks->each(function ($task) {
-                $task->deliverables_count = $task->deliverables ? $task->deliverables->count() : 0;
-            });
+            // Note: deliverables_count is now automatically available via Task model accessor
 
             // Recent projects - include both created and assigned projects
             $recentProjects = Project::with(['status'])
