@@ -29,6 +29,7 @@ class Task extends Model implements HasMedia
         'priority_id',
         'note',
         'deliverable_quantity',
+        'requires_attachments',
         'is_repeating',
         'repeat_frequency',
         'repeat_interval',
@@ -49,6 +50,7 @@ class Task extends Model implements HasMedia
         'is_repeating' => 'boolean',
         'repeat_active' => 'boolean',
         'skip_weekends' => 'boolean',
+        'requires_attachments' => 'boolean',
         'repeat_until' => 'date',
         'repeat_start' => 'date',
         'last_repeated_at' => 'datetime',
@@ -80,7 +82,7 @@ class Task extends Model implements HasMedia
 
     public function messages()
     {
-        return $this->hasMany(ChMessage::class);
+        return $this->hasMany(ChMessage::class, 'task_id');
     }
 
     public function project()
@@ -192,6 +194,16 @@ class Task extends Model implements HasMedia
     public function clientFiles()
     {
         return $this->hasMany(TaskFile::class)->where('file_category', 'client_file');
+    }
+
+    public function views()
+    {
+        return $this->hasMany(TaskView::class);
+    }
+
+    public function rejections()
+    {
+        return $this->hasMany(TaskRejection::class);
     }
 
 }

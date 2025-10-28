@@ -78,15 +78,7 @@ class Status extends Model
      */
     public static function getTaskerAllowedStatuses()
     {
-        return static::whereIn('slug', ['pending', 'submitted'])->get();
-    }
-
-    /**
-     * Get statuses that can be set by Requesters and Admins
-     */
-    public static function getRequesterAdminAllowedStatuses()
-    {
-        return static::whereNotIn('slug', ['pending', 'submitted'])->get();
+        return static::whereIn('slug', ['pending', 'submitted', 'rejected', 'in-progress'])->get();
     }
 
 }

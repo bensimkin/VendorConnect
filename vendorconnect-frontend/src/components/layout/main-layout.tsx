@@ -23,6 +23,7 @@ import {
   Tag,
   Briefcase,
   BarChart3,
+  TrendingUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
@@ -48,6 +49,7 @@ const navigation = [
 
 // Admin navigation items
 const adminNavigation = [
+  { name: 'Analytics', href: '/analytics', icon: TrendingUp },
   { name: 'Admin Settings', href: '/settings/admin', icon: Settings },
 ];
 
@@ -56,8 +58,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const { user, logout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme, setTheme } = useTheme();
-  
-  console.log('MainLayout loaded, user:', user);
 
   // Helper function to check if user has access to navigation item (case/format insensitive)
   const normalizeRole = (name?: string) => (name || '').toLowerCase().replace(/\s+/g, '_').trim();

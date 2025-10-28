@@ -25,6 +25,7 @@ interface Task {
   standard_brief?: string;
   note?: string;
   deliverable_quantity?: number;
+  requires_attachments?: boolean;
   status_id?: number;
   priority_id?: number;
   project_id?: number;
@@ -64,7 +65,7 @@ interface Task {
     description?: string;
     deliverable_quantity?: number;
   };
-  close_deadline?: boolean;
+  close_deadline?: number;
   is_repeating?: boolean;
   repeat_frequency?: string;
   repeat_interval?: number;
@@ -169,6 +170,7 @@ export default function EditTaskPage() {
     end_date: '',
     task_type_id: null as number | null,
     close_deadline: 0,
+    requires_attachments: false,
     deliverable_quantity: 1,
     is_repeating: false,
     repeat_frequency: '',
@@ -214,7 +216,8 @@ export default function EditTaskPage() {
            project_id: taskData?.project?.id || null,
            end_date: taskData?.end_date ? taskData.end_date.split('T')[0] : '',
            task_type_id: taskData?.taskType?.id || null,
-           close_deadline: taskData?.close_deadline === true ? 1 : 0,
+           close_deadline: taskData?.close_deadline === 1 ? 1 : 0,
+           requires_attachments: taskData?.requires_attachments || false,
            deliverable_quantity: taskData?.deliverable_quantity || 1,
            is_repeating: taskData?.is_repeating || false,
            repeat_frequency: taskData?.repeat_frequency || '',
@@ -351,6 +354,7 @@ export default function EditTaskPage() {
         // client_ids: formData.client_ids, // Removed - no direct client-task relationship
         end_date: formData.end_date,
         close_deadline: formData.close_deadline,
+        requires_attachments: formData.requires_attachments,
         deliverable_quantity: formData.deliverable_quantity,
         is_repeating: formData.is_repeating,
         repeat_frequency: formData.repeat_frequency || null,
@@ -586,6 +590,27 @@ export default function EditTaskPage() {
                     />
                     <span className="text-sm text-muted-foreground">
                       If enabled, task will be automatically marked as "Rejected" when deadline passes
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="requires_attachments">Requires Attachments</Label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      id="requires_attachments"
+                      type="checkbox"
+                      checked={formData.requires_attachments}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          requires_attachments: e.target.checked,
+                        })
+                      }
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      If enabled, task must have deliverables or files before it can be completed
                     </span>
                   </div>
                 </div>

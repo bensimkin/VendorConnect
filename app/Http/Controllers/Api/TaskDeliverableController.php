@@ -7,6 +7,7 @@ use App\Models\Task;
 use App\Models\TaskDeliverable;
 use App\Models\Portfolio;
 use App\Services\NotificationService;
+use App\Models\TaskUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -121,6 +122,9 @@ class TaskDeliverableController extends BaseController
             $notificationService = new NotificationService();
             $notificationService->deliverableAdded($deliverable, Auth::user());
 
+            // Track activity for task
+            TaskUser::updateActivity($taskId, Auth::id());
+
             $deliverable->load(['creator', 'media']);
             return $this->sendResponse($deliverable, 'Deliverable created successfully');
         } catch (\Exception $e) {
@@ -219,6 +223,9 @@ class TaskDeliverableController extends BaseController
 
             DB::commit();
 
+            // Track activity for task
+            TaskUser::updateActivity($taskId, Auth::id());
+
             $deliverable->load(['creator', 'media']);
             return $this->sendResponse($deliverable, 'Deliverable updated successfully');
         } catch (\Exception $e) {
@@ -257,6 +264,10 @@ class TaskDeliverableController extends BaseController
             }
 
             $deliverable->update(['completed_at' => now()]);
+            
+            // Track activity for task
+            TaskUser::updateActivity($taskId, Auth::id());
+            
             return $this->sendResponse($deliverable, 'Deliverable marked as completed');
         } catch (\Exception $e) {
             return $this->sendServerError('Error completing deliverable: ' . $e->getMessage());

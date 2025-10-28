@@ -420,9 +420,9 @@ export default function TaskDetailPage() {
       toast.success('Status updated successfully');
       setEditingStatus(false);
       fetchTaskDetail(task.id.toString());
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update status:', error);
-      toast.error('Failed to update status');
+      toast.error(error.response?.data?.message || 'Failed to update status');
     } finally {
       setUpdatingStatus(false);
     }

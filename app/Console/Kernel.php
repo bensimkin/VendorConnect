@@ -22,6 +22,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('tasks:generate-repeating')->daily();
         $schedule->command('notifications:send-emails')->everyMinute();
         $schedule->command('tasks:auto-archive')->daily();
+        
+        // Recalculate project metrics baselines monthly to keep data fresh
+        $schedule->command('metrics:calculate-project-baselines')->monthly();
     }
 
     /**
