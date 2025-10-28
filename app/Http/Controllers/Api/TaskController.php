@@ -24,6 +24,9 @@ use App\Models\Portfolio;
 use App\Models\TaskAssignmentHistory;
 use App\Services\NotificationService;
 use App\Models\TaskFile;
+use App\Models\TaskView;
+use App\Models\TaskRejection;
+use App\Models\TaskUser;
 
 class TaskController extends BaseController
 {
@@ -169,6 +172,7 @@ class TaskController extends BaseController
                 'repeat_interval' => 'nullable|integer|min:1',
                 'repeat_until' => 'nullable|date|after:start_date',
                 'repeat_start' => 'nullable|date|after_or_equal:start_date',
+                'requires_attachments' => 'boolean',
             ]);
 
             if ($validator->fails()) {
@@ -224,6 +228,7 @@ class TaskController extends BaseController
                 'end_date' => $request->end_date,
                 'note' => $template ? $template->description : $request->note,
                 'deliverable_quantity' => $template ? $template->deliverable_quantity : $request->get('deliverable_quantity', 1),
+                'requires_attachments' => $request->get('requires_attachments', false),
                 'close_deadline' => $request->get('close_deadline', 0),
                 'is_repeating' => $request->get('is_repeating', false),
                 'repeat_frequency' => $request->get('repeat_frequency'),
@@ -327,6 +332,27 @@ class TaskController extends BaseController
                 }
             }
 
+            // Track task view for analytics
+            try {
+                TaskView::create([
+                    'task_id' => $task->id,
+                    'user_id' => $user->id,
+                    'viewed_at' => now(),
+                    'view_duration_seconds' => null, // Will be updated by frontend if provided
+                ]);
+            } catch (\Exception $e) {
+                // Log error but don't fail the request
+                \Log::error('Error tracking task view: ' . $e->getMessage());
+            }
+
+            // Track task activity
+            try {
+                TaskUser::updateActivity($task->id, $user->id);
+            } catch (\Exception $e) {
+                // Log error but don't fail the request
+                \Log::error('Error tracking task activity: ' . $e->getMessage());
+            }
+
             // Check if task is expired and has strict deadline
             if ($task->end_date && $task->close_deadline == 1) {
                 $deadline = Carbon::parse($task->end_date);
@@ -379,6 +405,8 @@ class TaskController extends BaseController
                 return $this->sendNotFound('Task not found');
             }
 
+            $oldStatus = $task->status; 
+
             // Role-based access control
             if ($this->hasAdminAccess($user)) {
                 // Admins and sub-admins can update all tasks
@@ -398,9 +426,39 @@ class TaskController extends BaseController
                 
                 // If updating status, check if it's allowed for Taskers
                 if ($request->has('status_id')) {
-                    $allowedStatuses = Status::whereIn('title', ['Pending', 'Submitted'])->pluck('id')->toArray();
+                    $allowedStatuses = Status::getTaskerAllowedStatuses()->pluck('id')->toArray();
                     if (!in_array($request->status_id, $allowedStatuses)) {
-                        return $this->sendError('Access denied: Taskers can only set status to Pending or Submitted', [], 403);
+                        return $this->sendError('Access denied: Taskers can only set status to Pending, Submitted, Rejected or In Progress', [], 403);
+                    }
+                }
+
+                $newStatus = Status::find($request->status_id);
+
+                // Track task rejection if status changed to "Rejected"
+                if ($newStatus && strtolower($newStatus->title) === 'rejected' && $oldStatus->id != $newStatus->id) {
+                    try {
+                        // Get all assigned users for this task
+                        $assignedUsers = $task->users()->get();
+                        
+                        foreach ($assignedUsers as $assignedUser) {
+                            // Check if already rejected by this user
+                            $existingRejection = TaskRejection::where('task_id', $task->id)
+                                ->where('user_id', $assignedUser->id)
+                                ->first();
+                            
+                            if (!$existingRejection) {
+                                // Create rejection record for each assigned user
+                                TaskRejection::create([
+                                    'task_id' => $task->id,
+                                    'user_id' => $assignedUser->id,
+                                    'rejected_at' => now(),
+                                    'reason' => $request->input('rejection_reason'),
+                                ]);
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        // Log error but don't fail the status update
+                        \Log::error('Error tracking task rejection: ' . $e->getMessage());
                     }
                 }
             }
@@ -422,6 +480,7 @@ class TaskController extends BaseController
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date|after_or_equal:start_date',
                 'close_deadline' => 'nullable|boolean',
+                'requires_attachments' => 'nullable|boolean',
                 'is_repeating' => 'nullable|boolean',
                 'repeat_frequency' => 'nullable|in:daily,weekly,monthly,yearly',
                 'repeat_interval' => 'nullable|integer|min:1',
@@ -433,12 +492,26 @@ class TaskController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
+            // Check if task was completed
+            $completedStatus = Status::where('title', 'Completed')->first();
+            if ($completedStatus && $request->status_id == $completedStatus->id && $oldStatus->id != $completedStatus->id) {
+                // Check if task requires attachments and validate they exist
+                if ($task->requires_attachments) {
+                    $hasDeliverables = $task->deliverables()->count() > 0;
+                    $hasMedia = $task->getMedia('task-media')->count() > 0;
+
+                    if (!$hasDeliverables && !$hasMedia) {
+                        return $this->sendError('Cannot complete task: This task requires attachments but no files have been uploaded. Please add deliverables or files before completing.', [], 400);
+                    }
+                }
+            }
+
             DB::beginTransaction();
 
             $task->update($request->only([
                 'title', 'description', 'standard_brief', 'status_id', 'priority_id', 
                 'task_type_id', 'project_id', 'start_date', 'end_date', 'close_deadline',
-                'note', 'deliverable_quantity', 'is_repeating', 'repeat_frequency', 
+                'note', 'deliverable_quantity', 'requires_attachments', 'is_repeating', 'repeat_frequency', 
                 'repeat_interval', 'repeat_until', 'repeat_start'
             ]));
 
@@ -567,6 +640,8 @@ class TaskController extends BaseController
                 return $this->sendNotFound('Task not found');
             }
 
+            $oldStatus = $task->status; 
+
             // Role-based access control
             if ($this->hasAdminAccess($user)) {
                 // Admins and sub-admins can update all tasks
@@ -581,13 +656,43 @@ class TaskController extends BaseController
                 // Taskers can only update status to Pending or Submitted (NOT Archive)
                 $allowedStatuses = Status::getTaskerAllowedStatuses()->pluck('id')->toArray();
                 if (!in_array($request->status_id, $allowedStatuses)) {
-                    return $this->sendError('Access denied: Taskers can only set status to Pending or Submitted', [], 403);
+                    return $this->sendError('Access denied: Taskers can only set status to Pending, Submitted, Rejected or In Progress', [], 403);
                 }
                 
                 // Check if tasker is assigned to this task
                 $isAssigned = $task->users()->where('users.id', $user->id)->exists();
                 if (!$isAssigned) {
                     return $this->sendError('Access denied: You are not assigned to this task', [], 403);
+                }
+
+                $newStatus = Status::find($request->status_id);
+
+                // Track task rejection if status changed to "Rejected"
+                if ($newStatus && strtolower($newStatus->title) === 'rejected' && $oldStatus->id != $newStatus->id) {
+                    try {
+                        // Get all assigned users for this task
+                        $assignedUsers = $task->users()->get();
+                        
+                        foreach ($assignedUsers as $assignedUser) {
+                            // Check if already rejected by this user
+                            $existingRejection = TaskRejection::where('task_id', $task->id)
+                                ->where('user_id', $assignedUser->id)
+                                ->first();
+                            
+                            if (!$existingRejection) {
+                                // Create rejection record for each assigned user
+                                TaskRejection::create([
+                                    'task_id' => $task->id,
+                                    'user_id' => $assignedUser->id,
+                                    'rejected_at' => now(),
+                                    'reason' => $request->input('rejection_reason'),
+                                ]);
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        // Log error but don't fail the status update
+                        \Log::error('Error tracking task rejection: ' . $e->getMessage());
+                    }
                 }
             } else {
                 // Other roles (if any) cannot update status
@@ -603,7 +708,20 @@ class TaskController extends BaseController
                 }
             }
 
-            $oldStatus = $task->status;
+            // Check if task was completed
+            $completedStatus = Status::where('title', 'Completed')->first();
+            if ($completedStatus && $request->status_id == $completedStatus->id && $oldStatus->id != $completedStatus->id) {
+                // Check if task requires attachments and validate they exist
+                if ($task->requires_attachments) {
+                    $hasDeliverables = $task->deliverables()->count() > 0;
+                    $hasMedia = $task->getMedia('task-media')->count() > 0;
+
+                    if (!$hasDeliverables && !$hasMedia) {
+                        return $this->sendError('Cannot complete task: This task requires attachments but no files have been uploaded. Please add deliverables or files before completing.', [], 400);
+                    }
+                }
+            }
+       
             $task->update(['status_id' => $request->status_id]);
             $task->load('status');
 
@@ -907,6 +1025,11 @@ class TaskController extends BaseController
 
             $message = $task->messages()->create($messageData);
 
+            // Track activity for task
+            if (Auth::check()) {
+               
+            }
+
             return $this->sendResponse($message, 'Message uploaded successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error uploading message: ' . $e->getMessage());
@@ -1069,6 +1192,9 @@ class TaskController extends BaseController
                 ]
             );
 
+            // Track activity for task
+            TaskUser::updateActivity($id, Auth::id());
+
             return $this->sendResponse($answer, 'Question answer submitted successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error submitting question answer: ' . $e->getMessage());
@@ -1212,6 +1338,9 @@ class TaskController extends BaseController
                     ],
                 ]);
             }
+
+            // Track activity for task
+            TaskUser::updateActivity($id, Auth::id());
 
             return $this->sendResponse($answer, 'Checklist answer submitted successfully');
         } catch (\Exception $e) {

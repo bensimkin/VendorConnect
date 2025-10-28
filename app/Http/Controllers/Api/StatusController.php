@@ -36,7 +36,7 @@ class StatusController extends BaseController
             $query->orderBy($sortBy, $sortOrder);
 
             if ($user->hasRole('Tasker')) {
-                $query->whereIn('title', ['Pending', 'Submitted']);
+                $query->whereIn('slug', ['pending', 'submitted', 'rejected', 'in-progress']);
             }
 
             if ($request->get('per_page') === 'all') {

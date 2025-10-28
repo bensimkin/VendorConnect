@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserSession;
 use App\Mail\PasswordResetMail;
 use App\Mail\EmailVerificationMail;
 use App\Mail\WelcomeMail;
@@ -77,6 +78,22 @@ class AuthController extends Controller
         // Update last login
         $user->forceFill(['last_login_at' => now()])->save();
 
+        // Track session (NEW CODE)
+        try {
+            UserSession::startSession(
+                $user->id,
+                $token,
+                $request->ip(),
+                $request->userAgent()
+            );
+        } catch (\Exception $e) {
+            // Don't fail login if session tracking fails
+            \Log::error('Session tracking failed on login', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
@@ -106,6 +123,24 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $user = $request->user();
+        
+        // Find active session and end it
+        try {
+            $token = $request->bearerToken();
+            if ($token) {
+                $session = UserSession::findByToken($token);
+                if ($session && $session->user_id === $user->id) {
+                    $session->endSession();
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to end session on logout', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([

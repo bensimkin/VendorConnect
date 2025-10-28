@@ -110,6 +110,7 @@ function NewTaskPageContent() {
     start_date: '',
     end_date: '',
     close_deadline: false,
+    requires_attachments: false,
     deliverable_quantity: 1,
     is_repeating: false,
     repeat_frequency: '',
@@ -307,6 +308,7 @@ function NewTaskPageContent() {
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
         close_deadline: formData.close_deadline,
+        requires_attachments: formData.requires_attachments,
         deliverable_quantity: formData.deliverable_quantity,
         is_repeating: formData.is_repeating,
         repeat_frequency: formData.repeat_frequency || null,
@@ -805,6 +807,22 @@ function NewTaskPageContent() {
                     />
                     <span className="text-sm text-muted-foreground">
                       If enabled, task will be automatically marked as "Rejected" when deadline passes
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="requires_attachments">Requires Attachments</Label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      id="requires_attachments"
+                      type="checkbox"
+                      checked={formData.requires_attachments}
+                      onChange={(e) => setFormData({ ...formData, requires_attachments: e.target.checked })}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      If enabled, task must have deliverables or files before it can be completed
                     </span>
                   </div>
                 </div>

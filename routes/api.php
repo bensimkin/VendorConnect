@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\ApiKeyController;
 use App\Http\Controllers\Api\SmartTaskController;
 use App\Http\Controllers\Api\HealthCheckController;
+use App\Http\Controllers\Api\AnalyticsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -87,13 +88,16 @@ Route::prefix('v1')->group(function () {
         });
         
         // Tasks
-        Route::prefix('tasks')->group(function () {
+        Route::prefix('tasks')->middleware(['track.task.activity'])->group(function () {
             Route::get('/', [TaskController::class, 'index']);
             Route::post('/', [TaskController::class, 'store']);
             Route::get('/{id}', [TaskController::class, 'show']);
             Route::put('/{id}', [TaskController::class, 'update']);
             Route::delete('/{id}', [TaskController::class, 'destroy']);
             Route::delete('/multiple', [TaskController::class, 'destroyMultiple']);
+            
+            // Task tracking
+            Route::post('/{id}/track-view', [AnalyticsController::class, 'trackTaskView']);
             
             // Task status and deadline
             Route::put('/{id}/status', [TaskController::class, 'updateStatus']);
@@ -337,6 +341,17 @@ Route::prefix('priorities')->group(function () {
 
         // Smart Task API - AI-powered task management via n8n
         Route::post('/smart-task', [SmartTaskController::class, 'handleRequest']);
+
+        // Analytics (Admin only)
+        Route::prefix('analytics')->group(function () {
+            Route::get('/task-views', [AnalyticsController::class, 'getTaskViewAnalytics']);
+            Route::get('/task-views/statistics', [AnalyticsController::class, 'getTaskViewStatistics']);
+            Route::get('/task-rejections/statistics', [AnalyticsController::class, 'getTaskRejectionStatistics']);
+            Route::get('/user-sessions/statistics', [AnalyticsController::class, 'getUserSessionStatistics']);
+            Route::get('/user-task-activity/statistics', [AnalyticsController::class, 'getUserTaskActivityStatistics']);
+            Route::get('/project-metrics-baselines', [AnalyticsController::class, 'getProjectMetricsBaselines']);
+            Route::get('/comment-activity/statistics', [AnalyticsController::class, 'getCommentActivityStatistics']);
+        });
 
     });
 });

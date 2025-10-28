@@ -43,6 +43,7 @@ class Kernel extends HttpKernel
         'api' => [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \App\Http\Middleware\ApiLogging::class,
+            \App\Http\Middleware\TrackSessionActivity::class,
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
@@ -84,5 +85,6 @@ class Kernel extends HttpKernel
         'subscription.modules' => \App\Http\Middleware\CheckSubscriptionModules::class,
         'check.maxCreate' => \App\Http\Middleware\CheckMaxCreate::class,
         'cAuth' => \App\Http\Middleware\ApiKeyAuth::class,
+        'track.task.activity' => \App\Http\Middleware\TrackTaskActivity::class,
     ];
 }

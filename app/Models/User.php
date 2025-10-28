@@ -87,6 +87,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Task::class);
     }
 
+    /**
+     * Get all sessions for this user
+     */
+    public function sessions()
+    {
+        return $this->hasMany(UserSession::class);
+    }
+
     public function status_tasks($status_id)
     {
         return $this->belongsToMany(Task::class, 'task_user')
@@ -229,5 +237,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification()
     {
         $this->notify(new \App\Notifications\SendGridEmailVerification);
+    }
+
+    public function taskViews()
+    {
+        return $this->hasMany(TaskView::class);
+    }
+
+    public function taskRejections()
+    {
+        return $this->hasMany(TaskRejection::class);
     }
 }
