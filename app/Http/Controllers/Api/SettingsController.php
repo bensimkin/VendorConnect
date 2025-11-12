@@ -221,10 +221,14 @@ class SettingsController extends BaseController
     public function getGeneralSettings()
     {
         try {
-            $generalSettings = get_settings('general_settings');
+            // Get from key column
+            $setting = \DB::table('settings')
+                ->where('key', 'general_settings')
+                ->first();
             
-            if (!$generalSettings) {
-                $generalSettings = [];
+            $generalSettings = [];
+            if ($setting && $setting->value) {
+                $generalSettings = json_decode($setting->value, true) ?: [];
             }
             
             $result = [
@@ -255,10 +259,14 @@ class SettingsController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            // Get existing general settings
-            $generalSettings = get_settings('general_settings');
-            if (!$generalSettings) {
-                $generalSettings = [];
+            // Get existing general settings from key column
+            $setting = \DB::table('settings')
+                ->where('key', 'general_settings')
+                ->first();
+            
+            $generalSettings = [];
+            if ($setting && $setting->value) {
+                $generalSettings = json_decode($setting->value, true) ?: [];
             }
 
             // Update only provided fields
@@ -272,12 +280,14 @@ class SettingsController extends BaseController
                 $generalSettings['date_format'] = $request->date_format;
             }
 
-            // Save back to database
+            // Save back to database using 'key' column
             \DB::table('settings')
                 ->updateOrInsert(
-                    ['variable' => 'general_settings'],
+                    ['key' => 'general_settings'],
                     [
                         'value' => json_encode($generalSettings),
+                        'type' => 'string',
+                        'group' => 'general',
                         'updated_at' => now()
                     ]
                 );
