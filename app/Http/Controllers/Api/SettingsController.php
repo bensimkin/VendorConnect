@@ -214,4 +214,77 @@ class SettingsController extends BaseController
             return $this->sendServerError('Error updating auto-archive settings: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get general settings
+     */
+    public function getGeneralSettings()
+    {
+        try {
+            $generalSettings = get_settings('general_settings');
+            
+            if (!$generalSettings) {
+                $generalSettings = [];
+            }
+            
+            $result = [
+                'timezone' => $generalSettings['timezone'] ?? 'UTC',
+                'company_title' => $generalSettings['company_title'] ?? 'VendorConnect',
+                'date_format' => $generalSettings['date_format'] ?? 'DD-MM-YYYY|d-m-Y',
+            ];
+
+            return $this->sendResponse($result, 'General settings retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving general settings: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update general settings
+     */
+    public function updateGeneralSettings(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'timezone' => 'nullable|string|timezone',
+                'company_title' => 'nullable|string|max:255',
+                'date_format' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendValidationError($validator->errors());
+            }
+
+            // Get existing general settings
+            $generalSettings = get_settings('general_settings');
+            if (!$generalSettings) {
+                $generalSettings = [];
+            }
+
+            // Update only provided fields
+            if ($request->has('timezone')) {
+                $generalSettings['timezone'] = $request->timezone;
+            }
+            if ($request->has('company_title')) {
+                $generalSettings['company_title'] = $request->company_title;
+            }
+            if ($request->has('date_format')) {
+                $generalSettings['date_format'] = $request->date_format;
+            }
+
+            // Save back to database
+            \DB::table('settings')
+                ->updateOrInsert(
+                    ['variable' => 'general_settings'],
+                    [
+                        'value' => json_encode($generalSettings),
+                        'updated_at' => now()
+                    ]
+                );
+
+            return $this->sendResponse($generalSettings, 'General settings updated successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error updating general settings: ' . $e->getMessage());
+        }
+    }
 }

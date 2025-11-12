@@ -32,10 +32,6 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: 'admin@admin.com',
-      password: 'admin123',
-    },
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -109,13 +105,6 @@ export default function LoginPage() {
               >
                 Forgot your password?
               </Link>
-            </div>
-            <div className="text-sm text-center text-muted-foreground">
-              <p>Demo credentials:</p>
-              <p className="font-mono text-xs mt-1">
-                Email: admin@admin.com<br />
-                Password: admin123
-              </p>
             </div>
           </CardFooter>
         </form>

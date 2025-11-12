@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Save, RefreshCw } from 'lucide-react';
+import { Settings, Save, RefreshCw, Globe } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 
 interface ProjectSettings {
@@ -21,6 +21,12 @@ interface ProjectSettings {
 interface AutoArchiveSettings {
   auto_archive_enabled: boolean;
   auto_archive_days: number;
+}
+
+interface GeneralSettings {
+  timezone: string;
+  company_title: string;
+  date_format: string;
 }
 
 export default function AdminSettingsPage() {
@@ -37,6 +43,12 @@ export default function AdminSettingsPage() {
     auto_archive_days: 30,
   });
 
+  const [generalSettings, setGeneralSettings] = useState<GeneralSettings>({
+    timezone: 'UTC',
+    company_title: 'VendorConnect',
+    date_format: 'DD-MM-YYYY|d-m-Y',
+  });
+
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -44,12 +56,14 @@ export default function AdminSettingsPage() {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const [projectResponse, autoArchiveResponse] = await Promise.all([
+      const [projectResponse, autoArchiveResponse, generalResponse] = await Promise.all([
         apiClient.get('/settings/project'),
-        apiClient.get('/settings/auto-archive')
+        apiClient.get('/settings/auto-archive'),
+        apiClient.get('/settings/general')
       ]);
       setSettings(projectResponse.data.data);
       setAutoArchiveSettings(autoArchiveResponse.data.data);
+      setGeneralSettings(generalResponse.data.data);
     } catch (error) {
       console.error('Failed to fetch settings:', error);
       toast.error('Failed to load settings');
@@ -66,6 +80,10 @@ export default function AdminSettingsPage() {
     setAutoArchiveSettings(prev => ({ ...prev, [key]: value }));
   };
 
+  const handleGeneralSettingChange = (key: keyof GeneralSettings, value: string) => {
+    setGeneralSettings(prev => ({ ...prev, [key]: value }));
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -77,7 +95,10 @@ export default function AdminSettingsPage() {
       // Save auto-archive settings
       const autoArchivePromise = apiClient.put('/settings/auto-archive', autoArchiveSettings);
       
-      await Promise.all([...projectPromises, autoArchivePromise]);
+      // Save general settings
+      const generalPromise = apiClient.put('/settings/general', generalSettings);
+      
+      await Promise.all([...projectPromises, autoArchivePromise, generalPromise]);
       toast.success('Settings saved successfully');
     } catch (error: any) {
       console.error('Failed to save settings:', error);
@@ -128,6 +149,102 @@ export default function AdminSettingsPage() {
             </Button>
           </div>
         </div>
+
+        {/* General Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              General Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Timezone Setting */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label className="text-base font-medium">
+                  Company Timezone
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Set the default timezone for your company
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={generalSettings.timezone}
+                  onChange={(e) => handleGeneralSettingChange('timezone', e.target.value)}
+                  className="px-3 py-2 border rounded-md bg-background text-foreground min-w-[200px]"
+                >
+                  <optgroup label="Americas">
+                    <option value="America/New_York">Eastern Time (ET)</option>
+                    <option value="America/Chicago">Central Time (CT)</option>
+                    <option value="America/Denver">Mountain Time (MT)</option>
+                    <option value="America/Phoenix">Arizona Time (MST)</option>
+                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                    <option value="America/Anchorage">Alaska Time (AKT)</option>
+                    <option value="Pacific/Honolulu">Hawaii Time (HST)</option>
+                    <option value="America/Toronto">Toronto</option>
+                    <option value="America/Vancouver">Vancouver</option>
+                    <option value="America/Mexico_City">Mexico City</option>
+                    <option value="America/Sao_Paulo">São Paulo</option>
+                    <option value="America/Buenos_Aires">Buenos Aires</option>
+                  </optgroup>
+                  <optgroup label="Europe">
+                    <option value="Europe/London">London (GMT/BST)</option>
+                    <option value="Europe/Paris">Paris (CET/CEST)</option>
+                    <option value="Europe/Berlin">Berlin (CET/CEST)</option>
+                    <option value="Europe/Rome">Rome (CET/CEST)</option>
+                    <option value="Europe/Madrid">Madrid (CET/CEST)</option>
+                    <option value="Europe/Amsterdam">Amsterdam (CET/CEST)</option>
+                    <option value="Europe/Brussels">Brussels (CET/CEST)</option>
+                    <option value="Europe/Vienna">Vienna (CET/CEST)</option>
+                    <option value="Europe/Zurich">Zurich (CET/CEST)</option>
+                    <option value="Europe/Stockholm">Stockholm (CET/CEST)</option>
+                    <option value="Europe/Oslo">Oslo (CET/CEST)</option>
+                    <option value="Europe/Helsinki">Helsinki (EET/EEST)</option>
+                    <option value="Europe/Athens">Athens (EET/EEST)</option>
+                    <option value="Europe/Moscow">Moscow (MSK)</option>
+                    <option value="Europe/Istanbul">Istanbul (TRT)</option>
+                  </optgroup>
+                  <optgroup label="Asia">
+                    <option value="Asia/Dubai">Dubai (GST)</option>
+                    <option value="Asia/Kolkata">India (IST)</option>
+                    <option value="Asia/Karachi">Karachi (PKT)</option>
+                    <option value="Asia/Dhaka">Dhaka (BST)</option>
+                    <option value="Asia/Bangkok">Bangkok (ICT)</option>
+                    <option value="Asia/Singapore">Singapore (SGT)</option>
+                    <option value="Asia/Hong_Kong">Hong Kong (HKT)</option>
+                    <option value="Asia/Shanghai">China (CST)</option>
+                    <option value="Asia/Tokyo">Tokyo (JST)</option>
+                    <option value="Asia/Seoul">Seoul (KST)</option>
+                    <option value="Asia/Manila">Manila (PHT)</option>
+                    <option value="Asia/Jakarta">Jakarta (WIB)</option>
+                  </optgroup>
+                  <optgroup label="Australia & Pacific">
+                    <option value="Australia/Sydney">Sydney (AEDT/AEST)</option>
+                    <option value="Australia/Melbourne">Melbourne (AEDT/AEST)</option>
+                    <option value="Australia/Brisbane">Brisbane (AEST)</option>
+                    <option value="Australia/Perth">Perth (AWST)</option>
+                    <option value="Pacific/Auckland">Auckland (NZDT/NZST)</option>
+                    <option value="Pacific/Fiji">Fiji (FJT)</option>
+                  </optgroup>
+                  <optgroup label="Africa">
+                    <option value="Africa/Cairo">Cairo (EET)</option>
+                    <option value="Africa/Johannesburg">Johannesburg (SAST)</option>
+                    <option value="Africa/Lagos">Lagos (WAT)</option>
+                    <option value="Africa/Nairobi">Nairobi (EAT)</option>
+                  </optgroup>
+                  <optgroup label="Other">
+                    <option value="UTC">UTC (Coordinated Universal Time)</option>
+                  </optgroup>
+                </select>
+                <Badge variant="outline">
+                  {generalSettings.timezone}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Project Settings */}
         <Card>

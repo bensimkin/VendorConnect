@@ -236,6 +236,10 @@ Route::prefix('priorities')->group(function () {
             Route::get('/project', [SettingsController::class, 'getProjectSettings']);
             Route::get('/group/{group}', [SettingsController::class, 'getByGroup']);
             
+            // General settings (must come before generic {key} routes)
+            Route::get('/general', [SettingsController::class, 'getGeneralSettings']);
+            Route::put('/general', [SettingsController::class, 'updateGeneralSettings']);
+            
             // Auto-archive settings (must come before generic {key} routes)
             Route::get('/auto-archive', [SettingsController::class, 'getAutoArchiveSettings']);
             Route::put('/auto-archive', [SettingsController::class, 'updateAutoArchiveSettings']);
