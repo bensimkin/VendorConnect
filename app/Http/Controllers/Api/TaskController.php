@@ -128,7 +128,7 @@ class TaskController extends BaseController
             });
 
             // Check for expired tasks with strict deadlines
-            $rejectedStatus = Status::where('title', 'Rejected')->first();
+            $rejectedStatus = Status::where('admin_id', $adminId)->where('title', 'Rejected')->first();
             if ($rejectedStatus) {
                 foreach ($tasks->items() as $task) {
                     if ($task->end_date && $task->close_deadline == 1) {
@@ -366,8 +366,10 @@ class TaskController extends BaseController
                 $current_time = now();
                 
                 if ($current_time > $deadline) {
+                    $adminId = getAdminIdByUserRole();
+                    
                     // Task is expired with strict deadline - mark as Rejected
-                    $rejectedStatus = Status::where('title', 'Rejected')->first();
+                    $rejectedStatus = Status::where('admin_id', $adminId)->where('title', 'Rejected')->first();
                     if ($rejectedStatus && $task->status_id != $rejectedStatus->id) {
                         $task->update(['status_id' => $rejectedStatus->id]);
                         $task->load(['users', 'status', 'priority', 'taskType', 'project', 'clients']);
@@ -499,8 +501,10 @@ class TaskController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
+            $adminId = getAdminIdByUserRole();
+            
             // Check if task was completed
-            $completedStatus = Status::where('title', 'Completed')->first();
+            $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
             if ($completedStatus && $request->status_id == $completedStatus->id && $oldStatus->id != $completedStatus->id) {
                 // Check if task requires attachments and validate they exist
                 if ($task->requires_attachments) {
@@ -635,6 +639,8 @@ class TaskController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
+            
             $validator = Validator::make($request->all(), [
                 'status_id' => 'required|exists:statuses,id'
             ]);
@@ -718,7 +724,7 @@ class TaskController extends BaseController
             }
 
             // Check if task was completed
-            $completedStatus = Status::where('title', 'Completed')->first();
+            $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
             if ($completedStatus && $request->status_id == $completedStatus->id && $oldStatus->id != $completedStatus->id) {
                 // Check if task requires attachments and validate they exist
                 if ($task->requires_attachments) {
@@ -735,7 +741,7 @@ class TaskController extends BaseController
             $task->load('status');
 
             // Check if task was completed
-            $completedStatus = Status::where('title', 'Completed')->first();
+            $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
             if ($completedStatus && $request->status_id == $completedStatus->id && $oldStatus->id != $completedStatus->id) {
                 $notificationService = new NotificationService();
                 $notificationService->taskCompleted($task, Auth::user());
