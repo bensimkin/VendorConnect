@@ -973,9 +973,12 @@ class TaskController extends BaseController
             // Find media by IDs using Spatie Media Library
             $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::whereIn('id', $request->media_ids)->get();
 
-            // Filter media that belongs to tasks
-            $validMedia = $media->filter(function ($mediaItem) {
-                $task = Task::where('id', $mediaItem->model_id)
+            $adminId = getAdminIdByUserRole();
+            
+            // Filter media that belongs to tasks (in this company)
+            $validMedia = $media->filter(function ($mediaItem) use ($adminId) {
+                $task = Task::where('admin_id', $adminId)
+                    ->where('id', $mediaItem->model_id)
                     ->first();
                 return $task !== null;
             });
@@ -1480,7 +1483,10 @@ class TaskController extends BaseController
                 return $this->sendError('This task is not a repeating task', [], 400);
             }
 
-            $childTasks = Task::where('parent_task_id', $id)
+            $adminId = getAdminIdByUserRole();
+            
+            $childTasks = Task::where('admin_id', $adminId)
+                ->where('parent_task_id', $id)
                 ->with(['status', 'users'])
                 ->orderBy('start_date', 'desc')
                 ->get();

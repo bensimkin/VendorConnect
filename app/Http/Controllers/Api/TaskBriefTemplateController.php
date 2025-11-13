@@ -161,8 +161,11 @@ class TaskBriefTemplateController extends BaseController
             \DB::beginTransaction();
 
             try {
-                // 1. Remove template reference from any tasks using this template
-                $tasksUpdated = \App\Models\Task::where('template_id', $template->id)
+                $adminId = getAdminIdByUserRole();
+                
+                // 1. Remove template reference from any tasks using this template (only in this company)
+                $tasksUpdated = \App\Models\Task::where('admin_id', $adminId)
+                    ->where('template_id', $template->id)
                     ->update(['template_id' => null]);
 
                 // 2. Delete all associated brief questions

@@ -210,8 +210,10 @@ class ClientController extends BaseController
             \Log::info('Auth user: ' . json_encode(Auth::user()));
             \Log::info('Auth check: ' . (Auth::check() ? 'true' : 'false'));
             
-            // Check if client exists first
-            $clientExists = Client::where('id', $id)->exists();
+            $adminId = getAdminIdByUserRole();
+            
+            // Check if client exists first (and belongs to this company)
+            $clientExists = Client::where('admin_id', $adminId)->where('id', $id)->exists();
             \Log::info('Client exists in database: ' . ($clientExists ? 'true' : 'false'));
             
             if (!$clientExists) {
