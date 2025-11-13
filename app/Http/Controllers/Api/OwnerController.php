@@ -108,54 +108,40 @@ class OwnerController extends BaseController
                     ];
                 });
 
+            // Get user IDs for this company (owner + team members)
+            $companyUserIds = \App\Models\TeamMember::where('admin_id', $adminId)
+                ->pluck('user_id')
+                ->push($admin->user_id) // Add owner
+                ->unique()
+                ->values()
+                ->all();
+
             // Active user metrics
             $activeToday = \App\Models\UserSession::whereNull('logout_at')
                 ->where('last_activity_at', '>=', Carbon::now()->subHours(24))
-                ->whereHas('user.teamMember', function($q) use ($adminId) {
-                    $q->where('admin_id', $adminId);
-                })
+                ->whereIn('user_id', $companyUserIds)
                 ->distinct('user_id')
                 ->count('user_id');
 
             $activeLast7Days = \App\Models\UserSession::where('last_activity_at', '>=', Carbon::now()->subDays(7))
-                ->whereHas('user.teamMember', function($q) use ($adminId) {
-                    $q->where('admin_id', $adminId);
-                })
-                ->orWhereHas('user.admin', function($q) use ($adminId) {
-                    $q->where('id', $adminId);
-                })
+                ->whereIn('user_id', $companyUserIds)
                 ->distinct('user_id')
                 ->count('user_id');
 
             $activeLast30Days = \App\Models\UserSession::where('last_activity_at', '>=', Carbon::now()->subDays(30))
-                ->whereHas('user.teamMember', function($q) use ($adminId) {
-                    $q->where('admin_id', $adminId);
-                })
-                ->orWhereHas('user.admin', function($q) use ($adminId) {
-                    $q->where('id', $adminId);
-                })
+                ->whereIn('user_id', $companyUserIds)
                 ->distinct('user_id')
                 ->count('user_id');
 
             // Recent sessions (last 7 days)
             $totalSessions = \App\Models\UserSession::whereBetween('login_at', [Carbon::now()->subDays(7), Carbon::now()])
-                ->whereHas('user.teamMember', function($q) use ($adminId) {
-                    $q->where('admin_id', $adminId);
-                })
-                ->orWhereHas('user.admin', function($q) use ($adminId) {
-                    $q->where('id', $adminId);
-                })
+                ->whereIn('user_id', $companyUserIds)
                 ->count();
 
             // Average session duration (last 7 days)
             $avgSessionDuration = \App\Models\UserSession::whereBetween('login_at', [Carbon::now()->subDays(7), Carbon::now()])
                 ->whereNotNull('duration_seconds')
-                ->whereHas('user.teamMember', function($q) use ($adminId) {
-                    $q->where('admin_id', $adminId);
-                })
-                ->orWhereHas('user.admin', function($q) use ($adminId) {
-                    $q->where('id', $adminId);
-                })
+                ->whereIn('user_id', $companyUserIds)
                 ->avg('duration_seconds');
 
             // Last activity timestamp
