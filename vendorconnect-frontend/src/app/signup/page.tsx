@@ -238,7 +238,7 @@ export default function SignupPage() {
               </p>
               
               <p className="text-xs text-muted-foreground italic">
-                VendorConnect is <span className="font-semibold text-primary">completely free</span> for the foreseeable future
+                VendorConnect is <span className="font-semibold text-primary">Complimentary</span> for The Mastermind Members
               </p>
             </div>
           </CardFooter>
