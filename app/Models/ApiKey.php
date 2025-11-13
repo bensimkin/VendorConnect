@@ -60,7 +60,10 @@ class ApiKey extends Model
      */
     public static function createForUser(User $user, string $name, ?string $description = null, ?array $permissions = null, ?Carbon $expiresAt = null): self
     {
+        $adminId = getAdminIdByUserRole();
+        
         return self::create([
+            'admin_id' => $adminId,
             'user_id' => $user->id,
             'name' => $name,
             'key' => self::generateKey($user, $permissions, $expiresAt),

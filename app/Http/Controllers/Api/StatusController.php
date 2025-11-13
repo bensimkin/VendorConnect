@@ -67,10 +67,12 @@ class StatusController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
+            $adminId = getAdminIdByUserRole();
+            
             $status = Status::create([
                 'title' => $request->title,
                 'slug' => $request->slug,
-                'admin_id' => Auth::user()->admin_id ?? null,
+                'admin_id' => $adminId,
             ]);
 
             return $this->sendResponse($status, 'Status created successfully');

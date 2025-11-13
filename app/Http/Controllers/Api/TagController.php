@@ -58,7 +58,10 @@ class TagController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
+            $adminId = getAdminIdByUserRole();
+            
             $tag = Tag::create([
+                'admin_id' => $adminId,
                 'title' => $request->title,
                 'slug' => \Str::slug($request->title),
             ]);

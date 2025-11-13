@@ -161,7 +161,10 @@ class PortfolioController extends BaseController
 
             DB::beginTransaction();
 
+            $adminId = getAdminIdByUserRole();
+
             $portfolio = Portfolio::create([
+                'admin_id' => $adminId,
                 'client_id' => $request->client_id,
                 'task_id' => $request->task_id,
                 'project_id' => $request->project_id,

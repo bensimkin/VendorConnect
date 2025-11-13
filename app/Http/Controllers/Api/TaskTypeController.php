@@ -64,7 +64,10 @@ class TaskTypeController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
+            $adminId = getAdminIdByUserRole();
+            
             $taskType = TaskType::create([
+                'admin_id' => $adminId,
                 'task_type' => $request->task_type,
             ]);
 

@@ -64,10 +64,12 @@ class PriorityController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
+            $adminId = getAdminIdByUserRole();
+            
             $priority = Priority::create([
                 'title' => $request->title,
                 'slug' => $request->slug,
-                'admin_id' => Auth::user()->admin_id ?? null,
+                'admin_id' => $adminId,
             ]);
 
             return $this->sendResponse($priority, 'Priority created successfully');
