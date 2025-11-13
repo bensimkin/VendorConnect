@@ -226,8 +226,13 @@ if (!function_exists('getAuthenticatedUser')) {
     {
         $prefix = '';
 
+        // Check the 'sanctum' guard (API tokens - used by frontend)
+        if (Auth::guard('sanctum')->check()) {
+            $user = Auth::guard('sanctum')->user();
+            $prefix = 'u_';
+        }
         // Check the 'web' guard (users)
-        if (Auth::guard('web')->check()) {
+        elseif (Auth::guard('web')->check()) {
             $user = Auth::guard('web')->user();
             $prefix = 'u_';
         }
