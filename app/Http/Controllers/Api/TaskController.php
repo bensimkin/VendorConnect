@@ -215,7 +215,11 @@ class TaskController extends BaseController
                 })->toArray();
             }
 
+            // Get admin_id for current user
+            $adminId = getAdminIdByUserRole();
+
             $task = Task::create([
+                'admin_id' => $adminId,
                 'title' => $template ? $template->title : $request->title,
                 'description' => $template ? $template->standard_brief : $request->description,
                 'standard_brief' => $request->standard_brief,

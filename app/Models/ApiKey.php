@@ -13,6 +13,7 @@ class ApiKey extends Model
     use HasFactory;
 
     protected $fillable = [
+        'admin_id',
         'user_id',
         'name',
         'key',
@@ -22,6 +23,14 @@ class ApiKey extends Model
         'expires_at',
         'is_active'
     ];
+
+    /**
+     * Get the admin that owns the API key
+     */
+    public function admin(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class);
+    }
 
     protected $casts = [
         'permissions' => 'array',

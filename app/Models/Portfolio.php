@@ -13,6 +13,7 @@ class Portfolio extends Model implements HasMedia
     use HasFactory;
 
     protected $fillable = [
+        'admin_id',
         'client_id',
         'task_id',
         'project_id',
@@ -24,6 +25,11 @@ class Portfolio extends Model implements HasMedia
         'created_by',
         'completed_at',
     ];
+
+    public function admin()
+    {
+        return $this->belongsTo(Admin::class);
+    }
 
     protected $casts = [
         'completed_at' => 'datetime',

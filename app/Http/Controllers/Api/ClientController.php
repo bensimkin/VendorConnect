@@ -159,7 +159,11 @@ class ClientController extends BaseController
 
             DB::beginTransaction();
 
+            // Get admin_id for current user
+            $adminId = getAdminIdByUserRole();
+
             $client = Client::create([
+                'admin_id' => $adminId,
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'email' => $request->email,
@@ -167,7 +171,6 @@ class ClientController extends BaseController
                 'company' => $request->company,
                 'address' => $request->address,
                 'notes' => $request->notes,
-                'admin_id' => $request->user()->id,
                 'status' => $request->get('status', 1),
                 'city' => $request->city,
                 'state' => $request->state,

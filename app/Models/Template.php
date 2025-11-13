@@ -9,12 +9,18 @@ class Template extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'admin_id',
         'type',
         'name',
         'subject',
         'content',
         'status',
     ];
+
+    public function admin()
+    {
+        return $this->belongsTo(Admin::class);
+    }
 
 }
 

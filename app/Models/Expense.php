@@ -10,6 +10,7 @@ class Expense extends Model
     use HasFactory;
 
     protected $fillable = [
+        'admin_id',
         'workspace_id',
         'user_id',
         'title',
@@ -19,4 +20,9 @@ class Expense extends Model
         'expense_date',
         'created_by'
     ];
+
+    public function admin()
+    {
+        return $this->belongsTo(Admin::class);
+    }
 }

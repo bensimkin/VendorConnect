@@ -9,6 +9,7 @@ class TaskBriefTemplates extends Model
 {
     use HasFactory;
     protected $fillable =[
+        'admin_id',
         "title",
         "standard_brief",
         "description",
@@ -17,6 +18,11 @@ class TaskBriefTemplates extends Model
         "created_at",
         "updated_at"
     ];
+
+    public function admin()
+    {
+        return $this->belongsTo(Admin::class);
+    }
 
 
     public function taskType(){

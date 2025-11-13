@@ -9,6 +9,7 @@ class TaskBriefQuestion extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'admin_id',
         "task_brief_templates_id",
         "question_text",
         "question_type",
@@ -16,6 +17,11 @@ class TaskBriefQuestion extends Model
         "created_at",
         "updated_at",
     ];
+
+    public function admin()
+    {
+        return $this->belongsTo(Admin::class);
+    }
 
     protected $casts = [
         'options' => 'array',

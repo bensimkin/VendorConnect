@@ -9,12 +9,18 @@ class Item extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'admin_id',
         'workspace_id',
         'unit_id',
         'title',
         'price',
         'description'
     ];
+
+    public function admin()
+    {
+        return $this->belongsTo(Admin::class);
+    }
 
     public function estimatesInvoices()
     {

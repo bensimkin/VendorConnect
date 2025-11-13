@@ -10,10 +10,16 @@ class ExpenseType extends Model
     use HasFactory;
 
     protected $fillable = [
+        'admin_id',
         'workspace_id',
         'title',
         'description'
     ];
+
+    public function admin()
+    {
+        return $this->belongsTo(Admin::class);
+    }
 
     public function expenses()
     {
