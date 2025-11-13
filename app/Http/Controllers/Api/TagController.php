@@ -16,8 +16,9 @@ class TagController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = Tag::query();
-            // Removed workspace filtering for single-tenant system
+            $adminId = getAdminIdByUserRole();
+            
+            $query = Tag::where('admin_id', $adminId);
 
             // Apply filters
             if ($request->has('search')) {

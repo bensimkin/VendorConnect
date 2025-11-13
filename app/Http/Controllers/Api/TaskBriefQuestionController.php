@@ -16,8 +16,9 @@ class TaskBriefQuestionController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = TaskBriefQuestion::query();
-            // Removed workspace filtering for single-tenant system
+            $adminId = getAdminIdByUserRole();
+            
+            $query = TaskBriefQuestion::where('admin_id', $adminId);
 
             // Apply filters
             if ($request->has('search')) {
@@ -59,7 +60,10 @@ class TaskBriefQuestionController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
+            $adminId = getAdminIdByUserRole();
+            
             $question = TaskBriefQuestion::create([
+                'admin_id' => $adminId,
                 'task_brief_templates_id' => $request->template_id,
                 'question_text' => $request->question,
                 'question_type' => $request->question_type,

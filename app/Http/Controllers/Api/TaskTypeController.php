@@ -16,8 +16,9 @@ class TaskTypeController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = TaskType::query();
-            // Removed workspace filtering for single-tenant system
+            $adminId = getAdminIdByUserRole();
+            
+            $query = TaskType::where('admin_id', $adminId);
 
             // Apply filters
             if ($request->has('search')) {

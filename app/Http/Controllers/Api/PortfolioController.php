@@ -22,7 +22,10 @@ class PortfolioController extends BaseController
     {
         try {
             $user = Auth::user();
-            $query = Portfolio::with(['client', 'task', 'project', 'createdBy', 'taskType']);
+            $adminId = getAdminIdByUserRole();
+            
+            $query = Portfolio::where('admin_id', $adminId)
+                ->with(['client', 'task', 'project', 'createdBy', 'taskType']);
 
             // Role-based filtering
             if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {

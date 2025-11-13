@@ -17,14 +17,14 @@ class TaskBriefTemplateController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             
             // Role-based access control - only admins, sub-admins, and requesters can access templates
             if ($user->hasRole('Tasker')) {
                 return $this->sendError('Access denied. Taskers cannot access task templates.', [], 403);
             }
             
-            $query = TaskBriefTemplates::query();
-            // Removed workspace filtering for single-tenant system
+            $query = TaskBriefTemplates::where('admin_id', $adminId);
 
             // Apply filters
             if ($request->has('search')) {
@@ -71,7 +71,10 @@ class TaskBriefTemplateController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
+            $adminId = getAdminIdByUserRole();
+            
             $template = TaskBriefTemplates::create([
+                'admin_id' => $adminId,
                 'title' => $request->title,
                 'standard_brief' => $request->standard_brief,
                 'description' => $request->description,

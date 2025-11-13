@@ -17,9 +17,9 @@ class StatusController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
 
-            $query = Status::query();
-            // Remove admin_id filtering for single-tenant system
+            $query = Status::where('admin_id', $adminId);
 
             // Apply filters
             if ($request->has('search')) {

@@ -23,13 +23,14 @@ class DashboardController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             $timeRange = $request->get('time_range', 'all'); // 'all', '30_days', '7_days'
             
             // Get date range based on time_range parameter
             $dateRange = $this->getDateRange($timeRange);
 
             // Get basic counts with role-based filtering
-            $totalTasksQuery = Task::query();
+            $totalTasksQuery = Task::where('admin_id', $adminId);
             
             // Apply date filtering if not 'all'
             if ($dateRange['start']) {
@@ -49,10 +50,10 @@ class DashboardController extends BaseController
             $totalTasks = $totalTasksQuery->count();
             
             // Apply date filtering to other counts
-            $totalUsers = User::count(); // Users count doesn't change with date range
-            $totalClients = Client::count(); // Clients count doesn't change with date range
+            $totalUsers = User::count(); // Users count doesn't change with date range (users are shared across admin)
+            $totalClients = Client::where('admin_id', $adminId)->count();
             
-            $totalProjectsQuery = Project::query();
+            $totalProjectsQuery = Project::where('admin_id', $adminId);
             if ($dateRange['start']) {
                 $totalProjectsQuery->where('created_at', '>=', $dateRange['start']);
             }

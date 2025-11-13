@@ -16,8 +16,9 @@ class PriorityController extends BaseController
     public function index(Request $request)
     {
         try {
-            // Single-tenant: do not filter by admin_id
-            $query = Priority::query();
+            $adminId = getAdminIdByUserRole();
+            
+            $query = Priority::where('admin_id', $adminId);
 
             // Apply filters
             if ($request->has('search')) {

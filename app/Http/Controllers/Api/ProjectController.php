@@ -22,12 +22,15 @@ class ProjectController extends BaseController
     {
         try {
             $user = Auth::user();
-            $query = Project::with([
-                'users', 
-                'status', 
-                'clients',
-                'createdBy:id,first_name,last_name,email',
-                'tasks' => function($q) use ($user) {
+            $adminId = getAdminIdByUserRole();
+            
+            $query = Project::where('admin_id', $adminId)
+                ->with([
+                    'users', 
+                    'status', 
+                    'clients',
+                    'createdBy:id,first_name,last_name,email',
+                    'tasks' => function($q) use ($user) {
                     $q->with([
                         'users:id,first_name,last_name,email,phone',
                         'status:id,title',

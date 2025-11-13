@@ -20,8 +20,9 @@ class ClientController extends BaseController
     {
         try {
             $user = Auth::user();
-            $query = Client::query();
-            // Removed workspace filtering for single-tenant system
+            $adminId = getAdminIdByUserRole();
+            
+            $query = Client::where('admin_id', $adminId);
 
             // Role-based filtering
             if ($user->hasRole(['admin', 'sub_admin', 'sub admin'])) {

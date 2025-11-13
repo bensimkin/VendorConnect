@@ -37,7 +37,10 @@ class TaskController extends BaseController
     {
         try {
             $user = Auth::user();
-            $query = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'project.clients', 'deliverables', 'createdBy']);
+            $adminId = getAdminIdByUserRole();
+            
+            $query = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'project.clients', 'deliverables', 'createdBy'])
+                ->where('admin_id', $adminId);
             
             // Role-based filtering
             if ($this->hasAdminAccess($user)) {

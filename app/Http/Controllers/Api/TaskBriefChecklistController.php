@@ -16,8 +16,9 @@ class TaskBriefChecklistController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = TaskBriefChecklist::query();
-            // Removed workspace filtering for single-tenant system
+            $adminId = getAdminIdByUserRole();
+            
+            $query = TaskBriefChecklist::where('admin_id', $adminId);
 
             // Apply filters
             if ($request->has('search')) {
@@ -58,7 +59,10 @@ class TaskBriefChecklistController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
+            $adminId = getAdminIdByUserRole();
+            
             $checklist = TaskBriefChecklist::create([
+                'admin_id' => $adminId,
                 'task_brief_templates_id' => $request->template_id,
                 'checklist' => $request->checklist,
             ]);
