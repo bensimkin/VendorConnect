@@ -362,6 +362,7 @@ class AnalyticsController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             
             // Check if user is admin
             if (!$this->hasAdminAccess($user)) {
@@ -763,6 +764,7 @@ class AnalyticsController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             
             // Check if user is admin
             if (!$this->hasAdminAccess($user)) {
