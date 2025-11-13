@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\UserRoleController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\OwnerController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\TagController;
 use App\Http\Controllers\Api\TaskBriefTemplateController;
@@ -237,6 +238,13 @@ Route::prefix('priorities')->group(function () {
         // Company routes
         Route::prefix('company')->group(function () {
             Route::get('/', [CompanyController::class, 'show']);
+        });
+        
+        // Owner routes (super admin - can see all companies)
+        Route::prefix('owner')->group(function () {
+            Route::get('/companies', [OwnerController::class, 'getAllCompanies']);
+            Route::get('/companies/{adminId}/analytics', [OwnerController::class, 'getCompanyAnalytics']);
+            Route::get('/platform-stats', [OwnerController::class, 'getPlatformStats']);
         });
         
         // Settings
