@@ -203,7 +203,10 @@ class AnalyticsController extends BaseController
                 });
 
             // Tasks with no views (assigned 3+ days ago but never opened, exclude completed and archived)
-            $unviewedTasks = Task::whereHas('users')
+            $adminId = getAdminIdByUserRole();
+            
+            $unviewedTasks = Task::where('admin_id', $adminId)
+                ->whereHas('users')
                 ->whereHas('status', function($q) {
                     $q->whereNotIn('slug', ['completed', 'archive']);
                 })
@@ -427,20 +430,22 @@ class AnalyticsController extends BaseController
                 });
 
             // Inactive users with active tasks (haven't logged in for 5+ days)
-            $inactiveUsers = User::whereHas('tasks', function($q) {
-                    $status = Status::where('title', 'Completed')->first();
-                    if ($status) {
-                        $q->where('tasks.status_id', '!=', $status->id);
+            $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
+            $completedStatusId = $completedStatus ? $completedStatus->id : null;
+            
+            $inactiveUsers = User::whereHas('tasks', function($q) use ($adminId, $completedStatusId) {
+                    $q->where('tasks.admin_id', $adminId);
+                    if ($completedStatusId) {
+                        $q->where('tasks.status_id', '!=', $completedStatusId);
                     }
                 })
                 ->where('last_login_at', '<', now()->subDays(5))
                 ->limit(20)
                 ->get()
-                ->map(function ($user) {
-                    $activeTasksCount = $user->tasks()->where(function($q) {
-                        $status = Status::where('title', 'Completed')->first();
-                        if ($status) {
-                            $q->where('status_id', '!=', $status->id);
+                ->map(function ($user) use ($adminId, $completedStatusId) {
+                    $activeTasksCount = $user->tasks()->where('admin_id', $adminId)->where(function($q) use ($completedStatusId) {
+                        if ($completedStatusId) {
+                            $q->where('status_id', '!=', $completedStatusId);
                         }
                     })->count();
                     
@@ -824,7 +829,8 @@ class AnalyticsController extends BaseController
                 });
 
             // Tasks with no comments in last 7 days (but active)
-            $inactiveTasks = Task::whereHas('users')
+            $inactiveTasks = Task::where('admin_id', $adminId)
+                ->whereHas('users')
                 ->whereHas('status', function($q) {
                     $q->whereNotIn('slug', ['completed', 'archive']);
                 })

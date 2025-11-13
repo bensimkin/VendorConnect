@@ -79,7 +79,9 @@ class TagController extends BaseController
     public function show($id)
     {
         try {
-            $tag = Tag::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            $tag = Tag::where('admin_id', $adminId)->find($id);
 
             if (!$tag) {
                 return $this->sendNotFound('Tag not found');
@@ -97,7 +99,9 @@ class TagController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $tag = Tag::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            $tag = Tag::where('admin_id', $adminId)->find($id);
 
             if (!$tag) {
                 return $this->sendNotFound('Tag not found');
@@ -128,7 +132,9 @@ class TagController extends BaseController
     public function destroy($id)
     {
         try {
-            $tag = Tag::where('workspace_id', Auth::user()->workspace_id)->find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            $tag = Tag::where('admin_id', $adminId)->find($id);
 
             if (!$tag) {
                 return $this->sendNotFound('Tag not found');

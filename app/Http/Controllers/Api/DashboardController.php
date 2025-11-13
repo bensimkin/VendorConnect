@@ -60,10 +60,11 @@ class DashboardController extends BaseController
             $totalProjects = $totalProjectsQuery->count();
 
             // Get task statistics
-            $taskStats = $this->getTaskStatistics($dateRange);
+            $taskStats = $this->getTaskStatistics($dateRange, $adminId);
             
             // Get recent tasks with role-based filtering
-            $recentTasksQuery = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'deliverables']);
+            $recentTasksQuery = Task::where('admin_id', $adminId)
+                ->with(['users', 'status', 'priority', 'taskType', 'template', 'deliverables']);
             
             // Apply date filtering if not 'all'
             if ($dateRange['start']) {
@@ -91,25 +92,25 @@ class DashboardController extends BaseController
             // Note: deliverables_count is now automatically available via Task model accessor
 
             // Get user activity
-            $userActivity = $this->getUserActivity($dateRange);
+            $userActivity = $this->getUserActivity($dateRange, $adminId);
 
             // Get task completion trend
-            $taskTrend = $this->getTaskCompletionTrend($dateRange);
+            $taskTrend = $this->getTaskCompletionTrend($dateRange, $adminId);
 
             // Get project management data
-            $projectManagement = $this->getProjectManagementData($user, $dateRange);
+            $projectManagement = $this->getProjectManagementData($user, $dateRange, $adminId);
 
             // Get overdue tasks
-            $overdueTasks = $this->getOverdueTasks($user, $dateRange);
+            $overdueTasks = $this->getOverdueTasks($user, $dateRange, $adminId);
 
             // Get all statuses for frontend mapping
-            $statuses = Status::select('id', 'title')->get();
+            $statuses = Status::where('admin_id', $adminId)->select('id', 'title')->get();
 
             // Get additional statistics for admin dashboard
-            $rejectedTasksTrend = $this->getRejectedTasksTrend($dateRange);
-            $tasksWithUncheckedChecklists = $this->getTasksWithUncheckedChecklists($dateRange);
-            $averageTaskCompletionTime = $this->getAverageTaskCompletionTime($dateRange);
-            $additionalStats = $this->getAdditionalStatistics($dateRange);
+            $rejectedTasksTrend = $this->getRejectedTasksTrend($dateRange, $adminId);
+            $tasksWithUncheckedChecklists = $this->getTasksWithUncheckedChecklists($dateRange, $adminId);
+            $averageTaskCompletionTime = $this->getAverageTaskCompletionTime($dateRange, $adminId);
+            $additionalStats = $this->getAdditionalStatistics($dateRange, $adminId);
 
             $dashboardData = [
                 'overview' => [
@@ -167,12 +168,15 @@ class DashboardController extends BaseController
     /**
      * Get task statistics
      */
-    private function getTaskStatistics($dateRange = null)
+    private function getTaskStatistics($dateRange = null, $adminId = null)
     {
         $user = Auth::user();
+        if (!$adminId) {
+            $adminId = getAdminIdByUserRole();
+        }
         
         // Apply role-based filtering to task statistics
-        $taskQuery = Task::query();
+        $taskQuery = Task::where('admin_id', $adminId);
         
         // Apply date filtering if provided
         if ($dateRange && $dateRange['start']) {
@@ -201,7 +205,7 @@ class DashboardController extends BaseController
         }
 
         // Get status IDs dynamically
-        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
         $completedStatusId = $completedStatus ? $completedStatus->id : null;
         
         // Apply same filtering to completed and overdue counts
@@ -223,9 +227,12 @@ class DashboardController extends BaseController
     /**
      * Get user activity
      */
-    private function getUserActivity($dateRange = null)
+    private function getUserActivity($dateRange = null, $adminId = null)
     {
         $user = Auth::user();
+        if (!$adminId) {
+            $adminId = getAdminIdByUserRole();
+        }
         
         $userQuery = User::withCount(['userTask as recent_tasks' => function ($query) use ($dateRange) {
                 if ($dateRange && $dateRange['start']) {
@@ -251,10 +258,14 @@ class DashboardController extends BaseController
     /**
      * Get task completion trend
      */
-    private function getTaskCompletionTrend($dateRange = null)
+    private function getTaskCompletionTrend($dateRange = null, $adminId = null)
     {
+        if (!$adminId) {
+            $adminId = getAdminIdByUserRole();
+        }
+        
         // Get status IDs dynamically
-        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
         $completedStatusId = $completedStatus ? $completedStatus->id : null;
         
         $trend = [];
@@ -269,7 +280,8 @@ class DashboardController extends BaseController
         
         for ($i = $daysToShow - 1; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
-            $query = Task::where('status_id', $completedStatusId)
+            $query = Task::where('admin_id', $adminId)
+                ->where('status_id', $completedStatusId)
                 ->whereDate('updated_at', $date);
             
             // Apply date range filtering if provided
@@ -291,13 +303,18 @@ class DashboardController extends BaseController
     /**
      * Get project management data
      */
-    private function getProjectManagementData($user, $dateRange = null)
+    private function getProjectManagementData($user, $dateRange = null, $adminId = null)
     {
+        if (!$adminId) {
+            $adminId = getAdminIdByUserRole();
+        }
+        
         // Get completed status ID
-        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
         $completedStatusId = $completedStatus ? $completedStatus->id : null;
 
-        $projectQuery = Project::with(['status', 'clients'])
+        $projectQuery = Project::where('admin_id', $adminId)
+            ->with(['status', 'clients'])
             ->withCount(['tasks as total_tasks' => function ($query) use ($dateRange) {
                 if ($dateRange && $dateRange['start']) {
                     $query->where('created_at', '>=', $dateRange['start']);
@@ -360,6 +377,7 @@ class DashboardController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             
             if (!$user->hasRole('Tasker')) {
                 return $this->sendError('Unauthorized access', [], 403);
@@ -369,11 +387,11 @@ class DashboardController extends BaseController
             $dateRange = $this->getDateRange($timeRange);
 
             // Get completed status ID
-            $completedStatus = Status::where('title', 'Completed')->first();
+            $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
             $completedStatusId = $completedStatus ? $completedStatus->id : null;
 
             // Overview statistics
-            $totalTasksQuery = Task::whereHas('users', function ($q) use ($user) {
+            $totalTasksQuery = Task::where('admin_id', $adminId)->whereHas('users', function ($q) use ($user) {
                 $q->where('users.id', $user->id);
             });
             
@@ -383,7 +401,7 @@ class DashboardController extends BaseController
             
             $totalTasks = $totalTasksQuery->count();
 
-            $completedTasksQuery = Task::whereHas('users', function ($q) use ($user) {
+            $completedTasksQuery = Task::where('admin_id', $adminId)->whereHas('users', function ($q) use ($user) {
                 $q->where('users.id', $user->id);
             })->where('status_id', $completedStatusId);
             
@@ -393,7 +411,7 @@ class DashboardController extends BaseController
             
             $completedTasks = $completedTasksQuery->count();
 
-            $pendingTasksQuery = Task::whereHas('users', function ($q) use ($user) {
+            $pendingTasksQuery = Task::where('admin_id', $adminId)->whereHas('users', function ($q) use ($user) {
                 $q->where('users.id', $user->id);
             })->where('status_id', '!=', $completedStatusId);
             
@@ -403,7 +421,7 @@ class DashboardController extends BaseController
             
             $pendingTasks = $pendingTasksQuery->count();
 
-            $overdueTasksQuery = Task::whereHas('users', function ($q) use ($user) {
+            $overdueTasksQuery = Task::where('admin_id', $adminId)->whereHas('users', function ($q) use ($user) {
                 $q->where('users.id', $user->id);
             })->where('end_date', '<', Carbon::now())
               ->where('status_id', '!=', $completedStatusId);
@@ -415,7 +433,8 @@ class DashboardController extends BaseController
             $overdueTasks = $overdueTasksQuery->count();
 
             // Recent tasks
-            $recentTasksQuery = Task::with(['status', 'priority', 'project', 'template', 'deliverables'])
+            $recentTasksQuery = Task::where('admin_id', $adminId)
+                ->with(['status', 'priority', 'project', 'template', 'deliverables'])
                 ->whereHas('users', function ($q) use ($user) {
                     $q->where('users.id', $user->id);
                 });
@@ -432,7 +451,8 @@ class DashboardController extends BaseController
             // Note: deliverables_count is now automatically available via Task model accessor
 
             // Upcoming deadlines (next 7 days)
-            $upcomingDeadlines = Task::with(['priority'])
+            $upcomingDeadlines = Task::where('admin_id', $adminId)
+                ->with(['priority'])
                 ->whereHas('users', function ($q) use ($user) {
                     $q->where('users.id', $user->id);
                 })
@@ -465,7 +485,8 @@ class DashboardController extends BaseController
                 });
 
             // Get overdue tasks list
-            $overdueTasksList = Task::with(['users', 'status', 'priority', 'project.clients'])
+            $overdueTasksList = Task::where('admin_id', $adminId)
+                ->with(['users', 'status', 'priority', 'project.clients'])
                 ->whereHas('users', function ($q) use ($user) {
                     $q->where('users.id', $user->id);
                 })
@@ -548,6 +569,7 @@ class DashboardController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             
             if (!$user->hasRole('Requester')) {
                 return $this->sendError('Unauthorized access', [], 403);
@@ -557,11 +579,11 @@ class DashboardController extends BaseController
             $dateRange = $this->getDateRange($timeRange);
 
             // Get completed status ID
-            $completedStatus = Status::where('title', 'Completed')->first();
+            $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
             $completedStatusId = $completedStatus ? $completedStatus->id : null;
 
             // Overview statistics - include both created and assigned tasks/projects
-            $totalTasksQuery = Task::where(function($query) use ($user) {
+            $totalTasksQuery = Task::where('admin_id', $adminId)->where(function($query) use ($user) {
                 $query->where('created_by', $user->id)
                       ->orWhereHas('users', function($q) use ($user) {
                           $q->where('users.id', $user->id);
@@ -574,7 +596,7 @@ class DashboardController extends BaseController
             
             $totalTasks = $totalTasksQuery->count();
             
-            $completedTasksQuery = Task::where(function($query) use ($user) {
+            $completedTasksQuery = Task::where('admin_id', $adminId)->where(function($query) use ($user) {
                 $query->where('created_by', $user->id)
                       ->orWhereHas('users', function($q) use ($user) {
                           $q->where('users.id', $user->id);
@@ -587,7 +609,7 @@ class DashboardController extends BaseController
             
             $completedTasks = $completedTasksQuery->count();
             
-            $pendingTasksQuery = Task::where(function($query) use ($user) {
+            $pendingTasksQuery = Task::where('admin_id', $adminId)->where(function($query) use ($user) {
                 $query->where('created_by', $user->id)
                       ->orWhereHas('users', function($q) use ($user) {
                           $q->where('users.id', $user->id);
@@ -600,7 +622,7 @@ class DashboardController extends BaseController
             
             $pendingTasks = $pendingTasksQuery->count();
             
-            $overdueTasksQuery = Task::where(function($query) use ($user) {
+            $overdueTasksQuery = Task::where('admin_id', $adminId)->where(function($query) use ($user) {
                 $query->where('created_by', $user->id)
                       ->orWhereHas('users', function($q) use ($user) {
                           $q->where('users.id', $user->id);
@@ -614,7 +636,7 @@ class DashboardController extends BaseController
             
             $overdueTasks = $overdueTasksQuery->count();
             
-            $totalProjectsQuery = Project::where(function($query) use ($user) {
+            $totalProjectsQuery = Project::where('admin_id', $adminId)->where(function($query) use ($user) {
                 $query->where('created_by', $user->id)
                       ->orWhereHas('users', function($q) use ($user) {
                           $q->where('users.id', $user->id);
@@ -628,7 +650,8 @@ class DashboardController extends BaseController
             $totalProjects = $totalProjectsQuery->count();
 
             // Recent tasks - include both created and assigned tasks
-            $recentTasksQuery = Task::with(['status', 'priority', 'project', 'users', 'template', 'deliverables'])
+            $recentTasksQuery = Task::where('admin_id', $adminId)
+                ->with(['status', 'priority', 'project', 'users', 'template', 'deliverables'])
                 ->where(function($query) use ($user) {
                     $query->where('created_by', $user->id)
                           ->orWhereHas('users', function($q) use ($user) {
@@ -648,7 +671,8 @@ class DashboardController extends BaseController
             // Note: deliverables_count is now automatically available via Task model accessor
 
             // Recent projects - include both created and assigned projects
-            $recentProjects = Project::with(['status'])
+            $recentProjects = Project::where('admin_id', $adminId)
+                ->with(['status'])
                 ->where(function($query) use ($user) {
                     $query->where('created_by', $user->id)
                           ->orWhereHas('users', function($q) use ($user) {
@@ -698,7 +722,8 @@ class DashboardController extends BaseController
             $taskTrend = $this->getRequesterTaskCompletionTrend($user, $dateRange);
 
             // Get overdue tasks list
-            $overdueTasksList = Task::with(['users', 'status', 'priority', 'project.clients'])
+            $overdueTasksList = Task::where('admin_id', $adminId)
+                ->with(['users', 'status', 'priority', 'project.clients'])
                 ->where(function($query) use ($user) {
                     $query->where('created_by', $user->id)
                           ->orWhereHas('users', function($q) use ($user) {
@@ -777,12 +802,14 @@ class DashboardController extends BaseController
      */
     private function getRequesterTaskStatistics($user, $dateRange = null)
     {
+        $adminId = getAdminIdByUserRole();
+        
         // Get completed status ID
-        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
         $completedStatusId = $completedStatus ? $completedStatus->id : null;
         
         // Base query for requester's tasks (created OR assigned)
-        $taskQuery = Task::where(function($query) use ($user) {
+        $taskQuery = Task::where('admin_id', $adminId)->where(function($query) use ($user) {
             $query->where('created_by', $user->id)
                   ->orWhereHas('users', function($q) use ($user) {
                       $q->where('users.id', $user->id);
@@ -826,8 +853,10 @@ class DashboardController extends BaseController
      */
     private function getRequesterTaskCompletionTrend($user, $dateRange = null)
     {
+        $adminId = getAdminIdByUserRole();
+        
         // Get completed status ID
-        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
         $completedStatusId = $completedStatus ? $completedStatus->id : null;
         
         $trend = [];
@@ -842,7 +871,8 @@ class DashboardController extends BaseController
         
         for ($i = $daysToShow - 1; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
-            $query = Task::where(function($query) use ($user) {
+            $query = Task::where('admin_id', $adminId)
+                ->where(function($query) use ($user) {
                     $query->where('created_by', $user->id)
                           ->orWhereHas('users', function($q) use ($user) {
                               $q->where('users.id', $user->id);
@@ -872,12 +902,14 @@ class DashboardController extends BaseController
      */
     private function getTaskerTaskStatistics($user, $dateRange = null)
     {
+        $adminId = getAdminIdByUserRole();
+        
         // Get completed status ID
-        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
         $completedStatusId = $completedStatus ? $completedStatus->id : null;
         
         // Base query for tasker's tasks (assigned only)
-        $taskQuery = Task::whereHas('users', function($q) use ($user) {
+        $taskQuery = Task::where('admin_id', $adminId)->whereHas('users', function($q) use ($user) {
             $q->where('users.id', $user->id);
         });
         
@@ -918,8 +950,10 @@ class DashboardController extends BaseController
      */
     private function getTaskerTaskCompletionTrend($user, $dateRange = null)
     {
+        $adminId = getAdminIdByUserRole();
+        
         // Get completed status ID
-        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
         $completedStatusId = $completedStatus ? $completedStatus->id : null;
         
         $trend = [];
@@ -934,7 +968,8 @@ class DashboardController extends BaseController
         
         for ($i = $daysToShow - 1; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
-            $query = Task::whereHas('users', function($q) use ($user) {
+            $query = Task::where('admin_id', $adminId)
+                ->whereHas('users', function($q) use ($user) {
                     $q->where('users.id', $user->id);
                 })
                 ->where('status_id', $completedStatusId)
@@ -961,8 +996,11 @@ class DashboardController extends BaseController
      */
     private function getTaskerUserActivity($user, $dateRange = null)
     {
+        $adminId = getAdminIdByUserRole();
+        
         // Get recent task updates for tasks assigned to this tasker
-        $recentActivityQuery = Task::with(['users', 'status', 'priority', 'project'])
+        $recentActivityQuery = Task::where('admin_id', $adminId)
+            ->with(['users', 'status', 'priority', 'project'])
             ->whereHas('users', function($q) use ($user) {
                 $q->where('users.id', $user->id);
             });
@@ -996,8 +1034,11 @@ class DashboardController extends BaseController
      */
     private function getRequesterUserActivity($user, $dateRange = null)
     {
+        $adminId = getAdminIdByUserRole();
+        
         // Get recent task updates for tasks created or assigned to this requester
-        $recentActivityQuery = Task::with(['users', 'status', 'priority', 'project'])
+        $recentActivityQuery = Task::where('admin_id', $adminId)
+            ->with(['users', 'status', 'priority', 'project'])
             ->where(function($query) use ($user) {
                 $query->where('created_by', $user->id)
                       ->orWhereHas('users', function($q) use ($user) {
@@ -1032,14 +1073,19 @@ class DashboardController extends BaseController
     /**
      * Get overdue tasks
      */
-    private function getOverdueTasks($user, $dateRange = null)
+    private function getOverdueTasks($user, $dateRange = null, $adminId = null)
     {
+        if (!$adminId) {
+            $adminId = getAdminIdByUserRole();
+        }
+        
         // Get completed status ID
-        $completedStatus = Status::where('title', 'Completed')->first();
+        $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
         $completedStatusId = $completedStatus ? $completedStatus->id : null;
         
         // Base query for overdue tasks
-        $overdueQuery = Task::with(['users', 'status', 'priority', 'project.clients', 'deliverables'])
+        $overdueQuery = Task::where('admin_id', $adminId)
+            ->with(['users', 'status', 'priority', 'project.clients', 'deliverables'])
             ->where('end_date', '<', Carbon::now())
             ->where('status_id', '!=', $completedStatusId);
             
@@ -1114,9 +1160,13 @@ class DashboardController extends BaseController
     /**
      * Get rejected tasks trend for the last 7 days
      */
-    private function getRejectedTasksTrend($dateRange = null)
+    private function getRejectedTasksTrend($dateRange = null, $adminId = null)
     {
-        $rejectedStatus = Status::where('title', 'Rejected')->first();
+        if (!$adminId) {
+            $adminId = getAdminIdByUserRole();
+        }
+        
+        $rejectedStatus = Status::where('admin_id', $adminId)->where('title', 'Rejected')->first();
         $rejectedStatusId = $rejectedStatus ? $rejectedStatus->id : null;
         
         $trend = [];
@@ -1131,7 +1181,8 @@ class DashboardController extends BaseController
         
         for ($i = $daysToShow - 1; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
-            $query = Task::where('status_id', $rejectedStatusId)
+            $query = Task::where('admin_id', $adminId)
+                ->where('status_id', $rejectedStatusId)
                 ->whereDate('updated_at', $date);
             
             // Apply date range filtering if provided
@@ -1153,9 +1204,13 @@ class DashboardController extends BaseController
     /**
      * Get tasks completed with unchecked checklists
      */
-    private function getTasksWithUncheckedChecklists($dateRange = null)
+    private function getTasksWithUncheckedChecklists($dateRange = null, $adminId = null)
     {
-        $completedStatus = Status::where('title', 'Completed')->first();
+        if (!$adminId) {
+            $adminId = getAdminIdByUserRole();
+        }
+        
+        $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
         $completedStatusId = $completedStatus ? $completedStatus->id : null;
         
         if (!$completedStatusId) {
@@ -1168,7 +1223,8 @@ class DashboardController extends BaseController
         }
 
         // Get completed tasks that have checklists
-        $completedTasksWithChecklistsQuery = Task::where('status_id', $completedStatusId)
+        $completedTasksWithChecklistsQuery = Task::where('admin_id', $adminId)
+            ->where('status_id', $completedStatusId)
             ->whereHas('template.briefchecks');
             
         // Apply date filtering if provided
@@ -1219,9 +1275,13 @@ class DashboardController extends BaseController
     /**
      * Get average time to complete tasks
      */
-    private function getAverageTaskCompletionTime($dateRange = null)
+    private function getAverageTaskCompletionTime($dateRange = null, $adminId = null)
     {
-        $completedStatus = Status::where('title', 'Completed')->first();
+        if (!$adminId) {
+            $adminId = getAdminIdByUserRole();
+        }
+        
+        $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
         $completedStatusId = $completedStatus ? $completedStatus->id : null;
         
         if (!$completedStatusId) {
@@ -1235,7 +1295,8 @@ class DashboardController extends BaseController
         }
 
         // Get completed tasks with their completion time
-        $completedTasksQuery = Task::where('status_id', $completedStatusId)
+        $completedTasksQuery = Task::where('admin_id', $adminId)
+            ->where('status_id', $completedStatusId)
             ->whereNotNull('updated_at');
             
         // Apply date filtering if provided
@@ -1276,12 +1337,15 @@ class DashboardController extends BaseController
     /**
      * Get additional statistics
      */
-    private function getAdditionalStatistics($dateRange = null)
+    private function getAdditionalStatistics($dateRange = null, $adminId = null)
     {
         $user = Auth::user();
+        if (!$adminId) {
+            $adminId = getAdminIdByUserRole();
+        }
         
         // Apply role-based filtering
-        $taskQuery = Task::query();
+        $taskQuery = Task::where('admin_id', $adminId);
         
         // Apply date filtering if provided
         if ($dateRange && $dateRange['start']) {
@@ -1299,10 +1363,10 @@ class DashboardController extends BaseController
         }
 
         // Get status IDs
-        $completedStatus = Status::where('title', 'Completed')->first();
-        $rejectedStatus = Status::where('title', 'Rejected')->first();
-        $pendingStatus = Status::where('title', 'Pending')->first();
-        $inProgressStatus = Status::where('title', 'In Progress')->first();
+        $completedStatus = Status::where('admin_id', $adminId)->where('title', 'Completed')->first();
+        $rejectedStatus = Status::where('admin_id', $adminId)->where('title', 'Rejected')->first();
+        $pendingStatus = Status::where('admin_id', $adminId)->where('title', 'Pending')->first();
+        $inProgressStatus = Status::where('admin_id', $adminId)->where('title', 'In Progress')->first();
 
         $completedStatusId = $completedStatus ? $completedStatus->id : null;
         $rejectedStatusId = $rejectedStatus ? $rejectedStatus->id : null;
