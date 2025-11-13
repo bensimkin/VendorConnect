@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('auth_token')?.value
 
   // List of paths that don't require authentication
-  const publicPaths = ['/login', '/forgot-password', '/reset-password']
+  const publicPaths = ['/login', '/signup', '/forgot-password', '/reset-password', '/verify-email']
   const isPublicPath = publicPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
   // Debug logging
@@ -18,7 +18,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (token && request.nextUrl.pathname === '/login') {
+  // Redirect to dashboard if already logged in and trying to access login/signup
+  if (token && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
     console.log('🔍 [MIDDLEWARE] Redirecting to dashboard - user already logged in')
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
