@@ -131,10 +131,18 @@ class ApiKey extends Model
     }
 
     /**
-     * Scope to get API keys for a specific user
+     * Scope to get API keys for a specific user (with optional admin filtering)
      */
     public function scopeForUser($query, int $userId)
     {
         return $query->where('user_id', $userId);
+    }
+
+    /**
+     * Scope to get API keys for current admin
+     */
+    public function scopeForAdmin($query, int $adminId)
+    {
+        return $query->where('admin_id', $adminId);
     }
 }

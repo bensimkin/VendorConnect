@@ -18,13 +18,14 @@ class ApiKeyController extends BaseController
     {
         try {
             $user = $request->user();
+            $adminId = getAdminIdByUserRole();
             
             // Check if user is admin
             if (!$user->hasRole('admin')) {
                 return $this->sendError('Only administrators can view API keys', 403);
             }
             
-            $apiKeys = ApiKey::forUser($user->id)
+            $apiKeys = ApiKey::where('admin_id', $adminId)
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($key) {
@@ -72,8 +73,10 @@ class ApiKeyController extends BaseController
                 return $this->sendError('Only administrators can create API keys', 403);
             }
             
+            $adminId = getAdminIdByUserRole();
+            
             // Check if user already has too many API keys (limit to 10)
-            $existingKeysCount = ApiKey::forUser($user->id)->count();
+            $existingKeysCount = ApiKey::where('admin_id', $adminId)->count();
             if ($existingKeysCount >= 10) {
                 return $this->sendError('Maximum number of API keys reached (10)', 400);
             }
@@ -113,13 +116,14 @@ class ApiKeyController extends BaseController
     {
         try {
             $user = $request->user();
+            $adminId = getAdminIdByUserRole();
             
             // Check if user is admin
             if (!$user->hasRole('admin')) {
                 return $this->sendError('Only administrators can view API keys', 403);
             }
             
-            $apiKey = ApiKey::forUser($user->id)->find($id);
+            $apiKey = ApiKey::where('admin_id', $adminId)->find($id);
 
             if (!$apiKey) {
                 return $this->sendNotFound('API key not found');
@@ -169,7 +173,9 @@ class ApiKeyController extends BaseController
                 return $this->sendError('Only administrators can update API keys', 403);
             }
             
-            $apiKey = ApiKey::forUser($user->id)->find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            $apiKey = ApiKey::where('admin_id', $adminId)->find($id);
 
             if (!$apiKey) {
                 return $this->sendNotFound('API key not found');
@@ -214,7 +220,9 @@ class ApiKeyController extends BaseController
                 return $this->sendError('Only administrators can delete API keys', 403);
             }
             
-            $apiKey = ApiKey::forUser($user->id)->find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            $apiKey = ApiKey::where('admin_id', $adminId)->find($id);
 
             if (!$apiKey) {
                 return $this->sendNotFound('API key not found');
@@ -241,7 +249,9 @@ class ApiKeyController extends BaseController
                 return $this->sendError('Only administrators can regenerate API keys', 403);
             }
             
-            $apiKey = ApiKey::forUser($user->id)->find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            $apiKey = ApiKey::where('admin_id', $adminId)->find($id);
 
             if (!$apiKey) {
                 return $this->sendNotFound('API key not found');
@@ -279,13 +289,15 @@ class ApiKeyController extends BaseController
                 return $this->sendError('Only administrators can view API key statistics', 403);
             }
             
-            $totalKeys = ApiKey::forUser($user->id)->count();
-            $activeKeys = ApiKey::forUser($user->id)->active()->count();
-            $expiredKeys = ApiKey::forUser($user->id)
+            $adminId = getAdminIdByUserRole();
+            
+            $totalKeys = ApiKey::where('admin_id', $adminId)->count();
+            $activeKeys = ApiKey::where('admin_id', $adminId)->active()->count();
+            $expiredKeys = ApiKey::where('admin_id', $adminId)
                 ->where('expires_at', '<', now())
                 ->count();
             
-            $recentlyUsed = ApiKey::forUser($user->id)
+            $recentlyUsed = ApiKey::where('admin_id', $adminId)
                 ->whereNotNull('last_used_at')
                 ->where('last_used_at', '>=', now()->subDays(30))
                 ->count();
