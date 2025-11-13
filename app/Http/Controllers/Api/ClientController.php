@@ -436,8 +436,10 @@ class ClientController extends BaseController
             \Log::info('Fetching tasks for client: ' . $client->id);
             \Log::info('Client projects count: ' . $client->projects()->count());
             
+            $adminId = getAdminIdByUserRole();
+            
             // Get tasks for this client via projects
-            $tasks = Task::whereHas('project', function($q) use ($client) {
+            $tasks = Task::where('admin_id', $adminId)->whereHas('project', function($q) use ($client) {
                 $q->whereHas('clients', function($subQ) use ($client) {
                     $subQ->where('clients.id', $client->id);
                 });

@@ -614,7 +614,9 @@ class TaskController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $tasks = Task::whereIn('id', $request->task_ids)->get();
+            $adminId = getAdminIdByUserRole();
+            
+            $tasks = Task::where('admin_id', $adminId)->whereIn('id', $request->task_ids)->get();
 
             foreach ($tasks as $task) {
                 $task->delete();
@@ -933,8 +935,11 @@ class TaskController extends BaseController
                 return $this->sendNotFound('Media not found');
             }
 
+            $adminId = getAdminIdByUserRole();
+            
             // Ensure the media belongs to a task
-            $task = Task::where('id', $media->model_id)
+            $task = Task::where('admin_id', $adminId)
+                ->where('id', $media->model_id)
                 ->first();
 
             if (!$task) {

@@ -21,6 +21,7 @@ class SearchController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             $query = $request->get('q', '');
             
             if (empty($query) || strlen($query) < 2) {
@@ -38,7 +39,7 @@ class SearchController extends BaseController
 
             // Search Clients (only for Admin users)
             if ($user->hasRole(['admin', 'sub admin'])) {
-                $clients = Client::where(function($q) use ($searchTerm) {
+                $clients = Client::where('admin_id', $adminId)->where(function($q) use ($searchTerm) {
                     $q->where('first_name', 'like', $searchTerm)
                       ->orWhere('last_name', 'like', $searchTerm)
                       ->orWhere('email', 'like', $searchTerm)
@@ -65,7 +66,7 @@ class SearchController extends BaseController
             }
 
             // Search Projects (with role-based filtering)
-            $projectQuery = Project::where(function($q) use ($searchTerm) {
+            $projectQuery = Project::where('admin_id', $adminId)->where(function($q) use ($searchTerm) {
                 $q->where('title', 'like', $searchTerm)
                   ->orWhere('description', 'like', $searchTerm)
                   ->orWhere('note', 'like', $searchTerm);
@@ -106,7 +107,7 @@ class SearchController extends BaseController
             $results['projects'] = $projects;
 
             // Search Tasks (with role-based filtering)
-            $taskQuery = Task::where(function($q) use ($searchTerm) {
+            $taskQuery = Task::where('admin_id', $adminId)->where(function($q) use ($searchTerm) {
                 $q->where('title', 'like', $searchTerm)
                   ->orWhere('description', 'like', $searchTerm)
                   ->orWhere('note', 'like', $searchTerm);
@@ -147,7 +148,7 @@ class SearchController extends BaseController
             $results['tasks'] = $tasks;
 
             // Search Portfolio Items (with role-based filtering)
-            $portfolioQuery = Portfolio::where(function($q) use ($searchTerm) {
+            $portfolioQuery = Portfolio::where('admin_id', $adminId)->where(function($q) use ($searchTerm) {
                 $q->where('title', 'like', $searchTerm)
                   ->orWhere('description', 'like', $searchTerm);
             });
