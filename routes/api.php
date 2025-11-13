@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserRoleController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\TagController;
 use App\Http\Controllers\Api\TaskBriefTemplateController;
@@ -42,6 +43,9 @@ use App\Http\Controllers\Api\AnalyticsController;
 
 // Public routes (no authentication required)
 Route::prefix('v1')->group(function () {
+    
+    // Company registration (no authentication required)
+    Route::post('/company/register', [CompanyController::class, 'register']);
     
     // Health check routes (no authentication required)
     Route::get('/health/smart-api', [HealthCheckController::class, 'smartApiHealth']);
@@ -228,6 +232,11 @@ Route::prefix('priorities')->group(function () {
             Route::get('/{id}', [RoleController::class, 'show']);
             Route::put('/{id}', [RoleController::class, 'update']);
             Route::delete('/{id}', [RoleController::class, 'destroy']);
+        });
+        
+        // Company routes
+        Route::prefix('company')->group(function () {
+            Route::get('/', [CompanyController::class, 'show']);
         });
         
         // Settings
