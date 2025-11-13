@@ -332,11 +332,51 @@ export default function OwnerDashboard() {
                     </div>
                   </div>
 
-                  {/* Active Users */}
+                  {/* Activity Metrics */}
                   <div>
-                    <h3 className="font-semibold mb-2">Active Users (Last 30 Days)</h3>
-                    <div className="text-2xl font-bold">{companyAnalytics.active_users_last_30_days}</div>
+                    <h3 className="font-semibold mb-3">🔥 Active Usage</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="p-4 bg-green-50 rounded-lg border-2 border-green-200">
+                        <div className="text-2xl font-bold text-green-600">{companyAnalytics.activity_metrics.active_users_today}</div>
+                        <div className="text-xs text-muted-foreground">Active Today</div>
+                      </div>
+                      <div className="p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">{companyAnalytics.activity_metrics.active_users_7_days}</div>
+                        <div className="text-xs text-muted-foreground">Last 7 Days</div>
+                      </div>
+                      <div className="p-4 bg-purple-50 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">{companyAnalytics.activity_metrics.active_users_30_days}</div>
+                        <div className="text-xs text-muted-foreground">Last 30 Days</div>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Session Stats */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <div className="text-sm text-muted-foreground mb-1">Sessions (Last 7 Days)</div>
+                      <div className="text-xl font-bold">{companyAnalytics.activity_metrics.total_sessions_7_days}</div>
+                    </div>
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <div className="text-sm text-muted-foreground mb-1">Avg Session Duration</div>
+                      <div className="text-xl font-bold">
+                        {Math.floor(companyAnalytics.activity_metrics.avg_session_duration_seconds / 60)}m
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Last Activity */}
+                  {companyAnalytics.activity_metrics.last_activity_at && (
+                    <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                      <div className="text-sm text-muted-foreground mb-1">Last Activity</div>
+                      <div className="font-semibold">
+                        {new Date(companyAnalytics.activity_metrics.last_activity_at).toLocaleString()}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {Math.floor((new Date().getTime() - new Date(companyAnalytics.activity_metrics.last_activity_at).getTime()) / (1000 * 60))} minutes ago
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-muted-foreground">No analytics data available</p>

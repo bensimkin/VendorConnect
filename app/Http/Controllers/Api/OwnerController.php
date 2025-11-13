@@ -108,17 +108,60 @@ class OwnerController extends BaseController
                     ];
                 });
 
-            // Recent logins (last 30 days)
-            $recentLogins = \App\Models\TeamMember::where('admin_id', $adminId)
-                ->with(['user' => function($q) {
-                    $q->select('id', 'first_name', 'last_name', 'email', 'last_login_at')
-                      ->whereNotNull('last_login_at')
-                      ->where('last_login_at', '>=', Carbon::now()->subDays(30));
-                }])
-                ->get()
-                ->pluck('user')
-                ->filter()
+            // Active user metrics
+            $activeToday = \App\Models\UserSession::whereNull('logout_at')
+                ->where('last_activity_at', '>=', Carbon::now()->subHours(24))
+                ->whereHas('user.teamMember', function($q) use ($adminId) {
+                    $q->where('admin_id', $adminId);
+                })
+                ->distinct('user_id')
+                ->count('user_id');
+
+            $activeLast7Days = \App\Models\UserSession::where('last_activity_at', '>=', Carbon::now()->subDays(7))
+                ->whereHas('user.teamMember', function($q) use ($adminId) {
+                    $q->where('admin_id', $adminId);
+                })
+                ->orWhereHas('user.admin', function($q) use ($adminId) {
+                    $q->where('id', $adminId);
+                })
+                ->distinct('user_id')
+                ->count('user_id');
+
+            $activeLast30Days = \App\Models\UserSession::where('last_activity_at', '>=', Carbon::now()->subDays(30))
+                ->whereHas('user.teamMember', function($q) use ($adminId) {
+                    $q->where('admin_id', $adminId);
+                })
+                ->orWhereHas('user.admin', function($q) use ($adminId) {
+                    $q->where('id', $adminId);
+                })
+                ->distinct('user_id')
+                ->count('user_id');
+
+            // Recent sessions (last 7 days)
+            $totalSessions = \App\Models\UserSession::whereBetween('login_at', [Carbon::now()->subDays(7), Carbon::now()])
+                ->whereHas('user.teamMember', function($q) use ($adminId) {
+                    $q->where('admin_id', $adminId);
+                })
+                ->orWhereHas('user.admin', function($q) use ($adminId) {
+                    $q->where('id', $adminId);
+                })
                 ->count();
+
+            // Average session duration (last 7 days)
+            $avgSessionDuration = \App\Models\UserSession::whereBetween('login_at', [Carbon::now()->subDays(7), Carbon::now()])
+                ->whereNotNull('duration_seconds')
+                ->whereHas('user.teamMember', function($q) use ($adminId) {
+                    $q->where('admin_id', $adminId);
+                })
+                ->orWhereHas('user.admin', function($q) use ($adminId) {
+                    $q->where('id', $adminId);
+                })
+                ->avg('duration_seconds');
+
+            // Last activity timestamp
+            $lastActivity = Task::where('admin_id', $adminId)
+                ->orderBy('updated_at', 'desc')
+                ->first();
 
             return $this->sendResponse([
                 'company' => [
@@ -144,7 +187,14 @@ class OwnerController extends BaseController
                     'tasks_created' => $recentTasks,
                 ],
                 'tasks_by_status' => $tasksByStatus,
-                'active_users_last_30_days' => $recentLogins,
+                'activity_metrics' => [
+                    'active_users_today' => $activeToday,
+                    'active_users_7_days' => $activeLast7Days,
+                    'active_users_30_days' => $activeLast30Days,
+                    'total_sessions_7_days' => $totalSessions,
+                    'avg_session_duration_seconds' => $avgSessionDuration ? round($avgSessionDuration, 0) : 0,
+                    'last_activity_at' => $lastActivity ? $lastActivity->updated_at : null,
+                ],
             ], 'Company analytics retrieved successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error retrieving company analytics: ' . $e->getMessage());
