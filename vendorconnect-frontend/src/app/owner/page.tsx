@@ -40,6 +40,8 @@ export default function OwnerDashboard() {
   const [platformStats, setPlatformStats] = useState<PlatformStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState<number | null>(null);
+  const [companyAnalytics, setCompanyAnalytics] = useState<any>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -61,6 +63,29 @@ export default function OwnerDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchCompanyAnalytics = async (adminId: number) => {
+    try {
+      setAnalyticsLoading(true);
+      const response = await apiClient.get(`/owner/companies/${adminId}/analytics`);
+      setCompanyAnalytics(response.data.data);
+    } catch (error: any) {
+      console.error('Failed to fetch company analytics:', error);
+      toast.error('Failed to load company analytics');
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  const handleViewAnalytics = (companyId: number) => {
+    setSelectedCompany(companyId);
+    fetchCompanyAnalytics(companyId);
+  };
+
+  const closeAnalytics = () => {
+    setSelectedCompany(null);
+    setCompanyAnalytics(null);
   };
 
   if (loading) {
@@ -215,7 +240,7 @@ export default function OwnerDashboard() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => setSelectedCompany(company.id)}
+                          onClick={() => handleViewAnalytics(company.id)}
                           className="w-full"
                         >
                           <TrendingUp className="h-4 w-4 mr-2" />
@@ -235,10 +260,10 @@ export default function OwnerDashboard() {
         </CardContent>
       </Card>
 
-      {/* Company Analytics Modal (simplified - you can expand this) */}
+      {/* Company Analytics Modal */}
       {selectedCompany && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <Card className="max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={closeAnalytics}>
+          <Card className="max-w-4xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <CardHeader>
               <CardTitle>
                 Company Analytics: {companies.find(c => c.id === selectedCompany)?.company_name}
@@ -247,15 +272,75 @@ export default function OwnerDashboard() {
                 size="sm"
                 variant="ghost"
                 className="absolute top-4 right-4"
-                onClick={() => setSelectedCompany(null)}
+                onClick={closeAnalytics}
               >
                 ✕
               </Button>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Detailed analytics coming soon. Use /owner/companies/{selectedCompany}/analytics API endpoint for data.
-              </p>
+              {analyticsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : companyAnalytics ? (
+                <div className="space-y-6">
+                  {/* Overview Stats */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <div className="text-3xl font-bold text-green-600">{companyAnalytics.overview.total_projects}</div>
+                      <div className="text-sm text-muted-foreground">Projects</div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-lg">
+                      <div className="text-3xl font-bold text-purple-600">{companyAnalytics.overview.total_tasks}</div>
+                      <div className="text-sm text-muted-foreground">Tasks</div>
+                    </div>
+                    <div className="text-center p-4 bg-orange-50 rounded-lg">
+                      <div className="text-3xl font-bold text-orange-600">{companyAnalytics.overview.total_clients}</div>
+                      <div className="text-sm text-muted-foreground">Clients</div>
+                    </div>
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <div className="text-3xl font-bold text-blue-600">{companyAnalytics.overview.total_users}</div>
+                      <div className="text-sm text-muted-foreground">Users</div>
+                    </div>
+                  </div>
+
+                  {/* Recent Activity */}
+                  <div>
+                    <h3 className="font-semibold mb-2">Recent Activity ({companyAnalytics.period_activity.start_date} to {companyAnalytics.period_activity.end_date})</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3 bg-gray-50 rounded">
+                        <div className="text-lg font-semibold">{companyAnalytics.period_activity.projects_created}</div>
+                        <div className="text-sm text-muted-foreground">Projects Created</div>
+                      </div>
+                      <div className="p-3 bg-gray-50 rounded">
+                        <div className="text-lg font-semibold">{companyAnalytics.period_activity.tasks_created}</div>
+                        <div className="text-sm text-muted-foreground">Tasks Created</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tasks by Status */}
+                  <div>
+                    <h3 className="font-semibold mb-2">Tasks by Status</h3>
+                    <div className="space-y-2">
+                      {companyAnalytics.tasks_by_status.map((item: any, index: number) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                          <span className="text-sm">{item.status}</span>
+                          <Badge variant="secondary">{item.count}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Active Users */}
+                  <div>
+                    <h3 className="font-semibold mb-2">Active Users (Last 30 Days)</h3>
+                    <div className="text-2xl font-bold">{companyAnalytics.active_users_last_30_days}</div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No analytics data available</p>
+              )}
             </CardContent>
           </Card>
         </div>
