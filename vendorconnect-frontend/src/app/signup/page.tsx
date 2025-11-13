@@ -32,7 +32,6 @@ type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const router = useRouter();
-  const { setUser, setToken } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -49,9 +48,11 @@ export default function SignupPage() {
       const response = await apiClient.post('/company/register', data);
       
       if (response.data.success) {
-        // Set auth token and user data
-        setToken(response.data.data.token);
-        setUser(response.data.data.user);
+        const { user, token } = response.data.data;
+        
+        // Save auth token
+        localStorage.setItem('auth_token', token);
+        document.cookie = `auth_token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
         
         toast.success('Company registered successfully! Welcome to VendorConnect!');
         
