@@ -342,7 +342,8 @@ export default function AdminSettingsPage() {
                 value={companySettings.company_address || ''}
                 onChange={(e) => handleCompanySettingChange('company_address', e.target.value)}
                 placeholder="Enter company address"
-                className="w-full max-w-md px-3 py-2 border rounded-md bg-background text-foreground min-h-[100px]"
+                rows={3}
+                className="flex w-full max-w-md rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
               <p className="text-sm text-muted-foreground">
                 Physical address of your company
