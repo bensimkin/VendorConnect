@@ -571,7 +571,12 @@ if (!function_exists('getAdminIdByUserRole')) {
                     case 'admin':
                         // If the user is an admin, fetch the admin ID directly
                         $admin = Admin::where('user_id', $user->id)->first();
-                        return $admin ? $admin->id : null;
+                        if ($admin) {
+                            return $admin->id;
+                        }
+                        // Fallback: check if admin user is also a team member
+                        $teamMember = TeamMember::where('user_id', $user->id)->first();
+                        return $teamMember ? $teamMember->admin_id : null;
 
                     case 'member':
                         // If the user is a member, fetch the admin ID from the team member table
