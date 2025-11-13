@@ -563,8 +563,17 @@ if (!function_exists('getAdminIdByUserRole')) {
     {
         $user = getAuthenticatedUser();
 
+        \Log::info('getAdminIdByUserRole - START', [
+            'user' => $user ? $user->id : null,
+            'user_email' => $user ? $user->email : null,
+        ]);
+
         if ($user) {
             $roles = $user->roles;
+            \Log::info('getAdminIdByUserRole - roles', [
+                'role_count' => $roles->count(),
+                'roles' => $roles->pluck('name')->toArray()
+            ]);
 
             foreach ($roles as $role) {
                 switch ($role->name) {
