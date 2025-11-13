@@ -16,7 +16,9 @@ class ClientCredentialController extends BaseController
     public function index($clientId)
     {
         try {
-            $client = Client::find($clientId);
+            $adminId = getAdminIdByUserRole();
+            
+            $client = Client::where('admin_id', $adminId)->find($clientId);
             if (!$client) {
                 return $this->sendNotFound('Client not found');
             }
@@ -35,7 +37,9 @@ class ClientCredentialController extends BaseController
     public function store(Request $request, $clientId)
     {
         try {
-            $client = Client::find($clientId);
+            $adminId = getAdminIdByUserRole();
+            
+            $client = Client::where('admin_id', $adminId)->find($clientId);
             if (!$client) {
                 return $this->sendNotFound('Client not found');
             }
@@ -67,6 +71,14 @@ class ClientCredentialController extends BaseController
     public function show($clientId, $credentialId)
     {
         try {
+            $adminId = getAdminIdByUserRole();
+            
+            // Verify client belongs to this company
+            $client = Client::where('admin_id', $adminId)->find($clientId);
+            if (!$client) {
+                return $this->sendNotFound('Client not found');
+            }
+            
             $credential = ClientCredential::where('client_id', $clientId)
                 ->where('id', $credentialId)
                 ->first();
@@ -87,6 +99,14 @@ class ClientCredentialController extends BaseController
     public function update(Request $request, $clientId, $credentialId)
     {
         try {
+            $adminId = getAdminIdByUserRole();
+            
+            // Verify client belongs to this company
+            $client = Client::where('admin_id', $adminId)->find($clientId);
+            if (!$client) {
+                return $this->sendNotFound('Client not found');
+            }
+            
             $credential = ClientCredential::where('client_id', $clientId)
                 ->where('id', $credentialId)
                 ->first();
@@ -122,6 +142,14 @@ class ClientCredentialController extends BaseController
     public function destroy($clientId, $credentialId)
     {
         try {
+            $adminId = getAdminIdByUserRole();
+            
+            // Verify client belongs to this company
+            $client = Client::where('admin_id', $adminId)->find($clientId);
+            if (!$client) {
+                return $this->sendNotFound('Client not found');
+            }
+            
             $credential = ClientCredential::where('client_id', $clientId)
                 ->where('id', $credentialId)
                 ->first();
@@ -144,6 +172,14 @@ class ClientCredentialController extends BaseController
     public function getPassword($clientId, $credentialId)
     {
         try {
+            $adminId = getAdminIdByUserRole();
+            
+            // Verify client belongs to this company
+            $client = Client::where('admin_id', $adminId)->find($clientId);
+            if (!$client) {
+                return $this->sendNotFound('Client not found');
+            }
+            
             $credential = ClientCredential::where('client_id', $clientId)
                 ->where('id', $credentialId)
                 ->first();

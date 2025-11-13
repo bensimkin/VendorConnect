@@ -22,7 +22,9 @@ class TaskDeliverableController extends BaseController
     public function index($taskId)
     {
         try {
-            $task = Task::find($taskId);
+            $adminId = getAdminIdByUserRole();
+            
+            $task = Task::where('admin_id', $adminId)->find($taskId);
             if (!$task) {
                 return $this->sendNotFound('Task not found');
             }
@@ -40,7 +42,9 @@ class TaskDeliverableController extends BaseController
     public function store(Request $request, $taskId)
     {
         try {
-            $task = Task::find($taskId);
+            $adminId = getAdminIdByUserRole();
+            
+            $task = Task::where('admin_id', $adminId)->find($taskId);
             if (!$task) {
                 return $this->sendNotFound('Task not found');
             }
@@ -96,6 +100,7 @@ class TaskDeliverableController extends BaseController
                 
                 // Create a unique portfolio item for this specific deliverable
                 $portfolio = Portfolio::create([
+                    'admin_id' => $adminId,
                     'client_id' => $client->id,
                     'task_id' => $taskId,
                     'project_id' => $task->project_id,
@@ -139,6 +144,14 @@ class TaskDeliverableController extends BaseController
     public function show($taskId, $deliverableId)
     {
         try {
+            $adminId = getAdminIdByUserRole();
+            
+            // Verify task belongs to this company
+            $task = Task::where('admin_id', $adminId)->find($taskId);
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+            
             $deliverable = TaskDeliverable::where('task_id', $taskId)
                 ->with(['creator', 'media'])
                 ->find($deliverableId);
@@ -159,14 +172,21 @@ class TaskDeliverableController extends BaseController
     public function update(Request $request, $taskId, $deliverableId)
     {
         try {
+            $adminId = getAdminIdByUserRole();
+            
+            // Verify task belongs to this company
+            $task = Task::where('admin_id', $adminId)->find($taskId);
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+            
             $deliverable = TaskDeliverable::where('task_id', $taskId)->find($deliverableId);
             if (!$deliverable) {
                 return $this->sendNotFound('Deliverable not found');
             }
 
             // Check if task is past due with strict deadline
-            $task = Task::find($taskId);
-            if ($task && $task->end_date && $task->close_deadline == 1) {
+            if ($task->end_date && $task->close_deadline == 1) {
                 $deadline = \Carbon\Carbon::parse($task->end_date);
                 $current_time = now();
                 
@@ -240,6 +260,14 @@ class TaskDeliverableController extends BaseController
     public function destroy($taskId, $deliverableId)
     {
         try {
+            $adminId = getAdminIdByUserRole();
+            
+            // Verify task belongs to this company
+            $task = Task::where('admin_id', $adminId)->find($taskId);
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+            
             $deliverable = TaskDeliverable::where('task_id', $taskId)->find($deliverableId);
             if (!$deliverable) {
                 return $this->sendNotFound('Deliverable not found');
@@ -258,6 +286,14 @@ class TaskDeliverableController extends BaseController
     public function complete($taskId, $deliverableId)
     {
         try {
+            $adminId = getAdminIdByUserRole();
+            
+            // Verify task belongs to this company
+            $task = Task::where('admin_id', $adminId)->find($taskId);
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+            
             $deliverable = TaskDeliverable::where('task_id', $taskId)->find($deliverableId);
             if (!$deliverable) {
                 return $this->sendNotFound('Deliverable not found');
@@ -280,6 +316,14 @@ class TaskDeliverableController extends BaseController
     public function deleteFile($taskId, $deliverableId, $mediaId)
     {
         try {
+            $adminId = getAdminIdByUserRole();
+            
+            // Verify task belongs to this company
+            $task = Task::where('admin_id', $adminId)->find($taskId);
+            if (!$task) {
+                return $this->sendNotFound('Task not found');
+            }
+            
             $deliverable = TaskDeliverable::where('task_id', $taskId)->find($deliverableId);
             if (!$deliverable) {
                 return $this->sendNotFound('Deliverable not found');
