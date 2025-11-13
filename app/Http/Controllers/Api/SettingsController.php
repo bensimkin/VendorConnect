@@ -297,4 +297,76 @@ class SettingsController extends BaseController
             return $this->sendServerError('Error updating general settings: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get company information
+     */
+    public function getCompanyInfo()
+    {
+        try {
+            $adminId = getAdminIdByUserRole();
+            
+            $admin = \App\Models\Admin::find($adminId);
+            
+            if (!$admin) {
+                return $this->sendNotFound('Company not found');
+            }
+
+            $result = [
+                'company_name' => $admin->company_name,
+                'company_email' => $admin->company_email,
+                'company_phone' => $admin->company_phone,
+                'company_address' => $admin->company_address,
+            ];
+
+            return $this->sendResponse($result, 'Company information retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error retrieving company information: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update company information
+     */
+    public function updateCompanyInfo(Request $request)
+    {
+        try {
+            $adminId = getAdminIdByUserRole();
+            
+            $admin = \App\Models\Admin::find($adminId);
+            
+            if (!$admin) {
+                return $this->sendNotFound('Company not found');
+            }
+
+            $validator = Validator::make($request->all(), [
+                'company_name' => 'nullable|string|max:255',
+                'company_email' => 'nullable|email|max:255',
+                'company_phone' => 'nullable|string|max:50',
+                'company_address' => 'nullable|string|max:500',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendValidationError($validator->errors());
+            }
+
+            $admin->update($request->only([
+                'company_name',
+                'company_email',
+                'company_phone',
+                'company_address'
+            ]));
+
+            $result = [
+                'company_name' => $admin->company_name,
+                'company_email' => $admin->company_email,
+                'company_phone' => $admin->company_phone,
+                'company_address' => $admin->company_address,
+            ];
+
+            return $this->sendResponse($result, 'Company information updated successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error updating company information: ' . $e->getMessage());
+        }
+    }
 }

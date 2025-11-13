@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Save, RefreshCw, Globe } from 'lucide-react';
+import { Settings, Save, RefreshCw, Globe, Building2 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 
 interface ProjectSettings {
@@ -27,6 +27,13 @@ interface GeneralSettings {
   timezone: string;
   company_title: string;
   date_format: string;
+}
+
+interface CompanySettings {
+  company_name: string;
+  company_email: string;
+  company_phone: string;
+  company_address: string;
 }
 
 export default function AdminSettingsPage() {
@@ -49,6 +56,13 @@ export default function AdminSettingsPage() {
     date_format: 'DD-MM-YYYY|d-m-Y',
   });
 
+  const [companySettings, setCompanySettings] = useState<CompanySettings>({
+    company_name: '',
+    company_email: '',
+    company_phone: '',
+    company_address: '',
+  });
+
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -56,14 +70,16 @@ export default function AdminSettingsPage() {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const [projectResponse, autoArchiveResponse, generalResponse] = await Promise.all([
+      const [projectResponse, autoArchiveResponse, generalResponse, companyResponse] = await Promise.all([
         apiClient.get('/settings/project'),
         apiClient.get('/settings/auto-archive'),
-        apiClient.get('/settings/general')
+        apiClient.get('/settings/general'),
+        apiClient.get('/settings/company')
       ]);
       setSettings(projectResponse.data.data);
       setAutoArchiveSettings(autoArchiveResponse.data.data);
       setGeneralSettings(generalResponse.data.data);
+      setCompanySettings(companyResponse.data.data);
     } catch (error) {
       console.error('Failed to fetch settings:', error);
       toast.error('Failed to load settings');
@@ -84,6 +100,10 @@ export default function AdminSettingsPage() {
     setGeneralSettings(prev => ({ ...prev, [key]: value }));
   };
 
+  const handleCompanySettingChange = (key: keyof CompanySettings, value: string) => {
+    setCompanySettings(prev => ({ ...prev, [key]: value }));
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -98,7 +118,10 @@ export default function AdminSettingsPage() {
       // Save general settings
       const generalPromise = apiClient.put('/settings/general', generalSettings);
       
-      await Promise.all([...projectPromises, autoArchivePromise, generalPromise]);
+      // Save company settings
+      const companyPromise = apiClient.put('/settings/company', companySettings);
+      
+      await Promise.all([...projectPromises, autoArchivePromise, generalPromise, companyPromise]);
       toast.success('Settings saved successfully');
     } catch (error: any) {
       console.error('Failed to save settings:', error);
@@ -242,6 +265,88 @@ export default function AdminSettingsPage() {
                   {generalSettings.timezone}
                 </Badge>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Company Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Company Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Company Name */}
+            <div className="space-y-2">
+              <Label htmlFor="company_name" className="text-base font-medium">
+                Company Name
+              </Label>
+              <Input
+                id="company_name"
+                type="text"
+                value={companySettings.company_name || ''}
+                onChange={(e) => handleCompanySettingChange('company_name', e.target.value)}
+                placeholder="Enter company name"
+                className="max-w-md"
+              />
+              <p className="text-sm text-muted-foreground">
+                The name of your organization
+              </p>
+            </div>
+
+            {/* Company Email */}
+            <div className="space-y-2">
+              <Label htmlFor="company_email" className="text-base font-medium">
+                Company Email
+              </Label>
+              <Input
+                id="company_email"
+                type="email"
+                value={companySettings.company_email || ''}
+                onChange={(e) => handleCompanySettingChange('company_email', e.target.value)}
+                placeholder="contact@company.com"
+                className="max-w-md"
+              />
+              <p className="text-sm text-muted-foreground">
+                Primary contact email for your company
+              </p>
+            </div>
+
+            {/* Company Phone */}
+            <div className="space-y-2">
+              <Label htmlFor="company_phone" className="text-base font-medium">
+                Company Phone
+              </Label>
+              <Input
+                id="company_phone"
+                type="tel"
+                value={companySettings.company_phone || ''}
+                onChange={(e) => handleCompanySettingChange('company_phone', e.target.value)}
+                placeholder="+1 (555) 123-4567"
+                className="max-w-md"
+              />
+              <p className="text-sm text-muted-foreground">
+                Primary contact phone number
+              </p>
+            </div>
+
+            {/* Company Address */}
+            <div className="space-y-2">
+              <Label htmlFor="company_address" className="text-base font-medium">
+                Company Address
+              </Label>
+              <textarea
+                id="company_address"
+                value={companySettings.company_address || ''}
+                onChange={(e) => handleCompanySettingChange('company_address', e.target.value)}
+                placeholder="Enter company address"
+                className="w-full max-w-md px-3 py-2 border rounded-md bg-background text-foreground min-h-[100px]"
+              />
+              <p className="text-sm text-muted-foreground">
+                Physical address of your company
+              </p>
             </div>
           </CardContent>
         </Card>

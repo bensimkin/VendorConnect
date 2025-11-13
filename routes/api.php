@@ -236,6 +236,10 @@ Route::prefix('priorities')->group(function () {
             Route::get('/project', [SettingsController::class, 'getProjectSettings']);
             Route::get('/group/{group}', [SettingsController::class, 'getByGroup']);
             
+            // Company settings (must come before generic {key} routes)
+            Route::get('/company', [SettingsController::class, 'getCompanyInfo']);
+            Route::put('/company', [SettingsController::class, 'updateCompanyInfo']);
+            
             // General settings (must come before generic {key} routes)
             Route::get('/general', [SettingsController::class, 'getGeneralSettings']);
             Route::put('/general', [SettingsController::class, 'updateGeneralSettings']);
