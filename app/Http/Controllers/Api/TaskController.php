@@ -39,14 +39,6 @@ class TaskController extends BaseController
             $user = Auth::user();
             $adminId = getAdminIdByUserRole();
             
-            // DEBUG: Log admin_id value
-            \Log::info('TaskController::index - DEBUG', [
-                'user_id' => $user ? $user->id : null,
-                'user_email' => $user ? $user->email : null,
-                'admin_id' => $adminId,
-                'has_admin_role' => $user ? $user->hasRole('admin') : false,
-            ]);
-            
             $query = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'project.clients', 'deliverables', 'createdBy'])
                 ->where('admin_id', $adminId);
             
