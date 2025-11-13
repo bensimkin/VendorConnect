@@ -571,11 +571,21 @@ if (!function_exists('getAdminIdByUserRole')) {
                     case 'admin':
                         // If the user is an admin, fetch the admin ID directly
                         $admin = Admin::where('user_id', $user->id)->first();
+                        \Log::debug('getAdminIdByUserRole - admin case', [
+                            'user_id' => $user->id,
+                            'admin_found' => $admin ? 'YES' : 'NO',
+                            'admin_id' => $admin ? $admin->id : null
+                        ]);
                         if ($admin) {
                             return $admin->id;
                         }
                         // Fallback: check if admin user is also a team member
                         $teamMember = TeamMember::where('user_id', $user->id)->first();
+                        \Log::debug('getAdminIdByUserRole - team member fallback', [
+                            'user_id' => $user->id,
+                            'team_member_found' => $teamMember ? 'YES' : 'NO',
+                            'team_admin_id' => $teamMember ? $teamMember->admin_id : null
+                        ]);
                         return $teamMember ? $teamMember->admin_id : null;
 
                     case 'member':
