@@ -103,12 +103,10 @@ export default function SettingsPage() {
       await apiClient.put('/user/notifications', notifications);
       toast.success('Notification preferences updated');
       
-      // Refresh user data to get updated preferences
-      const response = await apiClient.get('/profile');
-      if (response.data?.data && user) {
-        // Update the user in auth store with new preferences
+      // Update the user in auth store with new preferences
+      if (user) {
         useAuthStore.setState({ 
-          user: { ...user, notification_preferences: notifications } as User
+          user: { ...user, notification_preferences: notifications }
         });
       }
     } catch (error: any) {
