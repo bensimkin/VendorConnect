@@ -19,8 +19,21 @@ class UserController extends BaseController
     {
         try {
             $user = Auth::user();
-            $query = User::with(['roles', 'permissions']);
-            // Removed workspace filtering for single-tenant system
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering: Only show users from the same company
+            $query = User::with(['roles', 'permissions'])
+                ->where(function($q) use ($adminId) {
+                    // Include the admin user themselves
+                    $admin = \App\Models\Admin::where('id', $adminId)->first();
+                    if ($admin) {
+                        $q->where('id', $admin->user_id);
+                    }
+                    // Include all team members of this company
+                    $q->orWhereHas('teamMembers', function($subQ) use ($adminId) {
+                        $subQ->where('admin_id', $adminId);
+                    });
+                });
 
             // Apply filters
             if ($request->has('search')) {
@@ -94,6 +107,8 @@ class UserController extends BaseController
 
             DB::beginTransaction();
 
+            $adminId = getAdminIdByUserRole();
+
             $user = User::create([
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
@@ -107,6 +122,12 @@ class UserController extends BaseController
             if ($request->has('role_ids')) {
                 $user->roles()->attach($request->role_ids);
             }
+
+            // Add user to team_members table for multi-tenant isolation
+            \App\Models\TeamMember::create([
+                'admin_id' => $adminId,
+                'user_id' => $user->id,
+            ]);
 
             DB::commit();
 
@@ -126,7 +147,19 @@ class UserController extends BaseController
     {
         try {
             $currentUser = Auth::user();
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering: Only allow viewing users from the same company
             $user = User::with(['roles', 'permissions'])
+                ->where(function($q) use ($adminId) {
+                    $admin = \App\Models\Admin::where('id', $adminId)->first();
+                    if ($admin) {
+                        $q->where('id', $admin->user_id);
+                    }
+                    $q->orWhereHas('teamMembers', function($subQ) use ($adminId) {
+                        $subQ->where('admin_id', $adminId);
+                    });
+                })
                 ->find($id);
 
             if (!$user) {
@@ -153,7 +186,19 @@ class UserController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $user = User::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering: Only allow updating users from the same company
+            $user = User::where(function($q) use ($adminId) {
+                    $admin = \App\Models\Admin::where('id', $adminId)->first();
+                    if ($admin) {
+                        $q->where('id', $admin->user_id);
+                    }
+                    $q->orWhereHas('teamMembers', function($subQ) use ($adminId) {
+                        $subQ->where('admin_id', $adminId);
+                    });
+                })
+                ->find($id);
 
             if (!$user) {
                 return $this->sendNotFound('User not found');
@@ -206,7 +251,19 @@ class UserController extends BaseController
     public function destroy($id)
     {
         try {
-            $user = User::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering: Only allow deleting users from the same company
+            $user = User::where(function($q) use ($adminId) {
+                    $admin = \App\Models\Admin::where('id', $adminId)->first();
+                    if ($admin) {
+                        $q->where('id', $admin->user_id);
+                    }
+                    $q->orWhereHas('teamMembers', function($subQ) use ($adminId) {
+                        $subQ->where('admin_id', $adminId);
+                    });
+                })
+                ->find($id);
 
             if (!$user) {
                 return $this->sendNotFound('User not found');
@@ -240,7 +297,20 @@ class UserController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $users = User::whereIn('id', $request->user_ids)->get();
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering: Only allow deleting users from the same company
+            $users = User::whereIn('id', $request->user_ids)
+                ->where(function($q) use ($adminId) {
+                    $admin = \App\Models\Admin::where('id', $adminId)->first();
+                    if ($admin) {
+                        $q->where('id', $admin->user_id);
+                    }
+                    $q->orWhereHas('teamMembers', function($subQ) use ($adminId) {
+                        $subQ->where('admin_id', $adminId);
+                    });
+                })
+                ->get();
 
             // Prevent deleting self
             $users = $users->filter(function ($user) {
