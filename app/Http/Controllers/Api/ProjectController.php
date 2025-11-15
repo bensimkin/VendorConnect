@@ -233,24 +233,18 @@ class ProjectController extends BaseController
                 $project->users()->attach($request->user_ids);
             }
 
-            // Attach clients and update primary client reference
+            // Attach clients (many-to-many relationship via client_project pivot table)
             if ($request->filled('client_ids')) {
                 // Multiple clients mode
                 \Log::info('Attaching multiple clients to project', ['client_ids' => $request->client_ids, 'project_id' => $project->id]);
                 $project->clients()->attach($request->client_ids, ['admin_id' => $adminId]);
-                // Store first client as primary reference
-                $project->client_id = $request->client_ids[0] ?? null;
             } elseif ($request->filled('client_id')) {
                 // Single client mode
                 \Log::info('Attaching single client to project', ['client_id' => $request->client_id, 'project_id' => $project->id]);
                 $project->clients()->attach($request->client_id, ['admin_id' => $adminId]);
-                $project->client_id = $request->client_id;
             } else {
                 \Log::warning('No client data provided for project creation', ['project_id' => $project->id, 'request_data' => $request->all()]);
-                $project->client_id = null;
             }
-
-            $project->save();
 
             DB::commit();
 
@@ -445,6 +439,7 @@ class ProjectController extends BaseController
             $adminId = getAdminIdByUserRole();
 
             // Handle client assignment - support both single client_id and client_ids array
+            // Update client relationships (sync replaces all existing)
             if ($request->filled('client_ids')) {
                 // Multiple clients mode - sync with admin_id
                 $clientData = [];
@@ -452,18 +447,13 @@ class ProjectController extends BaseController
                     $clientData[$clientId] = ['admin_id' => $adminId];
                 }
                 $project->clients()->sync($clientData);
-                $project->client_id = $request->client_ids[0] ?? null;
             } elseif ($request->filled('client_id')) {
                 // Single client mode - sync with admin_id
                 $project->clients()->sync([$request->client_id => ['admin_id' => $adminId]]);
-                $project->client_id = $request->client_id;
             } else {
                 // No client data - detach all clients
                 $project->clients()->detach();
-                $project->client_id = null;
             }
-
-            $project->save();
 
             DB::commit();
 
