@@ -44,27 +44,45 @@ class MemberValidationService
                     'status' => $data['status'] ?? null
                 ]);
 
-                // Only allow if is_active is explicitly true
-                return isset($data['is_active']) && $data['is_active'] === true;
+                // Only block if we get a definitive "inactive" or "not found" response
+                // If is_member is explicitly false, block access (member not found)
+                if (isset($data['is_member']) && $data['is_member'] === false) {
+                    return false;
+                }
+
+                // If is_active is explicitly false, block access (inactive member)
+                if (isset($data['is_active']) && $data['is_active'] === false) {
+                    return false;
+                }
+
+                // If is_active is explicitly true, allow access
+                if (isset($data['is_active']) && $data['is_active'] === true) {
+                    return true;
+                }
+
+                // If we don't get clear status indicators, allow access (fail open)
+                Log::warning('Mastermind API returned unclear status - allowing access', [
+                    'email' => $email,
+                    'response' => $data
+                ]);
+                return true;
             }
 
-            Log::error('Mastermind API request failed', [
+            // On API failure (non-200 response), allow access (fail open)
+            Log::warning('Mastermind API request failed - allowing access', [
                 'email' => $email,
                 'status' => $response->status(),
                 'response' => $response->body()
             ]);
-
-            // On API failure, deny access for security
-            return false;
+            return true;
 
         } catch (\Exception $e) {
-            Log::error('Mastermind member validation error', [
+            // On exception (network error, timeout, etc.), allow access (fail open)
+            Log::warning('Mastermind member validation error - allowing access', [
                 'email' => $email,
                 'error' => $e->getMessage()
             ]);
-
-            // On exception, deny access for security
-            return false;
+            return true;
         }
     }
 

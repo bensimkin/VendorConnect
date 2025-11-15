@@ -103,7 +103,8 @@ class CompanyController extends BaseController
             // Create default workspace for the new company
             \App\Models\Workspace::create([
                 'admin_id' => $admin->id,
-                'name' => 'Default Workspace',
+                'user_id' => $user->id,
+                'title' => 'Default Workspace',
                 'is_primary' => true,
             ]);
 
