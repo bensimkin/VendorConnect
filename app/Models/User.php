@@ -40,6 +40,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at',
         'last_login_at',
         'country_code',
+        'notification_preferences',
     ];
 
     /**
@@ -59,6 +60,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'notification_preferences' => 'array',
     ];
 
     protected $appends = ['role'];

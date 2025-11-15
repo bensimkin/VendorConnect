@@ -172,20 +172,19 @@ class ProfileController extends BaseController
         try {
             $user = Auth::user();
             
-            // Notification preferences are stored per-user (not per-tenant)
-            // This is intentional - each user has their own notification settings
-            
-            // For now, just return success as notification preferences
-            // would typically be stored in a user_preferences table
-            // or as a JSON field on the users table
-            
-            return $this->sendResponse([
+            // Build preferences array from request
+            $preferences = [
                 'email_notifications' => $request->input('email_notifications', true),
                 'push_notifications' => $request->input('push_notifications', false),
                 'task_assignments' => $request->input('task_assignments', true),
                 'task_updates' => $request->input('task_updates', true),
                 'mentions' => $request->input('mentions', true),
-            ], 'Notification preferences updated successfully');
+            ];
+            
+            // Save to user's notification_preferences JSON field
+            $user->update(['notification_preferences' => $preferences]);
+            
+            return $this->sendResponse($preferences, 'Notification preferences updated successfully');
         } catch (\Exception $e) {
             return $this->sendServerError('Error updating notification preferences: ' . $e->getMessage());
         }

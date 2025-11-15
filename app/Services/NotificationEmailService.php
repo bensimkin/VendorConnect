@@ -66,6 +66,19 @@ class NotificationEmailService
      */
     protected function sendNotificationSummaryEmail(User $user, $notifications): void
     {
+        // Check if user has email notifications enabled
+        $preferences = $user->notification_preferences ?? [];
+        $emailNotificationsEnabled = $preferences['email_notifications'] ?? true;
+        
+        if (!$emailNotificationsEnabled) {
+            Log::info("Skipping email notification for user {$user->id} - email notifications disabled", [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'preferences' => $preferences
+            ]);
+            return;
+        }
+        
         $notificationCount = $notifications->count();
         $subject = "You have {$notificationCount} unread notification" . ($notificationCount > 1 ? 's' : '');
         
@@ -77,6 +90,12 @@ class NotificationEmailService
                    ->subject($subject)
                    ->text($textContent);
         });
+        
+        Log::info("Sent notification email to user {$user->id}", [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'notification_count' => $notificationCount
+        ]);
     }
 
     /**
