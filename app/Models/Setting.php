@@ -10,6 +10,7 @@ class Setting extends Model
     use HasFactory;
 
     protected $fillable = [
+        'admin_id',
         'key',
         'value',
         'type',
@@ -20,9 +21,13 @@ class Setting extends Model
     /**
      * Get a setting value by key
      */
-    public static function getValue($key, $default = null)
+    public static function getValue($key, $default = null, $adminId = null)
     {
-        $setting = self::where('key', $key)->first();
+        if ($adminId === null) {
+            $adminId = getAdminIdByUserRole();
+        }
+        
+        $setting = self::where('admin_id', $adminId)->where('key', $key)->first();
         
         if (!$setting) {
             return $default;
@@ -43,10 +48,14 @@ class Setting extends Model
     /**
      * Set a setting value
      */
-    public static function setValue($key, $value, $type = 'string', $group = 'general', $description = null)
+    public static function setValue($key, $value, $type = 'string', $group = 'general', $description = null, $adminId = null)
     {
+        if ($adminId === null) {
+            $adminId = getAdminIdByUserRole();
+        }
+        
         $setting = self::updateOrCreate(
-            ['key' => $key],
+            ['admin_id' => $adminId, 'key' => $key],
             [
                 'value' => is_array($value) ? json_encode($value) : (string) $value,
                 'type' => $type,
@@ -61,8 +70,8 @@ class Setting extends Model
     /**
      * Check if a setting is enabled (for boolean settings)
      */
-    public static function isEnabled($key, $default = false)
+    public static function isEnabled($key, $default = false, $adminId = null)
     {
-        return self::getValue($key, $default);
+        return self::getValue($key, $default, $adminId);
     }
 }

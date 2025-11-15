@@ -15,7 +15,8 @@ class SettingsController extends BaseController
     public function index(Request $request)
     {
         try {
-            $query = Setting::query();
+            $adminId = getAdminIdByUserRole();
+            $query = Setting::where('admin_id', $adminId);
 
             // Filter by group
             if ($request->has('group')) {
@@ -41,7 +42,8 @@ class SettingsController extends BaseController
     public function show($key)
     {
         try {
-            $setting = Setting::where('key', $key)->first();
+            $adminId = getAdminIdByUserRole();
+            $setting = Setting::where('admin_id', $adminId)->where('key', $key)->first();
 
             if (!$setting) {
                 return $this->sendNotFound('Setting not found');
@@ -59,7 +61,8 @@ class SettingsController extends BaseController
     public function update(Request $request, $key)
     {
         try {
-            $setting = Setting::where('key', $key)->first();
+            $adminId = getAdminIdByUserRole();
+            $setting = Setting::where('admin_id', $adminId)->where('key', $key)->first();
 
             if (!$setting) {
                 return $this->sendNotFound('Setting not found');
@@ -116,7 +119,9 @@ class SettingsController extends BaseController
     public function getByGroup($group)
     {
         try {
-            $settings = Setting::where('group', $group)
+            $adminId = getAdminIdByUserRole();
+            $settings = Setting::where('admin_id', $adminId)
+                ->where('group', $group)
                 ->orderBy('key')
                 ->get();
 
@@ -132,14 +137,16 @@ class SettingsController extends BaseController
     public function getProjectSettings()
     {
         try {
-            $settings = Setting::where('group', 'project')
+            $adminId = getAdminIdByUserRole();
+            $settings = Setting::where('admin_id', $adminId)
+                ->where('group', 'project')
                 ->orderBy('key')
                 ->get();
 
             // Convert to key-value pairs for easier frontend consumption
             $formattedSettings = [];
             foreach ($settings as $setting) {
-                $formattedSettings[$setting->key] = Setting::getValue($setting->key);
+                $formattedSettings[$setting->key] = Setting::getValue($setting->key, null, $adminId);
             }
 
             return $this->sendResponse($formattedSettings, 'Project settings retrieved successfully');
@@ -154,7 +161,8 @@ class SettingsController extends BaseController
     public function getAutoArchiveSettings()
     {
         try {
-            $settings = Setting::where('group', 'archive_settings')->get();
+            $adminId = getAdminIdByUserRole();
+            $settings = Setting::where('admin_id', $adminId)->where('group', 'archive_settings')->get();
             
             $result = [
                 'auto_archive_enabled' => $settings->where('key', 'auto_archive_enabled')->first()?->value === '1',
@@ -182,9 +190,11 @@ class SettingsController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
+            $adminId = getAdminIdByUserRole();
+
             // Update auto_archive_enabled
             Setting::updateOrCreate(
-                ['key' => 'auto_archive_enabled'],
+                ['admin_id' => $adminId, 'key' => 'auto_archive_enabled'],
                 [
                     'value' => $request->auto_archive_enabled ? '1' : '0',
                     'group' => 'archive_settings',
@@ -195,7 +205,7 @@ class SettingsController extends BaseController
 
             // Update auto_archive_days
             Setting::updateOrCreate(
-                ['key' => 'auto_archive_days'],
+                ['admin_id' => $adminId, 'key' => 'auto_archive_days'],
                 [
                     'value' => (string) $request->auto_archive_days,
                     'group' => 'archive_settings',
@@ -221,8 +231,10 @@ class SettingsController extends BaseController
     public function getGeneralSettings()
     {
         try {
+            $adminId = getAdminIdByUserRole();
             // Get from key column
             $setting = \DB::table('settings')
+                ->where('admin_id', $adminId)
                 ->where('key', 'general_settings')
                 ->first();
             
@@ -259,8 +271,11 @@ class SettingsController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
+            $adminId = getAdminIdByUserRole();
+
             // Get existing general settings from key column
             $setting = \DB::table('settings')
+                ->where('admin_id', $adminId)
                 ->where('key', 'general_settings')
                 ->first();
             
@@ -283,7 +298,7 @@ class SettingsController extends BaseController
             // Save back to database using 'key' column
             \DB::table('settings')
                 ->updateOrInsert(
-                    ['key' => 'general_settings'],
+                    ['admin_id' => $adminId, 'key' => 'general_settings'],
                     [
                         'value' => json_encode($generalSettings),
                         'type' => 'string',
