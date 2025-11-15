@@ -19,7 +19,6 @@ export default function SettingsPage() {
   const { user } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const [saving, setSaving] = useState(false);
-  const [companyInfo, setCompanyInfo] = useState<any>(null);
   const [profileData, setProfileData] = useState({
     first_name: user?.first_name || '',
     last_name: user?.last_name || '',
@@ -38,19 +37,6 @@ export default function SettingsPage() {
     project_updates: true,
     mentions: true,
   });
-
-  // Load company info for branding
-  useEffect(() => {
-    const fetchCompanyInfo = async () => {
-      try {
-        const response = await apiClient.get('/company');
-        setCompanyInfo(response.data?.data);
-      } catch (error) {
-        console.error('Failed to fetch company info:', error);
-      }
-    };
-    fetchCompanyInfo();
-  }, []);
 
   // Load notification preferences from user object on mount
   useEffect(() => {
@@ -399,9 +385,7 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">Version</p>
-                    <p className="text-sm text-muted-foreground">
-                      {companyInfo?.company_name || 'VendorConnect'} v1.0.0
-                    </p>
+                    <p className="text-sm text-muted-foreground">VendorConnect v1.0.0</p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
