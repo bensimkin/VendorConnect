@@ -752,11 +752,29 @@ class AnalyticsController extends BaseController
                 return $this->sendForbidden('Only admins can view project metrics baselines');
             }
 
-            // Get all baseline metrics (filter by tenant)
-            $baselines = ProjectMetricsBaseline::where('admin_id', $adminId)
-                ->orderBy('calculated_at', 'desc')
+            // Get all baseline metrics (filter by tenant via relationships)
+            // Note: project_metrics_baseline doesn't have admin_id yet
+            // Filter by client_id and task_type_id which belong to this tenant
+            $baselines = ProjectMetricsBaseline::orderBy('calculated_at', 'desc')
                 ->with(['taskType', 'client'])
-                ->get();
+                ->get()
+                ->filter(function($baseline) use ($adminId) {
+                    // Only include baselines that belong to this tenant's clients or task types
+                    if ($baseline->client_id) {
+                        $client = \App\Models\Client::find($baseline->client_id);
+                        if (!$client || $client->admin_id != $adminId) {
+                            return false;
+                        }
+                    }
+                    if ($baseline->task_type_id) {
+                        $taskType = \App\Models\TaskType::find($baseline->task_type_id);
+                        if (!$taskType || $taskType->admin_id != $adminId) {
+                            return false;
+                        }
+                    }
+                    // If neither client nor task_type is set, it's a global baseline - include it
+                    return true;
+                });
 
             // Group by metric name for easier display
             $groupedBaselines = [
