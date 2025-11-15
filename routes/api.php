@@ -92,6 +92,11 @@ Route::prefix('v1')->group(function () {
             Route::put('/{id}/photo', [ProfileController::class, 'updatePhoto']);
         });
         
+        // User preferences (different from profile for frontend compatibility)
+        Route::prefix('user')->group(function () {
+            Route::put('/notifications', [ProfileController::class, 'updateNotificationPreferences']);
+        });
+        
         // Tasks
         Route::prefix('tasks')->middleware(['track.task.activity'])->group(function () {
             Route::get('/', [TaskController::class, 'index']);
