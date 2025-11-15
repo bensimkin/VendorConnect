@@ -108,25 +108,27 @@ export default function LoginPage() {
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
-            <div className="text-sm text-center text-muted-foreground space-y-2">
-              <div>
-                <Link 
-                  href="/forgot-password" 
-                  className="text-primary hover:underline"
-                >
-                  Forgot your password?
-                </Link>
+            {process.env.NEXT_PUBLIC_DEMO_MODE !== 'true' && (
+              <div className="text-sm text-center text-muted-foreground space-y-2">
+                <div>
+                  <Link 
+                    href="/forgot-password" 
+                    className="text-primary hover:underline"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
+                <div>
+                  Don't have an account?{' '}
+                  <Link 
+                    href="/signup" 
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Sign up for free
+                  </Link>
+                </div>
               </div>
-              <div>
-                Don't have an account?{' '}
-                <Link 
-                  href="/signup" 
-                  className="text-primary hover:underline font-medium"
-                >
-                  Sign up for free
-                </Link>
-              </div>
-            </div>
+            )}
           </CardFooter>
         </form>
       </Card>
