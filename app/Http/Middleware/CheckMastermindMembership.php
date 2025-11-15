@@ -36,12 +36,23 @@ class CheckMastermindMembership
             return $next($request);
         }
 
-        // Check if user is an active Mastermind member
+        // Only validate ADMIN users (company owners), not team members
+        // Get the admin (company owner) for this user
+        $admin = \App\Models\Admin::where('user_id', $user->id)->first();
+        
+        // If user is not a company owner, skip validation (they're a team member)
+        if (!$admin) {
+            return $next($request);
+        }
+
+        // User is a company owner - validate their Mastermind membership
         $memberService = new MemberValidationService();
         if (!$memberService->isActiveMember($user->email)) {
-            Log::warning('Inactive Mastermind member attempted access', [
+            Log::warning('Inactive Mastermind member (company owner) attempted access', [
                 'user_id' => $user->id,
-                'email' => $user->email
+                'email' => $user->email,
+                'admin_id' => $admin->id,
+                'company_name' => $admin->company_name
             ]);
 
             return response()->json([
