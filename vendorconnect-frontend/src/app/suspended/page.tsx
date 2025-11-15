@@ -72,8 +72,8 @@ export default function SuspendedPage() {
 
             <div className="text-xs text-muted-foreground pt-4">
               If you believe this is an error, please contact{' '}
-              <a href="mailto:support@themastermind.com.au" className="text-primary underline">
-                support@themastermind.com.au
+              <a href="mailto:clientservice@themastermind.com.au" className="text-primary underline">
+                clientservice@themastermind.com.au
               </a>
             </div>
           </div>
