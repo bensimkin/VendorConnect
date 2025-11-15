@@ -31,7 +31,20 @@ class ProfileController extends BaseController
     public function show($id)
     {
         try {
-            $user = User::with(['roles', 'permissions'])->find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering: Only allow viewing users from the same company
+            $user = User::with(['roles', 'permissions'])
+                ->where(function($q) use ($adminId) {
+                    $admin = \App\Models\Admin::where('id', $adminId)->first();
+                    if ($admin) {
+                        $q->where('id', $admin->user_id);
+                    }
+                    $q->orWhereHas('teamMembers', function($subQ) use ($adminId) {
+                        $subQ->where('admin_id', $adminId);
+                    });
+                })
+                ->find($id);
 
             if (!$user) {
                 return $this->sendNotFound('User not found');
@@ -49,7 +62,19 @@ class ProfileController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $user = User::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering: Only allow updating users from the same company
+            $user = User::where(function($q) use ($adminId) {
+                    $admin = \App\Models\Admin::where('id', $adminId)->first();
+                    if ($admin) {
+                        $q->where('id', $admin->user_id);
+                    }
+                    $q->orWhereHas('teamMembers', function($subQ) use ($adminId) {
+                        $subQ->where('admin_id', $adminId);
+                    });
+                })
+                ->find($id);
 
             if (!$user) {
                 return $this->sendNotFound('User not found');
@@ -97,7 +122,19 @@ class ProfileController extends BaseController
     public function updatePhoto(Request $request, $id)
     {
         try {
-            $user = User::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering: Only allow updating users from the same company
+            $user = User::where(function($q) use ($adminId) {
+                    $admin = \App\Models\Admin::where('id', $adminId)->first();
+                    if ($admin) {
+                        $q->where('id', $admin->user_id);
+                    }
+                    $q->orWhereHas('teamMembers', function($subQ) use ($adminId) {
+                        $subQ->where('admin_id', $adminId);
+                    });
+                })
+                ->find($id);
 
             if (!$user) {
                 return $this->sendNotFound('User not found');
