@@ -26,9 +26,12 @@ class AnalyticsController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             
-            // Validate that the task exists
-            $task = Task::find($taskId);
+            // Validate that the task exists AND belongs to user's tenant
+            $task = Task::where('id', $taskId)
+                ->where('admin_id', $adminId)
+                ->first();
             if (!$task) {
                 return $this->sendNotFound('Task not found');
             }
@@ -67,6 +70,7 @@ class AnalyticsController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             
             // Check if user is admin
             if (!$this->hasAdminAccess($user)) {
@@ -79,12 +83,13 @@ class AnalyticsController extends BaseController
             $taskId = $request->input('task_id');
             $userId = $request->input('user_id');
 
-            // Build query
+            // Build query with multi-tenant filtering
             $query = DB::table('task_views')
                 ->join('tasks', 'task_views.task_id', '=', 'tasks.id')
                 ->join('users', 'task_views.user_id', '=', 'users.id')
                 ->leftJoin('statuses', 'tasks.status_id', '=', 'statuses.id')
                 ->leftJoin('projects', 'tasks.project_id', '=', 'projects.id')
+                ->where('tasks.admin_id', $adminId)
                 ->select(
                     'task_views.id',
                     'task_views.task_id',
@@ -130,6 +135,7 @@ class AnalyticsController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             
             // Check if user is admin
             if (!$this->hasAdminAccess($user)) {
@@ -140,32 +146,36 @@ class AnalyticsController extends BaseController
             $startDate = $request->input('start_date', Carbon::now()->subDays(7)->toDateString());
             $endDate = $request->input('end_date', Carbon::now()->toDateString());
 
-            // Total views (exclude completed and archived tasks)
+            // Total views (exclude completed and archived tasks, filter by tenant)
             $totalViews = TaskView::join('tasks', 'task_views.task_id', '=', 'tasks.id')
                 ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
+                ->where('tasks.admin_id', $adminId)
                 ->whereBetween('task_views.viewed_at', [$startDate, $endDate])
                 ->whereNotIn('statuses.slug', ['completed', 'archive'])
                 ->count();
 
-            // Unique tasks viewed (exclude completed and archived tasks)
+            // Unique tasks viewed (exclude completed and archived tasks, filter by tenant)
             $uniqueTasksViewed = TaskView::join('tasks', 'task_views.task_id', '=', 'tasks.id')
                 ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
+                ->where('tasks.admin_id', $adminId)
                 ->whereBetween('task_views.viewed_at', [$startDate, $endDate])
                 ->whereNotIn('statuses.slug', ['completed', 'archive'])
                 ->distinct('task_views.task_id')
                 ->count('task_views.task_id');
 
-            // Unique users viewing tasks (exclude completed and archived tasks)
+            // Unique users viewing tasks (exclude completed and archived tasks, filter by tenant)
             $uniqueUsers = TaskView::join('tasks', 'task_views.task_id', '=', 'tasks.id')
                 ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
+                ->where('tasks.admin_id', $adminId)
                 ->whereBetween('task_views.viewed_at', [$startDate, $endDate])
                 ->whereNotIn('statuses.slug', ['completed', 'archive'])
                 ->distinct('task_views.user_id')
                 ->count('task_views.user_id');
 
-            // Most viewed tasks (exclude completed and archived tasks)
+            // Most viewed tasks (exclude completed and archived tasks, filter by tenant)
             $mostViewedTasks = TaskView::join('tasks', 'task_views.task_id', '=', 'tasks.id')
                 ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
+                ->where('tasks.admin_id', $adminId)
                 ->whereBetween('task_views.viewed_at', [$startDate, $endDate])
                 ->whereNotIn('statuses.slug', ['completed', 'archive'])
                 ->select('task_views.task_id', DB::raw('count(*) as view_count'))
@@ -173,8 +183,8 @@ class AnalyticsController extends BaseController
                 ->orderBy('view_count', 'desc')
                 ->limit(10)
                 ->get()
-                ->map(function ($item) {
-                    $task = Task::find($item->task_id);
+                ->map(function ($item) use ($adminId) {
+                    $task = Task::where('id', $item->task_id)->where('admin_id', $adminId)->first();
                     return [
                         'task_id' => $item->task_id,
                         'task_title' => $task ? $task->title : 'Unknown',
@@ -182,9 +192,10 @@ class AnalyticsController extends BaseController
                     ];
                 });
 
-            // Top users by views (exclude completed and archived tasks)
+            // Top users by views (exclude completed and archived tasks, filter by tenant)
             $topUsers = TaskView::join('tasks', 'task_views.task_id', '=', 'tasks.id')
                 ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
+                ->where('tasks.admin_id', $adminId)
                 ->whereBetween('task_views.viewed_at', [$startDate, $endDate])
                 ->whereNotIn('statuses.slug', ['completed', 'archive'])
                 ->select('task_views.user_id', DB::raw('count(*) as view_count'))
@@ -225,9 +236,10 @@ class AnalyticsController extends BaseController
                     ];
                 });
 
-            // Average view duration (exclude completed and archived tasks)
+            // Average view duration (exclude completed and archived tasks, filter by tenant)
             $avgViewDuration = TaskView::join('tasks', 'task_views.task_id', '=', 'tasks.id')
                 ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
+                ->where('tasks.admin_id', $adminId)
                 ->whereBetween('task_views.viewed_at', [$startDate, $endDate])
                 ->whereNotIn('statuses.slug', ['completed', 'archive'])
                 ->whereNotNull('task_views.view_duration_seconds')
@@ -260,6 +272,7 @@ class AnalyticsController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             
             // Check if user is admin
             if (!$this->hasAdminAccess($user)) {
@@ -270,23 +283,32 @@ class AnalyticsController extends BaseController
             $startDate = $request->input('start_date', Carbon::now()->subDays(30)->toDateString());
             $endDate = $request->input('end_date', Carbon::now()->toDateString());
 
-            // Total rejections
-            $totalRejections = TaskRejection::whereBetween('rejected_at', [$startDate, $endDate])->count();
+            // Total rejections (filter by tenant)
+            $totalRejections = TaskRejection::join('tasks', 'task_rejections.task_id', '=', 'tasks.id')
+                ->where('tasks.admin_id', $adminId)
+                ->whereBetween('task_rejections.rejected_at', [$startDate, $endDate])
+                ->count();
 
-            // Unique tasks rejected
-            $uniqueTasksRejected = TaskRejection::whereBetween('rejected_at', [$startDate, $endDate])
-                ->distinct('task_id')
-                ->count('task_id');
+            // Unique tasks rejected (filter by tenant)
+            $uniqueTasksRejected = TaskRejection::join('tasks', 'task_rejections.task_id', '=', 'tasks.id')
+                ->where('tasks.admin_id', $adminId)
+                ->whereBetween('task_rejections.rejected_at', [$startDate, $endDate])
+                ->distinct('task_rejections.task_id')
+                ->count('task_rejections.task_id');
 
-            // Unique users rejecting tasks
-            $uniqueUsers = TaskRejection::whereBetween('rejected_at', [$startDate, $endDate])
-                ->distinct('user_id')
-                ->count('user_id');
+            // Unique users rejecting tasks (filter by tenant)
+            $uniqueUsers = TaskRejection::join('tasks', 'task_rejections.task_id', '=', 'tasks.id')
+                ->where('tasks.admin_id', $adminId)
+                ->whereBetween('task_rejections.rejected_at', [$startDate, $endDate])
+                ->distinct('task_rejections.user_id')
+                ->count('task_rejections.user_id');
 
-            // Top users by rejections
-            $topRejectingUsers = TaskRejection::whereBetween('rejected_at', [$startDate, $endDate])
-                ->select('user_id', DB::raw('count(*) as rejection_count'))
-                ->groupBy('user_id')
+            // Top users by rejections (filter by tenant)
+            $topRejectingUsers = TaskRejection::join('tasks', 'task_rejections.task_id', '=', 'tasks.id')
+                ->where('tasks.admin_id', $adminId)
+                ->whereBetween('task_rejections.rejected_at', [$startDate, $endDate])
+                ->select('task_rejections.user_id', DB::raw('count(*) as rejection_count'))
+                ->groupBy('task_rejections.user_id')
                 ->orderBy('rejection_count', 'desc')
                 ->limit(10)
                 ->get()
@@ -300,15 +322,17 @@ class AnalyticsController extends BaseController
                     ];
                 });
 
-            // Most rejected tasks
-            $mostRejectedTasks = TaskRejection::whereBetween('rejected_at', [$startDate, $endDate])
-                ->select('task_id', DB::raw('count(*) as rejection_count'))
-                ->groupBy('task_id')
+            // Most rejected tasks (filter by tenant)
+            $mostRejectedTasks = TaskRejection::join('tasks', 'task_rejections.task_id', '=', 'tasks.id')
+                ->where('tasks.admin_id', $adminId)
+                ->whereBetween('task_rejections.rejected_at', [$startDate, $endDate])
+                ->select('task_rejections.task_id', DB::raw('count(*) as rejection_count'))
+                ->groupBy('task_rejections.task_id')
                 ->orderBy('rejection_count', 'desc')
                 ->limit(10)
                 ->get()
-                ->map(function ($item) {
-                    $task = Task::with('taskType')->find($item->task_id);
+                ->map(function ($item) use ($adminId) {
+                    $task = Task::with('taskType')->where('id', $item->task_id)->where('admin_id', $adminId)->first();
                     return [
                         'task_id' => $item->task_id,
                         'task_title' => $task ? $task->title : 'Unknown',
@@ -317,10 +341,13 @@ class AnalyticsController extends BaseController
                     ];
                 });
 
-            // Recent rejections with details
-            $recentRejections = TaskRejection::whereBetween('rejected_at', [$startDate, $endDate])
+            // Recent rejections with details (filter by tenant)
+            $recentRejections = TaskRejection::join('tasks', 'task_rejections.task_id', '=', 'tasks.id')
+                ->where('tasks.admin_id', $adminId)
+                ->whereBetween('task_rejections.rejected_at', [$startDate, $endDate])
+                ->select('task_rejections.*')
                 ->with(['task', 'user'])
-                ->orderBy('rejected_at', 'desc')
+                ->orderBy('task_rejections.rejected_at', 'desc')
                 ->limit(20)
                 ->get()
                 ->map(function ($rejection) {
@@ -373,35 +400,49 @@ class AnalyticsController extends BaseController
             $startDate = $request->input('start_date', Carbon::now()->subDays(7)->toDateString());
             $endDate = $request->input('end_date', Carbon::now()->toDateString());
 
-            // Total sessions
-            $totalSessions = UserSession::whereBetween('login_at', [$startDate, $endDate])->count();
+            // Get tenant user IDs for filtering
+            $admin = \App\Models\Admin::where('id', $adminId)->first();
+            $tenantUserIds = \App\Models\TeamMember::where('admin_id', $adminId)->pluck('user_id')->toArray();
+            if ($admin) {
+                $tenantUserIds[] = $admin->user_id;
+            }
 
-            // Active users (users with sessions in the last 24 hours)
-            $activeUsers = UserSession::whereNull('logout_at')
+            // Total sessions (filter by tenant users)
+            $totalSessions = UserSession::whereIn('user_id', $tenantUserIds)
+                ->whereBetween('login_at', [$startDate, $endDate])
+                ->count();
+
+            // Active users (users with sessions in the last 24 hours, filter by tenant)
+            $activeUsers = UserSession::whereIn('user_id', $tenantUserIds)
+                ->whereNull('logout_at')
                 ->where('last_activity_at', '>=', now()->subHours(24))
                 ->distinct('user_id')
                 ->count('user_id');
 
-            // Unique users
-            $uniqueUsers = UserSession::whereBetween('login_at', [$startDate, $endDate])
+            // Unique users (filter by tenant)
+            $uniqueUsers = UserSession::whereIn('user_id', $tenantUserIds)
+                ->whereBetween('login_at', [$startDate, $endDate])
                 ->distinct('user_id')
                 ->count('user_id');
 
-            // Average session duration
-            $avgSessionDuration = UserSession::whereBetween('login_at', [$startDate, $endDate])
+            // Average session duration (filter by tenant)
+            $avgSessionDuration = UserSession::whereIn('user_id', $tenantUserIds)
+                ->whereBetween('login_at', [$startDate, $endDate])
                 ->whereNotNull('duration_seconds')
                 ->avg('duration_seconds');
 
-            // Top users by session count
-            $topUsersBySessions = UserSession::whereBetween('login_at', [$startDate, $endDate])
+            // Top users by session count (filter by tenant)
+            $topUsersBySessions = UserSession::whereIn('user_id', $tenantUserIds)
+                ->whereBetween('login_at', [$startDate, $endDate])
                 ->select('user_id', DB::raw('count(*) as session_count'))
                 ->groupBy('user_id')
                 ->orderBy('session_count', 'desc')
                 ->limit(10)
                 ->get()
-                ->map(function ($item) {
+                ->map(function ($item) use ($tenantUserIds) {
                     $user = User::find($item->user_id);
                     $avgDuration = UserSession::where('user_id', $item->user_id)
+                        ->whereIn('user_id', $tenantUserIds)
                         ->whereNotNull('duration_seconds')
                         ->avg('duration_seconds');
                     return [
@@ -413,8 +454,9 @@ class AnalyticsController extends BaseController
                     ];
                 });
 
-            // Recent sessions
-            $recentSessions = UserSession::whereBetween('login_at', [$startDate, $endDate])
+            // Recent sessions (filter by tenant)
+            $recentSessions = UserSession::whereIn('user_id', $tenantUserIds)
+                ->whereBetween('login_at', [$startDate, $endDate])
                 ->with('user')
                 ->orderBy('login_at', 'desc')
                 ->limit(10)
@@ -460,8 +502,9 @@ class AnalyticsController extends BaseController
                     ];
                 });
 
-            // Session activity trend (daily breakdown)
-            $sessionActivityTrend = UserSession::whereBetween('login_at', [$startDate, $endDate])
+            // Session activity trend (daily breakdown, filter by tenant)
+            $sessionActivityTrend = UserSession::whereIn('user_id', $tenantUserIds)
+                ->whereBetween('login_at', [$startDate, $endDate])
                 ->select(
                     DB::raw('DATE(login_at) as date'),
                     DB::raw('COUNT(DISTINCT user_id) as active_users'),
@@ -507,6 +550,7 @@ class AnalyticsController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             
             // Check if user is admin
             if (!$this->hasAdminAccess($user)) {
@@ -517,9 +561,10 @@ class AnalyticsController extends BaseController
             $startDate = $request->input('start_date', Carbon::now()->subDays(7)->toDateString());
             $endDate = $request->input('end_date', Carbon::now()->toDateString());
 
-            // Overview statistics (exclude completed/archived tasks)
+            // Overview statistics (exclude completed/archived tasks, filter by tenant)
             $totalTaskAssignments = DB::table('task_user as tu')
                 ->join('tasks as t', 'tu.task_id', '=', 't.id')
+                ->where('t.admin_id', $adminId)
                 ->whereNotNull('tu.last_activity_at')
                 ->whereBetween('tu.last_activity_at', [$startDate, $endDate])
                 ->whereNotIn('t.status_id', function($q) {
@@ -529,6 +574,7 @@ class AnalyticsController extends BaseController
 
             $uniqueTasksWithActivity = DB::table('task_user as tu')
                 ->join('tasks as t', 'tu.task_id', '=', 't.id')
+                ->where('t.admin_id', $adminId)
                 ->whereNotNull('tu.last_activity_at')
                 ->whereBetween('tu.last_activity_at', [$startDate, $endDate])
                 ->whereNotIn('t.status_id', function($q) {
@@ -539,6 +585,7 @@ class AnalyticsController extends BaseController
 
             $uniqueUsersWithActivity = DB::table('task_user as tu')
                 ->join('tasks as t', 'tu.task_id', '=', 't.id')
+                ->where('t.admin_id', $adminId)
                 ->whereNotNull('tu.last_activity_at')
                 ->whereBetween('tu.last_activity_at', [$startDate, $endDate])
                 ->whereNotIn('t.status_id', function($q) {
@@ -547,12 +594,13 @@ class AnalyticsController extends BaseController
                 ->distinct('tu.user_id')
                 ->count('tu.user_id');
 
-            // Tasks with no activity from assigned users (7+ days)
+            // Tasks with no activity from assigned users (7+ days, filter by tenant)
             $tasksWithNoActivity = DB::table('task_user as tu')
                 ->join('tasks as t', 'tu.task_id', '=', 't.id')
                 ->leftJoin('statuses as s', 't.status_id', '=', 's.id')
                 ->leftJoin('priorities as p', 't.priority_id', '=', 'p.id')
                 ->join('users as u', 'tu.user_id', '=', 'u.id')
+                ->where('t.admin_id', $adminId)
                 ->where(function($q) {
                     $q->whereNull('tu.last_activity_at')
                     ->orWhere('tu.last_activity_at', '<', Carbon::now()->subDays(7));
@@ -585,6 +633,7 @@ class AnalyticsController extends BaseController
             $usersByActivityLevel = DB::table('task_user as tu')
                 ->join('users as u', 'tu.user_id', '=', 'u.id')
                 ->join('tasks as t', 'tu.task_id', '=', 't.id')
+                ->where('t.admin_id', $adminId)
                 ->whereNotNull('tu.last_activity_at')
                 ->whereBetween('tu.last_activity_at', [$startDate, $endDate])
                 ->whereNotIn('t.status_id', function($q) {
@@ -611,9 +660,10 @@ class AnalyticsController extends BaseController
                     ];
                 });
 
-            // Tasks with most activity
+            // Tasks with most activity (filter by tenant)
             $mostActiveTasks = DB::table('task_user as tu')
                 ->join('tasks as t', 'tu.task_id', '=', 't.id')
+                ->where('t.admin_id', $adminId)
                 ->whereNotNull('tu.last_activity_at')
                 ->whereBetween('tu.last_activity_at', [$startDate, $endDate])
                 ->whereNotIn('t.status_id', function ($q) {
@@ -640,9 +690,10 @@ class AnalyticsController extends BaseController
                     ];
                 });
 
-            // Activity trend
+            // Activity trend (filter by tenant)
             $activityTrend = DB::table('task_user as tu')
                 ->join('tasks as t', 'tu.task_id', '=', 't.id')
+                ->where('t.admin_id', $adminId)
                 ->whereNotNull('tu.last_activity_at')
                 ->whereBetween('tu.last_activity_at', [$startDate, $endDate])
                 ->whereNotIn('t.status_id', function ($q) {
@@ -694,14 +745,16 @@ class AnalyticsController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             
             // Check if user is admin
             if (!$this->hasAdminAccess($user)) {
                 return $this->sendForbidden('Only admins can view project metrics baselines');
             }
 
-            // Get all baseline metrics
-            $baselines = ProjectMetricsBaseline::orderBy('calculated_at', 'desc')
+            // Get all baseline metrics (filter by tenant)
+            $baselines = ProjectMetricsBaseline::where('admin_id', $adminId)
+                ->orderBy('calculated_at', 'desc')
                 ->with(['taskType', 'client'])
                 ->get();
 
@@ -775,36 +828,44 @@ class AnalyticsController extends BaseController
             $startDate = $request->input('start_date', Carbon::now()->subDays(7)->toDateString());
             $endDate = $request->input('end_date', Carbon::now()->toDateString());
 
-            // Total comments
+            // Total comments (filter by tenant)
             $totalComments = ChMessage::whereNotNull('task_id')
-                ->whereBetween('created_at', [$startDate, $endDate])
+                ->join('tasks', 'ch_messages.task_id', '=', 'tasks.id')
+                ->where('tasks.admin_id', $adminId)
+                ->whereBetween('ch_messages.created_at', [$startDate, $endDate])
                 ->count();
 
-            // Unique tasks with comments
+            // Unique tasks with comments (filter by tenant)
             $uniqueTasksWithComments = ChMessage::whereNotNull('task_id')
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->distinct('task_id')
-                ->count('task_id');
+                ->join('tasks', 'ch_messages.task_id', '=', 'tasks.id')
+                ->where('tasks.admin_id', $adminId)
+                ->whereBetween('ch_messages.created_at', [$startDate, $endDate])
+                ->distinct('ch_messages.task_id')
+                ->count('ch_messages.task_id');
 
-            // Unique users commenting
+            // Unique users commenting (filter by tenant)
             $uniqueUsers = ChMessage::whereNotNull('task_id')
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->distinct('sender_id')
-                ->count('sender_id');
+                ->join('tasks', 'ch_messages.task_id', '=', 'tasks.id')
+                ->where('tasks.admin_id', $adminId)
+                ->whereBetween('ch_messages.created_at', [$startDate, $endDate])
+                ->distinct('ch_messages.sender_id')
+                ->count('ch_messages.sender_id');
 
             // Average comments per task
-            $avgCommentsPerTask = $totalComments > 0 ? round($totalComments / $uniqueTasksWithComments, 2) : 0;
+            $avgCommentsPerTask = $totalComments > 0 && $uniqueTasksWithComments > 0 ? round($totalComments / $uniqueTasksWithComments, 2) : 0;
 
-            // Tasks with most comments
+            // Tasks with most comments (filter by tenant)
             $mostActiveTasks = ChMessage::whereNotNull('task_id')
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->select('task_id', DB::raw('count(*) as comment_count'))
-                ->groupBy('task_id')
+                ->join('tasks', 'ch_messages.task_id', '=', 'tasks.id')
+                ->where('tasks.admin_id', $adminId)
+                ->whereBetween('ch_messages.created_at', [$startDate, $endDate])
+                ->select('ch_messages.task_id', DB::raw('count(*) as comment_count'))
+                ->groupBy('ch_messages.task_id')
                 ->orderBy('comment_count', 'desc')
                 ->limit(10)
                 ->get()
-                ->map(function ($item) {
-                    $task = Task::find($item->task_id);
+                ->map(function ($item) use ($adminId) {
+                    $task = Task::where('id', $item->task_id)->where('admin_id', $adminId)->first();
                     return [
                         'task_id' => $item->task_id,
                         'task_title' => $task ? $task->title : 'Unknown',
@@ -812,11 +873,13 @@ class AnalyticsController extends BaseController
                     ];
                 });
 
-            // Top users by comments
+            // Top users by comments (filter by tenant)
             $topCommentingUsers = ChMessage::whereNotNull('task_id')
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->select('sender_id', DB::raw('count(*) as comment_count'))
-                ->groupBy('sender_id')
+                ->join('tasks', 'ch_messages.task_id', '=', 'tasks.id')
+                ->where('tasks.admin_id', $adminId)
+                ->whereBetween('ch_messages.created_at', [$startDate, $endDate])
+                ->select('ch_messages.sender_id', DB::raw('count(*) as comment_count'))
+                ->groupBy('ch_messages.sender_id')
                 ->orderBy('comment_count', 'desc')
                 ->limit(10)
                 ->get()
@@ -852,16 +915,18 @@ class AnalyticsController extends BaseController
                     ];
                 });
 
-            // Comment activity trend
+            // Comment activity trend (filter by tenant)
             $activityTrend = ChMessage::whereNotNull('task_id')
-                ->whereBetween('created_at', [$startDate, $endDate])
+                ->join('tasks', 'ch_messages.task_id', '=', 'tasks.id')
+                ->where('tasks.admin_id', $adminId)
+                ->whereBetween('ch_messages.created_at', [$startDate, $endDate])
                 ->select(
-                    DB::raw('DATE(created_at) as date'),
+                    DB::raw('DATE(ch_messages.created_at) as date'),
                     DB::raw('COUNT(*) as total_comments'),
-                    DB::raw('COUNT(DISTINCT task_id) as active_tasks'),
-                    DB::raw('COUNT(DISTINCT sender_id) as active_users')
+                    DB::raw('COUNT(DISTINCT ch_messages.task_id) as active_tasks'),
+                    DB::raw('COUNT(DISTINCT ch_messages.sender_id) as active_users')
                 )
-                ->groupBy(DB::raw('DATE(created_at)'))
+                ->groupBy(DB::raw('DATE(ch_messages.created_at)'))
                 ->orderBy('date', 'desc')
                 ->limit(30)
                 ->get()
@@ -874,11 +939,14 @@ class AnalyticsController extends BaseController
                     ];
                 });
 
-            // Recent comments
+            // Recent comments (filter by tenant)
             $recentComments = ChMessage::whereNotNull('task_id')
-                ->whereBetween('created_at', [$startDate, $endDate])
+                ->join('tasks', 'ch_messages.task_id', '=', 'tasks.id')
+                ->where('tasks.admin_id', $adminId)
+                ->whereBetween('ch_messages.created_at', [$startDate, $endDate])
+                ->select('ch_messages.*')
                 ->with(['sender', 'task'])
-                ->orderBy('created_at', 'desc')
+                ->orderBy('ch_messages.created_at', 'desc')
                 ->limit(20)
                 ->get()
                 ->map(function ($message) {
