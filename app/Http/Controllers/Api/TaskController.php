@@ -849,10 +849,14 @@ class TaskController extends BaseController
     public function getInformation($id)
     {
         try {
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
             $task = Task::with([
                 'users', 'clients', 'status', 'priority', 'project', 'tags',
                 'questionAnswers', 'checklistAnswers'
             ])
+            ->where('admin_id', $adminId)
             ->find($id);
 
             if (!$task) {
@@ -873,7 +877,10 @@ class TaskController extends BaseController
     public function uploadMedia(Request $request, $id)
     {
         try {
-            $task = Task::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $task = Task::where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -931,7 +938,10 @@ class TaskController extends BaseController
     public function getMedia($id)
     {
         try {
-            $task = Task::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $task = Task::where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -1023,7 +1033,10 @@ class TaskController extends BaseController
     public function uploadMessage(Request $request, $id)
     {
         try {
-            $task = Task::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $task = Task::where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -1080,7 +1093,10 @@ class TaskController extends BaseController
     public function getMessages($id)
     {
         try {
-            $task = Task::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $task = Task::where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -1103,7 +1119,12 @@ class TaskController extends BaseController
     public function deleteMessage($messageId)
     {
         try {
-            $message = ChMessage::where('id', $messageId)->first();
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering via task relationship
+            $message = ChMessage::whereHas('task', function($q) use ($adminId) {
+                $q->where('admin_id', $adminId);
+            })->where('id', $messageId)->first();
 
             if (!$message) {
                 return $this->sendNotFound('Message not found');
@@ -1146,7 +1167,12 @@ class TaskController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $messages = TaskMessage::whereIn('id', $request->message_ids)->get();
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering via task relationship
+            $messages = TaskMessage::whereHas('task', function($q) use ($adminId) {
+                $q->where('admin_id', $adminId);
+            })->whereIn('id', $request->message_ids)->get();
 
             foreach ($messages as $message) {
                 // Allow user to delete their own messages, or admin/sub_admin/requester to delete any message
@@ -1176,7 +1202,11 @@ class TaskController extends BaseController
     public function getQuestionAnswers($id)
     {
         try {
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
             $task = Task::with(['questionAnswers.briefQuestions'])
+                ->where('admin_id', $adminId)
                 ->find($id);
 
             if (!$task) {
@@ -1195,7 +1225,10 @@ class TaskController extends BaseController
     public function submitQuestionAnswer(Request $request, $id)
     {
         try {
-            $task = Task::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $task = Task::where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -1245,7 +1278,11 @@ class TaskController extends BaseController
     public function getChecklistAnswers($id)
     {
         try {
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
             $task = Task::with(['checklistAnswers.briefChecklist'])
+                ->where('admin_id', $adminId)
                 ->find($id);
 
             if (!$task) {
@@ -1264,14 +1301,19 @@ class TaskController extends BaseController
     public function getChecklistStatus($id)
     {
         try {
+            $adminId = getAdminIdByUserRole();
+            
             \Log::info("Getting checklist status for task ID: {$id}", [
                 'user_id' => Auth::id(),
                 'task_id' => $id,
+                'admin_id' => $adminId,
                 'request_url' => request()->fullUrl(),
                 'user_agent' => request()->userAgent()
             ]);
 
+            // Multi-tenant filtering
             $task = Task::with(['checklistAnswers.briefChecklist'])
+                ->where('admin_id', $adminId)
                 ->find($id);
 
             if (!$task) {
@@ -1320,7 +1362,10 @@ class TaskController extends BaseController
     public function submitChecklistAnswer(Request $request, $id)
     {
         try {
-            $task = Task::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $task = Task::where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -1392,7 +1437,10 @@ class TaskController extends BaseController
     public function stopRepetition($id)
     {
         try {
-            $task = Task::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $task = Task::where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -1426,7 +1474,10 @@ class TaskController extends BaseController
     public function resumeRepetition($id)
     {
         try {
-            $task = Task::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $task = Task::where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -1496,7 +1547,10 @@ class TaskController extends BaseController
     public function getRepeatingHistory($id)
     {
         try {
-            $task = Task::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $task = Task::where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -1555,7 +1609,12 @@ class TaskController extends BaseController
     public function getClientBriefAndFiles($id)
     {
         try {
-            $task = Task::with(['project.clients.brandGuideFiles', 'project.clients.generalClientFiles'])->find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $task = Task::with(['project.clients.brandGuideFiles', 'project.clients.generalClientFiles'])
+                ->where('admin_id', $adminId)
+                ->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -1712,7 +1771,10 @@ class TaskController extends BaseController
     public function uploadTaskFile(Request $request, $id)
     {
         try {
-            $task = Task::with('project.clients')->find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $task = Task::with('project.clients')->where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -1780,7 +1842,10 @@ class TaskController extends BaseController
     public function deleteTaskFile($taskId, $fileId)
     {
         try {
-            $task = Task::find($taskId);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $task = Task::where('admin_id', $adminId)->find($taskId);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
