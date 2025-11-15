@@ -57,6 +57,12 @@ class CheckMastermindMembership
             return $next($request);
         }
 
+        // Whitelist: Platform owner always has access
+        $platformOwnerEmail = 'ben@businessnet.com.au';
+        if (strtolower($ownerUser->email) === strtolower($platformOwnerEmail)) {
+            return $next($request);
+        }
+
         // Validate the COMPANY OWNER's email (not the logged-in user's email)
         $memberService = new MemberValidationService();
         if (!$memberService->isActiveMember($ownerUser->email)) {
