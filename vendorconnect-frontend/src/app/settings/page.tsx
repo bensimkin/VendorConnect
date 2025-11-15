@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,20 @@ export default function SettingsPage() {
     project_updates: true,
     mentions: true,
   });
+
+  // Load notification preferences from user object on mount
+  useEffect(() => {
+    if (user?.notification_preferences) {
+      setNotifications({
+        email_notifications: user.notification_preferences.email_notifications ?? true,
+        push_notifications: user.notification_preferences.push_notifications ?? false,
+        task_assignments: user.notification_preferences.task_assignments ?? true,
+        task_updates: user.notification_preferences.task_updates ?? true,
+        project_updates: user.notification_preferences.project_updates ?? true,
+        mentions: user.notification_preferences.mentions ?? true,
+      });
+    }
+  }, [user]);
 
   // Profile update handler
   const handleProfileUpdate = async () => {
