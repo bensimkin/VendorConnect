@@ -1,7 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+
+export default function SignupPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // If demo mode, redirect to login
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+      router.push('/login');
+    }
+  }, [router]);
+
+  // If not demo mode, show the actual signup page
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+    return null;
+  }
+
+  return <SignupForm />;
+}
+
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -30,7 +50,7 @@ const signupSchema = z.object({
 
 type SignupFormData = z.infer<typeof signupSchema>;
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
