@@ -30,6 +30,10 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
-    
+
+    'mastermind' => [
+        'api_key' => env('MASTERMIND_API_KEY'),
+        'api_url' => env('MASTERMIND_API_URL', 'https://incomm.themastermind.com.au/api/portal/members/lookup/by-email'),
+    ],
 
 ];

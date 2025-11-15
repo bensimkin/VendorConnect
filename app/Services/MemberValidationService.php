@@ -12,8 +12,8 @@ class MemberValidationService
 
     public function __construct()
     {
-        $this->apiKey = env('MASTERMIND_API_KEY');
-        $this->apiUrl = 'https://incomm.themastermind.com.au/api/portal/members/lookup/by-email';
+        $this->apiKey = config('services.mastermind.api_key');
+        $this->apiUrl = config('services.mastermind.api_url', 'https://incomm.themastermind.com.au/api/portal/members/lookup/by-email');
     }
 
     /**
