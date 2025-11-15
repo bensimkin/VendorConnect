@@ -41,7 +41,16 @@ export const useAuthStore = create<AuthState>()(
         try {
           console.log('🔍 [AUTH] Attempting login for:', email);
           const response = await apiClient.post('/auth/login', { email, password });
-          const { user, token, permissions } = response.data.data;
+          console.log('🔍 [AUTH] Response:', response.data);
+          
+          const data = response.data.data || response.data;
+          const user = data.user;
+          const token = data.token || data.access_token;
+          const permissions = data.permissions || [];
+          
+          if (!token) {
+            throw new Error('No token received from server');
+          }
           
           console.log('🔍 [AUTH] Login successful, setting token');
           
