@@ -659,7 +659,8 @@ class TaskController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $task = Task::find($id);
+            // Multi-tenant filtering
+            $task = Task::where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -770,6 +771,8 @@ class TaskController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
+            
             $validator = Validator::make($request->all(), [
                 'priority_id' => 'required|exists:priorities,id'
             ]);
@@ -778,7 +781,8 @@ class TaskController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $task = Task::find($id);
+            // Multi-tenant filtering
+            $task = Task::where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -814,6 +818,8 @@ class TaskController extends BaseController
     public function updateDeadline(Request $request, $id)
     {
         try {
+            $adminId = getAdminIdByUserRole();
+            
             $validator = Validator::make($request->all(), [
                 'end_date' => 'required|date'
             ]);
@@ -822,7 +828,8 @@ class TaskController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $task = Task::find($id);
+            // Multi-tenant filtering
+            $task = Task::where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -1646,7 +1653,10 @@ class TaskController extends BaseController
     public function updateClientBrief(Request $request, $id)
     {
         try {
-            $task = Task::with('project.clients')->find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $task = Task::with('project.clients')->where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
