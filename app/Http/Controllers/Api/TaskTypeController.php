@@ -84,7 +84,8 @@ class TaskTypeController extends BaseController
     public function show($id)
     {
         try {
-            $taskType = TaskType::find($id);
+            $adminId = getAdminIdByUserRole();
+            $taskType = TaskType::where('admin_id', $adminId)->find($id);
 
             if (!$taskType) {
                 return $this->sendNotFound('Task type not found');
@@ -102,7 +103,8 @@ class TaskTypeController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $taskType = TaskType::find($id);
+            $adminId = getAdminIdByUserRole();
+            $taskType = TaskType::where('admin_id', $adminId)->find($id);
 
             if (!$taskType) {
                 return $this->sendNotFound('Task type not found');
@@ -130,7 +132,8 @@ class TaskTypeController extends BaseController
     public function destroy($id)
     {
         try {
-            $taskType = TaskType::find($id);
+            $adminId = getAdminIdByUserRole();
+            $taskType = TaskType::where('admin_id', $adminId)->find($id);
 
             if (!$taskType) {
                 return $this->sendNotFound('Task type not found');

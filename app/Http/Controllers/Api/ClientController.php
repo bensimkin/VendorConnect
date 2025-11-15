@@ -266,7 +266,8 @@ class ClientController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $client = Client::find($id);
+            $adminId = getAdminIdByUserRole();
+            $client = Client::where('admin_id', $adminId)->find($id);
 
             if (!$client) {
                 return $this->sendNotFound('Client not found');
@@ -320,7 +321,8 @@ class ClientController extends BaseController
     public function destroy($id)
     {
         try {
-            $client = Client::find($id);
+            $adminId = getAdminIdByUserRole();
+            $client = Client::where('admin_id', $adminId)->find($id);
 
             if (!$client) {
                 return $this->sendNotFound('Client not found');
@@ -349,7 +351,8 @@ class ClientController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $clients = Client::whereIn('id', $request->client_ids)->get();
+            $adminId = getAdminIdByUserRole();
+            $clients = Client::where('admin_id', $adminId)->whereIn('id', $request->client_ids)->get();
 
             foreach ($clients as $client) {
                 $client->delete();

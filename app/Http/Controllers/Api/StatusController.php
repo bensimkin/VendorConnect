@@ -87,7 +87,8 @@ class StatusController extends BaseController
     public function show($id)
     {
         try {
-            $status = Status::find($id);
+            $adminId = getAdminIdByUserRole();
+            $status = Status::where('admin_id', $adminId)->find($id);
 
             if (!$status) {
                 return $this->sendNotFound('Status not found');
@@ -105,7 +106,8 @@ class StatusController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $status = Status::find($id);
+            $adminId = getAdminIdByUserRole();
+            $status = Status::where('admin_id', $adminId)->find($id);
 
             if (!$status) {
                 return $this->sendNotFound('Status not found');
@@ -134,7 +136,8 @@ class StatusController extends BaseController
     public function destroy($id)
     {
         try {
-            $status = Status::find($id);
+            $adminId = getAdminIdByUserRole();
+            $status = Status::where('admin_id', $adminId)->find($id);
 
             if (!$status) {
                 return $this->sendNotFound('Status not found');
@@ -168,7 +171,8 @@ class StatusController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
-            $statuses = Status::whereIn('id', $request->status_ids)->get();
+            $adminId = getAdminIdByUserRole();
+            $statuses = Status::where('admin_id', $adminId)->whereIn('id', $request->status_ids)->get();
 
             foreach ($statuses as $status) {
                 // Check if status is being used by tasks

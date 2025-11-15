@@ -264,6 +264,7 @@ class ProjectController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             $project = Project::with([
                 'users', 
                 'status', 
@@ -271,6 +272,7 @@ class ProjectController extends BaseController
                 'createdBy:id,first_name,last_name,email',
                 'tasks.status'
             ])
+                ->where('admin_id', $adminId)
                 ->find($id);
 
             if (!$project) {
@@ -365,7 +367,8 @@ class ProjectController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $project = Project::find($id);
+            $adminId = getAdminIdByUserRole();
+            $project = Project::where('admin_id', $adminId)->find($id);
 
             if (!$project) {
                 return $this->sendNotFound('Project not found');
@@ -472,7 +475,8 @@ class ProjectController extends BaseController
     public function destroy($id)
     {
         try {
-            $project = Project::find($id);
+            $adminId = getAdminIdByUserRole();
+            $project = Project::where('admin_id', $adminId)->find($id);
 
             if (!$project) {
                 return $this->sendNotFound('Project not found');

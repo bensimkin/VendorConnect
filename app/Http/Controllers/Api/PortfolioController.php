@@ -204,7 +204,9 @@ class PortfolioController extends BaseController
     public function show($id)
     {
         try {
+            $adminId = getAdminIdByUserRole();
             $portfolio = Portfolio::with(['client', 'task', 'project', 'createdBy', 'taskType'])
+                ->where('admin_id', $adminId)
                 ->find($id);
 
             if (!$portfolio) {
@@ -226,7 +228,8 @@ class PortfolioController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $portfolio = Portfolio::find($id);
+            $adminId = getAdminIdByUserRole();
+            $portfolio = Portfolio::where('admin_id', $adminId)->find($id);
 
             if (!$portfolio) {
                 return $this->sendNotFound('Portfolio item not found');
@@ -278,7 +281,8 @@ class PortfolioController extends BaseController
     public function destroy($id)
     {
         try {
-            $portfolio = Portfolio::find($id);
+            $adminId = getAdminIdByUserRole();
+            $portfolio = Portfolio::where('admin_id', $adminId)->find($id);
 
             if (!$portfolio) {
                 return $this->sendNotFound('Portfolio item not found');
