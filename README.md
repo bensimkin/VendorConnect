@@ -8,12 +8,7 @@ VendorConnect is a complete SaaS solution designed to streamline collaboration b
 
 ## 🌟 Key Features
 
-### Multi-Tenant Architecture
-- ✅ **Complete Company Isolation** - Each company's data is completely isolated with admin_id scoping
-- ✅ **Unlimited Companies** - Support unlimited companies on one platform
-- ✅ **Self-Service Registration** - Companies can sign up and start using immediately
-- ✅ **Company Branding** - Each company can set their name, email, phone, and address
-- ✅ **Zero Data Leakage** - 100% verified multi-tenant security across all 28 data tables
+
 
 ### Project Management
 - ✅ **Project Creation & Tracking** - Create and manage unlimited projects
@@ -38,12 +33,15 @@ VendorConnect is a complete SaaS solution designed to streamline collaboration b
 - ✅ **Bulk Operations** - Update or delete multiple tasks at once
 - ✅ **Task Comments** - Real-time commenting on tasks
 - ✅ **Task History** - Track all changes and activity
-- ✅ **Due Date Enforcement** - Optional strict deadlines with auto-rejection
+- ✅ **Task Rejection System** - Allow users to reject tasks with reasons
+- ✅ **Rejection Tracking** - Full history of all task rejections
+- ✅ **Rejection Analytics** - Monitor rejection rates and identify issues
+- ✅ **Due Date Enforcement** - Optional strict deadlines with auto-rejection on expiry
 
 ### User & Role Management
 - ✅ **Role-Based Access Control (RBAC)** - 5 roles: Owner, Admin, Sub-Admin, Requester, Tasker
 - ✅ **Granular Permissions** - Fine-grained control over who can do what
-- ✅ **Team Members** - Unlimited users per company
+ 
 - ✅ **User Profiles** - Comprehensive user information and avatars
 - ✅ **Activity Tracking** - Track user logins and task activity
 - ✅ **Dark Mode** - Per-user dark mode preference
@@ -53,8 +51,8 @@ VendorConnect is a complete SaaS solution designed to streamline collaboration b
 - ✅ **Client Credentials** - Securely store client login credentials (encrypted)
 - ✅ **Client Projects** - Link clients to multiple projects
 - ✅ **Client Tasks** - View all tasks for a specific client
-- ✅ **Client Contact Info** - Full contact details, address, phone, email
-- ✅ **Client Portal** - Optional client access to their projects
+- ✅ **Client Contact Info** -  
+-  
 
 ### Portfolio Management
 - ✅ **Portfolio Items** - Showcase completed work
@@ -79,23 +77,18 @@ VendorConnect is a complete SaaS solution designed to streamline collaboration b
 - ✅ **Task Comments** - Threaded discussions on tasks
 - ✅ **@Mentions** - Tag users in comments
 - ✅ **Activity Feed** - See all recent activity
+- ✅ **Rejection Workflow** - Formal task rejection with reason tracking
+- ✅ **Feedback Loop** - Capture why tasks are rejected for quality improvement
 
 ### Smart Features
-- ✅ **Smart Task API** - Natural language task creation via AI
+ 
 - ✅ **Global Search** - Search across projects, tasks, clients, portfolio
 - ✅ **Auto-Archive** - Automatically archive completed tasks after X days
-- ✅ **Smart Suggestions** - AI-powered task recommendations
+ 
 - ✅ **Template System** - Reusable task brief templates
 - ✅ **Bulk Actions** - Perform actions on multiple items at once
 
-### API & Integration
-- ✅ **RESTful API** - Complete API for all operations
-- ✅ **API Key Management** - Create and manage API keys per company
-- ✅ **API Authentication** - Sanctum token-based authentication
-- ✅ **Webhook Support** - Event-driven webhooks
-- ✅ **API Documentation** - Comprehensive API docs
-- ✅ **Rate Limiting** - 300 requests per minute per user
-- ✅ **CORS Support** - Configurable cross-origin requests
+ 
 
 ### Settings & Customization
 - ✅ **Company Settings** - Company name, email, phone, address
@@ -119,25 +112,9 @@ VendorConnect is a complete SaaS solution designed to streamline collaboration b
 - ✅ **SQL Injection Prevention** - Parameterized queries throughout
 - ✅ **XSS Protection** - Input sanitization
 
-### Platform Owner Features
-- ✅ **Owner Dashboard** - Platform-wide overview for software owner
-- ✅ **All Companies View** - See all registered companies
-- ✅ **Company Analytics** - Detailed usage stats per company
-- ✅ **Active Usage Tracking** - Monitor which companies are actively using the platform
-- ✅ **Platform Statistics** - Total users, projects, tasks across all companies
-- ✅ **Growth Metrics** - Track platform growth over time
+# 
 
-### Developer Features
-- ✅ **RESTful API** - Complete API coverage
-- ✅ **Clean Architecture** - MVC pattern, service layer
-- ✅ **Type Safety** - TypeScript frontend
-- ✅ **Code Quality** - PSR-12 compliant PHP
-- ✅ **Database Migrations** - Version-controlled schema
-- ✅ **Seeders** - Database seeding for development
-- ✅ **Testing Support** - PHPUnit and Jest ready
-- ✅ **Docker Ready** - Containerization support
-- ✅ **Git Workflow** - GitHub integration
-
+# 
 ### Automation & Scheduling
 - ✅ **Laravel Scheduler** - Automated task scheduling
 - ✅ **Recurring Tasks** - Automatically create recurring tasks
@@ -146,12 +123,7 @@ VendorConnect is a complete SaaS solution designed to streamline collaboration b
 - ✅ **Cron Jobs** - Daily backups and maintenance
 - ✅ **Background Jobs** - Queue processing for heavy tasks
 
-### Backup & Recovery
-- ✅ **Automated Daily Backups** - Database, files, and uploads backed up daily
-- ✅ **30-Day Retention** - Keep 30 days of backup history
-- ✅ **Compressed Backups** - Gzip compression for efficiency
-- ✅ **Easy Restore** - Simple restoration commands
-- ✅ **Backup Logging** - Detailed logs of all backup operations
+ 
 
 ---
 
@@ -334,6 +306,8 @@ VendorConnect is a complete SaaS solution designed to streamline collaboration b
 - 🎯 **Clearer Requirements** - Detailed task descriptions
 - 📝 **Complete History** - Full audit trail
 - 🔍 **Quality Control** - Review and approval workflows
+- ❌ **Task Rejection System** - Formal process for rejecting subpar work with reasons
+- 📈 **Rejection Analytics** - Identify patterns and improve quality over time
 
 ### Scalability
 - 🏢 **Multi-Tenant** - Support unlimited companies
