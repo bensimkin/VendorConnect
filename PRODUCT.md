@@ -890,8 +890,6 @@ VendorConnect is **open source** and can be:
 - Our success comes from happy users, not subscription fees
 - We're building a community, not just a product
 
-**Open Source:** Full source code available. Host it yourself if you prefer.
-
 ---
 
 ## 🎯 Success Metrics
