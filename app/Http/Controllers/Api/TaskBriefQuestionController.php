@@ -82,7 +82,12 @@ class TaskBriefQuestionController extends BaseController
     public function show($id)
     {
         try {
-            $question = TaskBriefQuestion::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering via template relationship
+            $question = TaskBriefQuestion::whereHas('template', function($q) use ($adminId) {
+                $q->where('admin_id', $adminId);
+            })->find($id);
 
             if (!$question) {
                 return $this->sendNotFound('Task brief question not found');
@@ -100,7 +105,12 @@ class TaskBriefQuestionController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $question = TaskBriefQuestion::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering via template relationship
+            $question = TaskBriefQuestion::whereHas('template', function($q) use ($adminId) {
+                $q->where('admin_id', $adminId);
+            })->find($id);
 
             if (!$question) {
                 return $this->sendNotFound('Task brief question not found');
@@ -140,7 +150,12 @@ class TaskBriefQuestionController extends BaseController
     public function destroy($id)
     {
         try {
-            $question = TaskBriefQuestion::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering via template relationship
+            $question = TaskBriefQuestion::whereHas('template', function($q) use ($adminId) {
+                $q->where('admin_id', $adminId);
+            })->find($id);
 
             if (!$question) {
                 return $this->sendNotFound('Task brief question not found');

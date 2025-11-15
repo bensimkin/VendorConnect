@@ -80,7 +80,12 @@ class TaskBriefChecklistController extends BaseController
     public function show($id)
     {
         try {
-            $checklist = TaskBriefChecklist::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering via template relationship
+            $checklist = TaskBriefChecklist::whereHas('template', function($q) use ($adminId) {
+                $q->where('admin_id', $adminId);
+            })->find($id);
 
             if (!$checklist) {
                 return $this->sendNotFound('Task brief checklist not found');
@@ -98,7 +103,12 @@ class TaskBriefChecklistController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $checklist = TaskBriefChecklist::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering via template relationship
+            $checklist = TaskBriefChecklist::whereHas('template', function($q) use ($adminId) {
+                $q->where('admin_id', $adminId);
+            })->find($id);
 
             if (!$checklist) {
                 return $this->sendNotFound('Task brief checklist not found');
@@ -135,7 +145,12 @@ class TaskBriefChecklistController extends BaseController
     public function destroy($id)
     {
         try {
-            $checklist = TaskBriefChecklist::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering via template relationship
+            $checklist = TaskBriefChecklist::whereHas('template', function($q) use ($adminId) {
+                $q->where('admin_id', $adminId);
+            })->find($id);
 
             if (!$checklist) {
                 return $this->sendNotFound('Task brief checklist not found');

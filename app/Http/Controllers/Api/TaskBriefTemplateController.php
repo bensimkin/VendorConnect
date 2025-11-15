@@ -95,13 +95,15 @@ class TaskBriefTemplateController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
             
             // Role-based access control - only admins, sub-admins, and requesters can access templates
             if ($user->hasRole('Tasker')) {
                 return $this->sendError('Access denied. Taskers cannot access task templates.', [], 403);
             }
             
-            $template = TaskBriefTemplates::find($id);
+            // Multi-tenant filtering
+            $template = TaskBriefTemplates::where('admin_id', $adminId)->find($id);
 
             if (!$template) {
                 return $this->sendNotFound('Task brief template not found');
@@ -119,7 +121,10 @@ class TaskBriefTemplateController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $template = TaskBriefTemplates::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $template = TaskBriefTemplates::where('admin_id', $adminId)->find($id);
 
             if (!$template) {
                 return $this->sendNotFound('Task brief template not found');
@@ -151,7 +156,10 @@ class TaskBriefTemplateController extends BaseController
     public function destroy($id)
     {
         try {
-            $template = TaskBriefTemplates::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering
+            $template = TaskBriefTemplates::where('admin_id', $adminId)->find($id);
 
             if (!$template) {
                 return $this->sendNotFound('Task brief template not found');
@@ -161,7 +169,6 @@ class TaskBriefTemplateController extends BaseController
             \DB::beginTransaction();
 
             try {
-                $adminId = getAdminIdByUserRole();
                 
                 // 1. Remove template reference from any tasks using this template (only in this company)
                 $tasksUpdated = \App\Models\Task::where('admin_id', $adminId)

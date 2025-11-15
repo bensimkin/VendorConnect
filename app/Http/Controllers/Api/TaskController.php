@@ -314,7 +314,11 @@ class TaskController extends BaseController
     {
         try {
             $user = Auth::user();
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering: Task must belong to user's company
             $task = Task::with(['users', 'status', 'priority', 'taskType', 'template', 'project', 'project.clients', 'questionAnswers.briefQuestions', 'checklistAnswers', 'deliverables.creator', 'deliverables.media', 'messages.sender', 'createdBy'])
+                ->where('admin_id', $adminId)
                 ->find($id);
 
             if (!$task) {
@@ -408,7 +412,10 @@ class TaskController extends BaseController
     {
         try {
             $user = Auth::user();
-            $task = Task::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering: Task must belong to user's company
+            $task = Task::where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
@@ -589,7 +596,10 @@ class TaskController extends BaseController
     public function destroy($id)
     {
         try {
-            $task = Task::find($id);
+            $adminId = getAdminIdByUserRole();
+            
+            // Multi-tenant filtering: Task must belong to user's company
+            $task = Task::where('admin_id', $adminId)->find($id);
 
             if (!$task) {
                 return $this->sendNotFound('Task not found');
