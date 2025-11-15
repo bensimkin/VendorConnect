@@ -59,6 +59,17 @@ export default function LoginPage() {
           <CardDescription className="text-center">
             Enter your credentials to access your account
           </CardDescription>
+          {/* Demo Credentials */}
+          {process.env.NEXT_PUBLIC_SHOW_DEMO_CREDENTIALS === 'true' && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm font-semibold text-blue-900 mb-2">Demo Credentials:</p>
+              <div className="space-y-1 text-xs text-blue-800">
+                <p><strong>Admin:</strong> ben@businessnet.com.au / password123</p>
+                <p><strong>Requester:</strong> businessmanager@businessnet.com.au / password123</p>
+                <p><strong>Tasker:</strong> kingstar970106@gmail.com / password123</p>
+              </div>
+            </div>
+          )}
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
