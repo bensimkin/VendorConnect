@@ -94,6 +94,7 @@ Route::prefix('v1')->group(function () {
         
         // User preferences (different from profile for frontend compatibility)
         Route::prefix('user')->group(function () {
+            Route::put('/profile', [ProfileController::class, 'updateCurrent']);
             Route::put('/notifications', [ProfileController::class, 'updateNotificationPreferences']);
         });
         

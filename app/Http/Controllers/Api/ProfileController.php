@@ -26,6 +26,36 @@ class ProfileController extends BaseController
     }
 
     /**
+     * Update current user's profile
+     */
+    public function updateCurrent(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            $validator = Validator::make($request->all(), [
+                'first_name' => 'sometimes|required|string|max:255',
+                'last_name' => 'sometimes|required|string|max:255',
+                'email' => 'sometimes|required|email|unique:users,email,' . $user->id,
+                'phone' => 'nullable|string|max:20',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendValidationError($validator->errors());
+            }
+
+            $updateData = $request->only(['first_name', 'last_name', 'email', 'phone']);
+            $user->update($updateData);
+
+            $user->load(['roles', 'permissions']);
+
+            return $this->sendResponse($user, 'Profile updated successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error updating profile: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Get user profile
      */
     public function show($id)
