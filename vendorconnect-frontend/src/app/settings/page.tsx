@@ -105,10 +105,10 @@ export default function SettingsPage() {
       
       // Refresh user data to get updated preferences
       const response = await apiClient.get('/profile');
-      if (response.data?.data) {
+      if (response.data?.data && user) {
         // Update the user in auth store with new preferences
         useAuthStore.setState({ 
-          user: { ...user, notification_preferences: notifications } 
+          user: { ...user, notification_preferences: notifications } as User
         });
       }
     } catch (error: any) {
