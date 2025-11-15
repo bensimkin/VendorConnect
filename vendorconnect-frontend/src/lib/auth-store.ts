@@ -12,6 +12,14 @@ interface User {
   photo: string | null;
   status: number;
   roles?: Array<{ id: number; name: string }>;
+  notification_preferences?: {
+    email_notifications?: boolean;
+    push_notifications?: boolean;
+    task_assignments?: boolean;
+    task_updates?: boolean;
+    project_updates?: boolean;
+    mentions?: boolean;
+  };
 }
 
 interface AuthState {
