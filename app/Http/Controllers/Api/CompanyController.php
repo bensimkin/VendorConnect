@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
+use App\Services\MemberValidationService;
 
 class CompanyController extends BaseController
 {
@@ -22,6 +23,12 @@ class CompanyController extends BaseController
     public function register(Request $request)
     {
         try {
+            // Validate Mastermind membership first
+            $memberService = new MemberValidationService();
+            if (!$memberService->isActiveMember($request->email)) {
+                return $this->sendError('VendorConnect is only available to active Mastermind members. Please use your Mastermind member email or contact support.', [], 403);
+            }
+
             $validator = Validator::make($request->all(), [
                 'company_name' => 'required|string|max:255',
                 'company_email' => 'nullable|email|max:255',

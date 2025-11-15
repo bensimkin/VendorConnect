@@ -36,6 +36,16 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Check for suspended membership
+    if (error.response?.data?.membership_suspended === true) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+        window.location.href = '/suspended';
+      }
+      return Promise.reject(error);
+    }
+    
     if (error.response?.status === 401) {
       // Clear token and redirect to login
       if (typeof window !== 'undefined') {

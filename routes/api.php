@@ -59,8 +59,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/resend-verification', [AuthController::class, 'resendVerification']);
     Route::post('/auth/send-welcome-email', [AuthController::class, 'sendWelcomeEmail']);
     
-    // Protected routes (authentication required)
-    Route::middleware(['cAuth'])->group(function () {
+    // Protected routes (authentication required + Mastermind membership check)
+    Route::middleware(['cAuth', 'mastermind'])->group(function () {
         
         // User profile
         Route::get('/user', function (Request $request) {

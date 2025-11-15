@@ -76,6 +76,7 @@ class Kernel extends HttpKernel
         'custom-verified' => \App\Http\Middleware\CustomVerifiedMiddleware::class,
         'customcan' => \App\Http\Middleware\CustomCanMiddleware::class,
         'customRole' => \App\Http\Middleware\CustomRoleMiddleware::class,
+        'mastermind' => \App\Http\Middleware\CheckMastermindMembership::class,
         // 'checkAccess' => \App\Http\Middleware\CheckAccess::class,
         'CheckInstallation' => \App\Http\Middleware\CheckInstallation::class,
         'log.activity' => \App\Http\Middleware\LogActivity::class,
