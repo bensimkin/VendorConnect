@@ -85,7 +85,8 @@ class PriorityController extends BaseController
     public function show($id)
     {
         try {
-            $priority = Priority::where('admin_id', Auth::user()->admin_id ?? 1)->find($id);
+            $adminId = getAdminIdByUserRole();
+            $priority = Priority::where('admin_id', $adminId)->find($id);
 
             if (!$priority) {
                 return $this->sendNotFound('Priority not found');
@@ -103,7 +104,8 @@ class PriorityController extends BaseController
     public function update(Request $request, $id)
     {
         try {
-            $priority = Priority::where('admin_id', Auth::user()->admin_id ?? 1)->find($id);
+            $adminId = getAdminIdByUserRole();
+            $priority = Priority::where('admin_id', $adminId)->find($id);
 
             if (!$priority) {
                 return $this->sendNotFound('Priority not found');
@@ -132,7 +134,8 @@ class PriorityController extends BaseController
     public function destroy($id)
     {
         try {
-            $priority = Priority::where('admin_id', Auth::user()->admin_id ?? 1)->find($id);
+            $adminId = getAdminIdByUserRole();
+            $priority = Priority::where('admin_id', $adminId)->find($id);
 
             if (!$priority) {
                 return $this->sendNotFound('Priority not found');
@@ -166,8 +169,9 @@ class PriorityController extends BaseController
                 return $this->sendValidationError($validator->errors());
             }
 
+            $adminId = getAdminIdByUserRole();
             $priorities = Priority::whereIn('id', $request->priority_ids)
-                ->where('admin_id', Auth::user()->admin_id ?? 1)
+                ->where('admin_id', $adminId)
                 ->get();
 
             foreach ($priorities as $priority) {
