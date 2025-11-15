@@ -108,6 +108,73 @@ class CompanyController extends BaseController
                 'is_primary' => true,
             ]);
 
+            // Create default settings for the new company
+            $defaultSettings = [
+                // Archive settings
+                [
+                    'admin_id' => $admin->id,
+                    'key' => 'auto_archive_enabled',
+                    'value' => '0',
+                    'type' => 'boolean',
+                    'group' => 'archive_settings',
+                    'description' => 'Enable automatic archiving of completed tasks'
+                ],
+                [
+                    'admin_id' => $admin->id,
+                    'key' => 'auto_archive_days',
+                    'value' => '30',
+                    'type' => 'integer',
+                    'group' => 'archive_settings',
+                    'description' => 'Number of days after completion to auto-archive tasks'
+                ],
+                // Project settings
+                [
+                    'admin_id' => $admin->id,
+                    'key' => 'allow_multiple_clients_per_project',
+                    'value' => '1',
+                    'type' => 'boolean',
+                    'group' => 'project',
+                    'description' => 'Allow multiple clients to be assigned to a single project'
+                ],
+                [
+                    'admin_id' => $admin->id,
+                    'key' => 'require_project_client',
+                    'value' => '1',
+                    'type' => 'boolean',
+                    'group' => 'project',
+                    'description' => 'Require at least one client to be assigned to a project'
+                ],
+                [
+                    'admin_id' => $admin->id,
+                    'key' => 'max_clients_per_project',
+                    'value' => '5',
+                    'type' => 'integer',
+                    'group' => 'project',
+                    'description' => 'Maximum number of clients that can be assigned to a single project'
+                ],
+                // General settings
+                [
+                    'admin_id' => $admin->id,
+                    'key' => 'general_settings',
+                    'value' => json_encode([
+                        'company_title' => $request->company_name,
+                        'timezone' => 'Australia/Brisbane',
+                        'date_format' => 'DD-MM-YYYY|d-m-Y',
+                        'currency_code' => 'AUD',
+                        'currency_symbol' => '$',
+                        'currency_symbol_position' => 'before',
+                        'decimal_points_in_currency' => '2'
+                    ]),
+                    'type' => 'json',
+                    'group' => 'general',
+                    'description' => 'General company settings'
+                ],
+            ];
+
+            foreach ($defaultSettings as $setting) {
+                \App\Models\Setting::create($setting);
+            }
+
             DB::commit();
 
             // Generate token for the new user
