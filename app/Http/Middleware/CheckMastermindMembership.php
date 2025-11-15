@@ -36,28 +36,42 @@ class CheckMastermindMembership
             return $next($request);
         }
 
-        // Only validate ADMIN users (company owners), not team members
-        // Get the admin (company owner) for this user
-        $admin = \App\Models\Admin::where('user_id', $user->id)->first();
+        // Get the company (admin_id) for this user
+        $adminId = getAdminIdByUserRole();
         
-        // If user is not a company owner, skip validation (they're a team member)
+        if (!$adminId) {
+            return $next($request);
+        }
+
+        // Find the company/admin record
+        $admin = \App\Models\Admin::find($adminId);
+        
         if (!$admin) {
             return $next($request);
         }
 
-        // User is a company owner - validate their Mastermind membership
+        // Get the company OWNER's user record
+        $ownerUser = \App\Models\User::find($admin->user_id);
+        
+        if (!$ownerUser) {
+            return $next($request);
+        }
+
+        // Validate the COMPANY OWNER's email (not the logged-in user's email)
         $memberService = new MemberValidationService();
-        if (!$memberService->isActiveMember($user->email)) {
-            Log::warning('Inactive Mastermind member (company owner) attempted access', [
-                'user_id' => $user->id,
-                'email' => $user->email,
+        if (!$memberService->isActiveMember($ownerUser->email)) {
+            Log::warning('Company with inactive Mastermind owner attempted access', [
+                'logged_in_user_id' => $user->id,
+                'logged_in_email' => $user->email,
+                'company_owner_id' => $ownerUser->id,
+                'company_owner_email' => $ownerUser->email,
                 'admin_id' => $admin->id,
                 'company_name' => $admin->company_name
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Your Mastermind membership is not active. VendorConnect is only available to active members.',
+                'message' => 'Your company owner\'s Mastermind membership is not active. VendorConnect is only available to companies with active member owners.',
                 'membership_suspended' => true
             ], 403);
         }
