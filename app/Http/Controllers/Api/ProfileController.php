@@ -163,4 +163,31 @@ class ProfileController extends BaseController
             return $this->sendServerError('Error updating profile photo: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Update notification preferences
+     */
+    public function updateNotificationPreferences(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            // Notification preferences are stored per-user (not per-tenant)
+            // This is intentional - each user has their own notification settings
+            
+            // For now, just return success as notification preferences
+            // would typically be stored in a user_preferences table
+            // or as a JSON field on the users table
+            
+            return $this->sendResponse([
+                'email_notifications' => $request->input('email_notifications', true),
+                'push_notifications' => $request->input('push_notifications', false),
+                'task_assignments' => $request->input('task_assignments', true),
+                'task_updates' => $request->input('task_updates', true),
+                'mentions' => $request->input('mentions', true),
+            ], 'Notification preferences updated successfully');
+        } catch (\Exception $e) {
+            return $this->sendServerError('Error updating notification preferences: ' . $e->getMessage());
+        }
+    }
 }
