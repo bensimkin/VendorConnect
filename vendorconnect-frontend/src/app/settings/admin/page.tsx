@@ -52,7 +52,7 @@ export default function AdminSettingsPage() {
 
   const [generalSettings, setGeneralSettings] = useState<GeneralSettings>({
     timezone: 'UTC',
-    company_title: 'VendorConnect',
+    company_title: '',
     date_format: 'DD-MM-YYYY|d-m-Y',
   });
 
